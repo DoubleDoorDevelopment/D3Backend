@@ -31,7 +31,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.server;
+
+import net.doubledoordev.backend.util.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,4 +59,5 @@ public class ServerData
     public String jarName = "minecraft_server.jar";
     public String rconPswd = Constants.randomString(10);
     public boolean autoStart = false;
+    public String owner = "";
 }

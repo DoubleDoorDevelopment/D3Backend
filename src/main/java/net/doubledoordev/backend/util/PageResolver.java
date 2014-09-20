@@ -33,12 +33,20 @@
 
 package net.doubledoordev.backend.util;
 
-import fi.iki.elonen.NanoHTTPD;
+import freemarker.core.ParseException;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.webserver.NanoHTTPD;
 import freemarker.template.*;
 import net.doubledoordev.backend.Main;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import static net.doubledoordev.backend.util.DataObject.DATA_OBJECT;
 
 /**
  * @author Dries007
@@ -58,18 +66,37 @@ public class PageResolver
 
     public static String resolve(String uri, NanoHTTPD.IHTTPSession session)
     {
+        String[] args = uri.split("/");
+        StringWriter stringWriter = new StringWriter();
         try
         {
-            String[] args = uri.split("/");
-            StringWriter stringWriter = new StringWriter();
-            freemarkerCfg.getTemplate(getTemplateFor(args, session)).process(getDataForPage(args, session), stringWriter);
-            return stringWriter.toString();
+            freemarkerCfg.getTemplate(getTemplateFor(args, session)).process(DATA_OBJECT.adapt(args, session), stringWriter);
         }
-        catch (TemplateException | IOException e)
+        catch (FileNotFoundException e)
         {
-            e.printStackTrace();
-            return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.getLocalizedMessage());
+            try
+            {
+                freemarkerCfg.getTemplate("404.ftl").process(DATA_OBJECT.adapt(e, session), stringWriter);
+            }
+            catch (Exception e1)
+            {
+                e.printStackTrace();
+                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.getLocalizedMessage());
+            }
         }
+        catch (Exception e)
+        {
+            try
+            {
+                freemarkerCfg.getTemplate("500.ftl").process(DATA_OBJECT.adapt(e, session), stringWriter);
+            }
+            catch (Exception e1)
+            {
+                e.printStackTrace();
+                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.getLocalizedMessage());
+            }
+        }
+        return stringWriter.toString();
     }
 
     private static String getTemplateFor(String[] args, NanoHTTPD.IHTTPSession session)
@@ -77,25 +104,9 @@ public class PageResolver
         switch (args[0])
         {
             default:
-                return "index.html";
-
+                return args[0] + ".ftl";
             case "servers":
-                return "server.html";
-            case "console":
-                return "console.html";
-        }
-    }
-
-    private static Object getDataForPage(String[] args, NanoHTTPD.IHTTPSession session)
-    {
-        switch (args[0])
-        {
-            default:
-                return Settings.SETTINGS;
-
-            case "console":
-            case "servers":
-                return Settings.getServerByName(args[1]);
+                return args.length > 1 ? "server.ftl" : "serverlist.ftl";
         }
     }
 }

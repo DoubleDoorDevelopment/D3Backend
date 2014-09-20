@@ -1,4 +1,4 @@
-package fi.iki.elonen;
+package net.doubledoordev.backend.webserver;
 
 import java.io.*;
 import java.net.*;

@@ -31,7 +31,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.rcon;
+package net.doubledoordev.backend.server.rcon;
 
 import net.doubledoordev.backend.util.exceptions.IncorrectRequestIdException;
 

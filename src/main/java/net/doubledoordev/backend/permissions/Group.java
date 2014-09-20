@@ -31,65 +31,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util;
-
-import net.doubledoordev.backend.Main;
-import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Server;
-import org.apache.commons.io.FileUtils;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static net.doubledoordev.backend.util.Constants.CONFIG_FILE;
-import static net.doubledoordev.backend.util.Constants.GSON;
+package net.doubledoordev.backend.permissions;
 
 /**
- * Global settings
- *
  * @author Dries007
  */
-@SuppressWarnings("ALL")
-public class Settings
+public enum Group
 {
-    public static final Settings SETTINGS;
-
-    static
-    {
-        Settings SETTINGS1;
-        try
-        {
-            SETTINGS1 = GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
-        }
-        catch (FileNotFoundException e)
-        {
-            SETTINGS1 = new Settings();
-        }
-        SETTINGS = SETTINGS1;
-    }
-
-    public String hostname = "localhost";
-    public int port = 80;
-    public boolean useJava8 = false;
-    public List<Server> servers = new ArrayList<>();
-    public List<User> users = new ArrayList<>();
-
-    private Settings()
-    {
-    }
-
-    public void save()
-    {
-        try
-        {
-            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(this));
-        }
-        catch (IOException e)
-        {
-            Main.LOGGER.error("Error saving the config file...", e);
-        }
-    }
 }

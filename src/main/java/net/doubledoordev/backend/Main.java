@@ -34,26 +34,15 @@
 package net.doubledoordev.backend;
 
 import net.doubledoordev.backend.util.Constants;
-import net.doubledoordev.backend.util.Server;
+import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.Webserver;
-import net.doubledoordev.backend.util.query.MCQuery;
-import net.doubledoordev.backend.util.rcon.RCon;
-import org.apache.commons.io.IOUtils;
+import net.doubledoordev.backend.webserver.Webserver;
+import net.doubledoordev.backend.server.rcon.RCon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.omg.CORBA.MARSHAL;
-
-import java.io.*;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import static net.doubledoordev.backend.util.Constants.GSON;
 import static net.doubledoordev.backend.util.Constants.NAME;
-import static net.doubledoordev.backend.util.Constants.SERVERS;
 
 /**
  * @author Dries007
@@ -105,7 +94,7 @@ public class Main
     public static synchronized void shutdown()
     {
         LOGGER.info("Attempting graceful shutdown of all servers...");
-        for (final Server server : Settings.SETTINGS.getServers())
+        for (final Server server : Settings.SETTINGS.servers)
         {
             if (server.getOnline())
             {

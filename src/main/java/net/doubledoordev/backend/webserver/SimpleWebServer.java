@@ -1,9 +1,6 @@
-package fi.iki.elonen;
-
-import org.apache.commons.io.IOUtils;
+package net.doubledoordev.backend.webserver;
 
 import java.io.*;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -125,12 +122,12 @@ public abstract class SimpleWebServer extends NanoHTTPD
 
     protected Response getNotFoundResponse()
     {
-        return createResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Error 404, file not found.");
+        return createResponse(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Error 404, file not found.");
     }
 
     protected Response getForbiddenResponse(String s)
     {
-        return createResponse(Response.Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "FORBIDDEN: " + s);
+        return createResponse(Response.Status.FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: " + s);
     }
 
     private boolean canServeUri(String uri)

@@ -35,6 +35,8 @@ package net.doubledoordev.backend.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.winreg.JavaFinder;
 import net.doubledoordev.backend.util.winreg.JavaInfo;
 

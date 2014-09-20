@@ -31,70 +31,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.query;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+package net.doubledoordev.backend.server.rcon;
 
 /**
- * @author Ryan McCann
+ * The game mode for a player.
+ * <p/>
+ * https://code.google.com/p/rcon-client/source/browse/trunk/RConClient/src/org/minecraft/rconclient/rcon/?r=2
+ *
+ * @author vincent
  */
-public class QueryRequest
+public enum GameMode
 {
-    static byte[] MAGIC = {(byte) 0xFE, (byte) 0xFD};
-    byte type;
-    int sessionID;
-    byte[] payload;
-    private ByteArrayOutputStream byteStream;
-    private DataOutputStream dataStream;
+    Survival(0),
+    Creative(1),
+    Adventure(2),
+    Spectator(3);
 
-    public QueryRequest()
+    /**
+     * The internal number of this mode.
+     */
+    private final int number;
+
+    /**
+     * Create a new instance of this object and initialize it;
+     *
+     * @param number The internal number.
+     */
+    private GameMode(final int number)
     {
-        int size = 1460;
-        byteStream = new ByteArrayOutputStream(size);
-        dataStream = new DataOutputStream(byteStream);
+        this.number = number;
     }
 
-    public QueryRequest(byte type)
+    /**
+     * @return the number
+     */
+    public int getNumber()
     {
-        this.type = type;
-    }
-
-    //convert the data in this request to a byte array to send to the server
-    byte[] toBytes()
-    {
-        byteStream.reset();
-
-        try
-        {
-            dataStream.write(MAGIC);
-            dataStream.write(type);
-            dataStream.writeInt(sessionID);
-            dataStream.write(payloadBytes());
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-
-        return byteStream.toByteArray();
-    }
-
-    private byte[] payloadBytes()
-    {
-        if (type == MCQuery.HANDSHAKE)
-        {
-            return new byte[]{}; //return empty byte array
-        }
-        else //(type == MCQuery.STAT)
-        {
-            return payload;
-        }
-    }
-
-    protected void setPayload(int load)
-    {
-        this.payload = ByteUtils.intToBytes(load);
+        return number;
     }
 }

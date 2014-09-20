@@ -31,42 +31,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.rcon;
-
-/**
- * The game mode for a player.
- * <p/>
- * https://code.google.com/p/rcon-client/source/browse/trunk/RConClient/src/org/minecraft/rconclient/rcon/?r=2
- *
- * @author vincent
- */
-public enum GameMode
-{
-    Survival(0),
-    Creative(1),
-    Adventure(2),
-    Spectator(3);
-
-    /**
-     * The internal number of this mode.
-     */
-    private final int number;
-
-    /**
-     * Create a new instance of this object and initialize it;
-     *
-     * @param number The internal number.
-     */
-    private GameMode(final int number)
-    {
-        this.number = number;
-    }
-
-    /**
-     * @return the number
-     */
-    public int getNumber()
-    {
-        return number;
-    }
+.form-signin {
+    max-width: 330px;
+    padding: 15px;
+    margin: 0 auto;
+}
+.form-signin .form-signin-heading,
+.form-signin .checkbox {
+    margin-bottom: 10px;
+}
+.form-signin .checkbox {
+    font-weight: normal;
+}
+.form-signin .form-control {
+    position: relative;
+    height: auto;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 16px;
+}
+.form-signin .form-control:focus {
+    z-index: 2;
+}
+.form-signin input[type="email"] {
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }

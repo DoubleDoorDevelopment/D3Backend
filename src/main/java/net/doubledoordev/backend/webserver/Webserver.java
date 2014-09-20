@@ -31,21 +31,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.webserver;
 
-import fi.iki.elonen.SimpleWebServer;
 import net.doubledoordev.backend.Main;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.DataObject;
+import net.doubledoordev.backend.util.PageResolver;
+import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.TypeHellhole;
 
 /**
  * Format for GET requests:
  *  ->  /static/... => served as a regular file.
  *  ->  /...        => Served from a template.
- *  ->  /.../       => Served as "/.../index".
  *
  * Format for PUT requests:
  *  ->  /server/${serverName}/${methodName}/${parameters ...}   =>  Invoke method on a specific server.
@@ -59,7 +57,7 @@ public class Webserver extends SimpleWebServer
 
     private Webserver()
     {
-        super(Settings.SETTINGS.getHostname(), Settings.SETTINGS.getPort(), "/static/");
+        super(Settings.SETTINGS.hostname, Settings.SETTINGS.port, "/static/");
     }
 
     @Override
@@ -67,17 +65,19 @@ public class Webserver extends SimpleWebServer
     {
         if (!session.getUri().startsWith("/static/") && !session.getUri().equals("/favicon.ico"))
         {
-            Main.LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
-            Main.LOGGER.debug("getUri: " + session.getUri());
-            Main.LOGGER.debug("getCookies: " + session.getCookies());
-            Main.LOGGER.debug("getHeaders: " + session.getHeaders());
-            Main.LOGGER.debug("getMethod: " + session.getMethod());
             Main.LOGGER.debug("getParms: " + session.getParms());
+            Main.LOGGER.debug("getHeaders: " + session.getHeaders());
+            Main.LOGGER.debug("getUri: " + session.getUri());
+            Main.LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
+            Main.LOGGER.debug("getMethod: " + session.getMethod());
+            Main.LOGGER.debug("getCookies: " + session.getCookies());
             Main.LOGGER.debug("-----================================-----");
         }
 
         switch (session.getMethod())
         {
+            case POST:
+                handlePost(session);
             case GET:
                 return serveGet(session);
             case PUT:
@@ -86,7 +86,12 @@ public class Webserver extends SimpleWebServer
         return new Response(Response.Status.NO_CONTENT, MIME_PLAINTEXT, "No Content");
     }
 
-    public Response servePut(IHTTPSession session)
+    private void handlePost(IHTTPSession session)
+    {
+
+    }
+
+    private Response servePut(IHTTPSession session)
     {
         try
         {
@@ -95,7 +100,7 @@ public class Webserver extends SimpleWebServer
             switch (split[0]) // 0 => type id
             {
                 case "server":
-                    Server server = Settings.getServerByName(split[1]); // 1 => server name
+                    Server server = DataObject.getServerByName(split[1]); // 1 => server name
                     for (java.lang.reflect.Method method : server.getClass().getDeclaredMethods())
                     {
                         // Check to see if name is same and if the amount of parameters fits.
@@ -112,7 +117,7 @@ public class Webserver extends SimpleWebServer
                     return new Response(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Server method not found");
                 // ----------------------------------------------------------------------------------------------------------
                 case "console":
-                    server = Settings.getServerByName(split[1]);
+                    server = DataObject.getServerByName(split[1]);
                     if (!server.getOnline()) return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Offline.");
                     return new Response(Response.Status.OK, MIME_PLAINTEXT, server.getRCon().send(split[2]));
             }
@@ -125,15 +130,16 @@ public class Webserver extends SimpleWebServer
         return new Response(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Method not found");
     }
 
-    public Response serveGet(IHTTPSession session)
+    private Response serveGet(IHTTPSession session)
     {
         String uri = session.getUri().toLowerCase();
         if (uri.startsWith(STATIC_PATH)) return super.respond(session.getHeaders(), uri.substring(STATIC_PATH.length()));
 
         try
         {
-            if (uri.endsWith("/")) uri += "index";
+            if (uri.equals("/")) uri += "index";
             uri = uri.substring(1);
+            if (uri.endsWith("/")) uri = uri.substring(0, uri.length() - 1);
             return new Response(PageResolver.resolve(uri, session));
         }
         catch (Exception e)

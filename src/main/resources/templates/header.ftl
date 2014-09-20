@@ -39,6 +39,42 @@
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 70px;
+        }
+    </style>
 </head>
 <body>
+<!-- Fixed navbar -->
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">D3 Backend</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li id="homeNavTab"><a href="/">Home</a></li>
+                <li id="serverListNavTab"><a href="/servers">Server List</a></li>
+                <li id="serversNavTab" class="dropdown">
+                    <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <#list servers as server>
+                        <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name} <span class="label pull-right label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></a></li>
+                        </#list>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li id="loginNavTab"><a href="/login"><#if user??>${user.username}<#else>Log in</#if></a></li>
+            </ul>
+        </div><!--/.nav-collapse -->
+    </div>
+</div>
 <div class="container">

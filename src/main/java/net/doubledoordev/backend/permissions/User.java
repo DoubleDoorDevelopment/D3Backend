@@ -31,65 +31,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util;
-
-import net.doubledoordev.backend.Main;
-import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Server;
-import org.apache.commons.io.FileUtils;
-
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static net.doubledoordev.backend.util.Constants.CONFIG_FILE;
-import static net.doubledoordev.backend.util.Constants.GSON;
+package net.doubledoordev.backend.permissions;
 
 /**
- * Global settings
- *
  * @author Dries007
  */
-@SuppressWarnings("ALL")
-public class Settings
+public class User
 {
-    public static final Settings SETTINGS;
+    private String username, passhash;
+    private String cookiekey;
+    private int maxServers;
+    private Group group;
 
-    static
+    public User(String username, String passhash)
     {
-        Settings SETTINGS1;
-        try
-        {
-            SETTINGS1 = GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
-        }
-        catch (FileNotFoundException e)
-        {
-            SETTINGS1 = new Settings();
-        }
-        SETTINGS = SETTINGS1;
+        this.username = username;
+        this.passhash = passhash;
     }
 
-    public String hostname = "localhost";
-    public int port = 80;
-    public boolean useJava8 = false;
-    public List<Server> servers = new ArrayList<>();
-    public List<User> users = new ArrayList<>();
-
-    private Settings()
+    public String getUsername()
     {
+        return username;
     }
 
-    public void save()
+    public String getPasshash()
     {
-        try
-        {
-            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(this));
-        }
-        catch (IOException e)
-        {
-            Main.LOGGER.error("Error saving the config file...", e);
-        }
+        return passhash;
+    }
+
+    public String getCookiekey()
+    {
+        return cookiekey;
+    }
+
+    public Group getGroup()
+    {
+        return group;
+    }
+
+    public int getMaxServers()
+    {
+        return maxServers;
+    }
+
+    public void setCookiekey(String cookiekey)
+    {
+        this.cookiekey = cookiekey;
+    }
+
+    public void setGroup(Group group)
+    {
+        this.group = group;
+    }
+
+    public void setMaxServers(int maxServers)
+    {
+        this.maxServers = maxServers;
     }
 }

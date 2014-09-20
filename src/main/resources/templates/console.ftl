@@ -31,7 +31,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Console ${name}</title>
+    <title>Console ${server.name}</title>
     <!-- Le meta -->
     <meta name="author" content="Dries007">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,7 +47,7 @@
         function sendCommand($input)
         {
             xmlhttp=new XMLHttpRequest();
-            xmlhttp.open('PUT', window.location.origin + "/console/${name}/" + encodeURIComponent($input.value), true)
+            xmlhttp.open('PUT', window.location.origin + "/console/${server.name}/" + encodeURIComponent($input.value), true)
             xmlhttp.send(null);
 
             xmlhttp.onreadystatechange=function()

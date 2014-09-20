@@ -31,14 +31,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.server;
 
 import com.google.gson.*;
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.DataObject;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
-import net.doubledoordev.backend.util.query.MCQuery;
-import net.doubledoordev.backend.util.query.QueryResponse;
-import net.doubledoordev.backend.util.rcon.RCon;
+import net.doubledoordev.backend.server.query.MCQuery;
+import net.doubledoordev.backend.server.query.QueryResponse;
+import net.doubledoordev.backend.server.rcon.RCon;
+import net.doubledoordev.backend.util.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,7 +52,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.URLDecoder;
 import java.util.*;
 
 import static net.doubledoordev.backend.util.Constants.LOCALHOST;
@@ -401,6 +404,16 @@ public class Server
         return data.autoStart;
     }
 
+    public String getOwner()
+    {
+        return data.owner;
+    }
+
+    public User getOwnerObject()
+    {
+        return DataObject.getUserByName(data.owner);
+    }
+
     public String getPropertiesAsText()
     {
         StringWriter stringWriter = new StringWriter();
@@ -467,6 +480,13 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         data.extraMCParameters = list;
+        saveAll();
+    }
+
+    public void setOwner(String owner) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.owner = owner;
         saveAll();
     }
 

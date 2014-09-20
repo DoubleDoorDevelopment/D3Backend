@@ -31,7 +31,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.query;
+package net.doubledoordev.backend.server.query;
 
 import java.util.ArrayList;
 
