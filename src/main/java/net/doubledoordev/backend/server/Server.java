@@ -35,9 +35,7 @@ package net.doubledoordev.backend.server;
 
 import com.google.gson.*;
 import net.doubledoordev.backend.Main;
-import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.util.Constants;
-import net.doubledoordev.backend.util.DataObject;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -94,7 +92,7 @@ public class Server
     {
         this.data = data;
         this.logger = LogManager.getLogger(data.name);
-        this.folder = new File(SERVERS, data.folderName);
+        this.folder = new File(SERVERS, data.name);
         this.propertiesFile = new File(folder, SERVER_PROPERTIES);
 
         if (folder.exists()) saveProperties();
@@ -180,7 +178,7 @@ public class Server
     {
         if (!propertiesLoaded) getProperties();
 
-        if (!data.fixedServerPort)
+        if (!Settings.SETTINGS.fixedPorts)
         {
             properties.setProperty(SERVER_PORT, String.valueOf(data.serverPort));
             properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
@@ -191,10 +189,10 @@ public class Server
             properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
         }
 
-        if (!data.fixedIP) properties.setProperty(SERVER_IP, data.ip);
+        if (!Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, data.ip);
         else data.ip = properties.getProperty(SERVER_IP, data.ip);
 
-        if (!data.fixedRConPort) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
+        if (!Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
         else data.rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(data.rconPort)));
 
         try
@@ -349,21 +347,6 @@ public class Server
         return data.name;
     }
 
-    public boolean getFixedServerPort()
-    {
-        return data.fixedServerPort;
-    }
-
-    public boolean getFixedRConPort()
-    {
-        return data.fixedRConPort;
-    }
-
-    public boolean getFixedIP()
-    {
-        return data.fixedIP;
-    }
-
     public int getRamMin()
     {
         return data.ramMin;
@@ -389,11 +372,6 @@ public class Server
         return data.extraMCParameters;
     }
 
-    public String getFolderName()
-    {
-        return data.folderName;
-    }
-
     public String getJarName()
     {
         return data.jarName;
@@ -409,9 +387,9 @@ public class Server
         return data.owner;
     }
 
-    public User getOwnerObject()
+    public List<String> getAdmins()
     {
-        return DataObject.getUserByName(data.owner);
+        return data.admins;
     }
 
     public String getPropertiesAsText()
@@ -480,13 +458,6 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         data.extraMCParameters = list;
-        saveAll();
-    }
-
-    public void setOwner(String owner) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.owner = owner;
         saveAll();
     }
 
@@ -609,7 +580,7 @@ public class Server
     private void saveAll()
     {
         saveProperties();
-        Settings.SETTINGS.save();
+        Settings.save();
     }
 
     public Process getProcess()

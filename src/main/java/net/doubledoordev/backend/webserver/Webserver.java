@@ -34,11 +34,18 @@
 package net.doubledoordev.backend.webserver;
 
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.DataObject;
-import net.doubledoordev.backend.util.PageResolver;
-import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.TypeHellhole;
+import net.doubledoordev.backend.util.*;
+
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.HashMap;
+import java.util.Map;
+
+import static net.doubledoordev.backend.Main.LOGGER;
+import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
 
 /**
  * Format for GET requests:
@@ -63,35 +70,95 @@ public class Webserver extends SimpleWebServer
     @Override
     public Response serve(IHTTPSession session)
     {
-        if (!session.getUri().startsWith("/static/") && !session.getUri().equals("/favicon.ico"))
-        {
-            Main.LOGGER.debug("getParms: " + session.getParms());
-            Main.LOGGER.debug("getHeaders: " + session.getHeaders());
-            Main.LOGGER.debug("getUri: " + session.getUri());
-            Main.LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
-            Main.LOGGER.debug("getMethod: " + session.getMethod());
-            Main.LOGGER.debug("getCookies: " + session.getCookies());
-            Main.LOGGER.debug("-----================================-----");
-        }
-
+        DataObject dataObject = new DataObject(session);
+        Main.printdebug(session, dataObject);
         switch (session.getMethod())
         {
             case POST:
-                handlePost(session);
+                handlePost(dataObject, session);
             case GET:
-                return serveGet(session);
+                return serveGet(dataObject, session);
             case PUT:
-                return servePut(session);
+                return servePut(dataObject, session);
         }
         return new Response(Response.Status.NO_CONTENT, MIME_PLAINTEXT, "No Content");
     }
 
-    private void handlePost(IHTTPSession session)
+    private void handlePost(DataObject dataObject, IHTTPSession session)
     {
-
+        try
+        {
+            session.parseBody(new HashMap<String, String>());
+            Map<String, String> map = session.getParms();
+            String split[] = session.getUri().substring(1).split("/");
+            switch (split[0]) // 0 => type id
+            {
+                case "login":
+                    if (map.containsKey("username") && map.containsKey("password"))
+                    {
+                        User user = DataObject.getUserByName(map.get("username"));
+                        if (user != null && user.verify(map.get("password")))
+                        {
+                            session.getCookies().set(COOKIE_KEY, user.getUsername() + "|" + user.getPasshash(), 30);
+                            dataObject.setUser(user);
+                        }
+                        else dataObject.adapt(new Exception("Login failed."));
+                    }
+                    else if (map.containsKey("logout"))
+                    {
+                        session.getCookies().delete(COOKIE_KEY);
+                        dataObject.setUser(null);
+                    }
+                    else if (dataObject.getUser() != null && map.containsKey("oldPassword") && map.containsKey("newPassword"))
+                    {
+                        if (dataObject.getUser().updatePassword(map.get("oldPassword"), map.get("newPassword")))
+                        {
+                            session.getCookies().set(COOKIE_KEY, dataObject.getUser().getUsername() + "|" + dataObject.getUser().getPasshash(), 30);
+                        }
+                        else dataObject.adapt(new Exception("Old password was wrong."));
+                    }
+                    else dataObject.adapt(new Exception("Form error."));
+                    break;
+                case "register":
+                    if (map.containsKey("username") && map.containsKey("password") && map.containsKey("areyouhuman"))
+                    {
+                        if (!map.get("areyouhuman").trim().equals("4")) dataObject.adapt(new Exception("You failed the human test..."));
+                        else
+                        {
+                            User user = DataObject.getUserByName(map.get("username"));
+                            if (!Constants.USERNAME_CHECK.matcher(map.get("username")).matches())
+                            {
+                                dataObject.adapt(new Exception("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please."));
+                            }
+                            else if (user == null)
+                            {
+                                try
+                                {
+                                    user = new User(map.get("username"), PasswordHash.createHash(map.get("password")));
+                                    Settings.SETTINGS.users.add(user);
+                                    session.getCookies().set(COOKIE_KEY, user.getUsername() + "|" + user.getPasshash(), 30);
+                                    dataObject.setUser(user);
+                                    Settings.save();
+                                }
+                                catch (NoSuchAlgorithmException | InvalidKeySpecException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            else dataObject.adapt(new Exception("Username taken."));
+                        }
+                    }
+                    else dataObject.adapt(new Exception("Form error."));
+                    break;
+            }
+        }
+        catch (IOException | ResponseException e)
+        {
+            e.printStackTrace();
+        }
     }
 
-    private Response servePut(IHTTPSession session)
+    private Response servePut(DataObject dataObject, IHTTPSession session)
     {
         try
         {
@@ -100,24 +167,12 @@ public class Webserver extends SimpleWebServer
             switch (split[0]) // 0 => type id
             {
                 case "server":
-                    Server server = DataObject.getServerByName(split[1]); // 1 => server name
-                    for (java.lang.reflect.Method method : server.getClass().getDeclaredMethods())
-                    {
-                        // Check to see if name is same and if the amount of parameters fits.
-                        // 2 => method name,    -3 => compensation for type, server name and method name.
-                        if (method.getName().equals(split[2]) && method.getParameterTypes().length == split.length - 3)
-                        {
-                            Object parms[] = new Object[split.length - 3];
-                            for (int i = 0; i < method.getParameterTypes().length; i++)
-                                parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + 3]);
-                            method.invoke(server, parms);
-                            return new Response(Response.Status.OK, MIME_PLAINTEXT, "OK");
-                        }
-                    }
-                    return new Response(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Server method not found");
+                    return invokeWithRefectionMagic(DataObject.getServerByName(split[1]), split);
+                case "users":
+                    return invokeWithRefectionMagic(DataObject.getUserByName(split[1]), split);
                 // ----------------------------------------------------------------------------------------------------------
                 case "console":
-                    server = DataObject.getServerByName(split[1]);
+                    Server server = DataObject.getServerByName(split[1]);
                     if (!server.getOnline()) return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "Server Offline.");
                     return new Response(Response.Status.OK, MIME_PLAINTEXT, server.getRCon().send(split[2]));
             }
@@ -130,7 +185,32 @@ public class Webserver extends SimpleWebServer
         return new Response(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Method not found");
     }
 
-    private Response serveGet(IHTTPSession session)
+    private Response invokeWithRefectionMagic(Object instance, String[] split) throws Exception
+    {
+        for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
+        {
+            // Check to see if name is same and if the amount of parameters fits.
+            // 2 => method name,    -3 => compensation for type, server name and method name.
+            if (method.getName().equals(split[2]) && method.getParameterTypes().length == split.length - 3)
+            {
+                try
+                {
+                    Object parms[] = new Object[split.length - 3];
+                    for (int i = 0; i < method.getParameterTypes().length; i++)
+                        parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + 3]);
+                    method.invoke(instance, parms);
+                    return new Response(Response.Status.OK, MIME_PLAINTEXT, "OK");
+                }
+                catch (Exception ignored)
+                {
+                    // Ignored because we don't care.
+                }
+            }
+        }
+        return new Response(Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Server method not found");
+    }
+
+    private Response serveGet(DataObject dataObject, IHTTPSession session)
     {
         String uri = session.getUri().toLowerCase();
         if (uri.startsWith(STATIC_PATH)) return super.respond(session.getHeaders(), uri.substring(STATIC_PATH.length()));
@@ -140,7 +220,7 @@ public class Webserver extends SimpleWebServer
             if (uri.equals("/")) uri += "index";
             uri = uri.substring(1);
             if (uri.endsWith("/")) uri = uri.substring(0, uri.length() - 1);
-            return new Response(PageResolver.resolve(uri, session));
+            return new Response(PageResolver.resolve(dataObject, uri, session));
         }
         catch (Exception e)
         {

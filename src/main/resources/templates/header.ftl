@@ -61,15 +61,19 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li id="homeNavTab"><a href="/">Home</a></li>
-                <li id="serverListNavTab"><a href="/servers">Server List</a></li>
-                <li id="serversNavTab" class="dropdown">
-                    <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <#list servers as server>
-                        <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name} <span class="label pull-right label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></a></li>
-                        </#list>
-                    </ul>
-                </li>
+                <#if user??>
+                    <li id="serverListNavTab"><a href="/servers">Server List</a></li>
+                    <li id="serversNavTab" class="dropdown">
+                        <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <#list servers as server>
+                                <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name} <span class="label pull-right label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></a></li>
+                            </#list>
+                        </ul>
+                    </li>
+                    <li id="newserverListNavTab"> <a href="/newserver">New Server</a></li>
+                </#if>
+                <li id="usersNavTab"><a href="/users">Users</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li id="loginNavTab"><a href="/login"><#if user??>${user.username}<#else>Log in</#if></a></li>

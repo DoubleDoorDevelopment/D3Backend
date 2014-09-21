@@ -35,7 +35,9 @@ package net.doubledoordev.backend;
 
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.DataObject;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.webserver.NanoHTTPD;
 import net.doubledoordev.backend.webserver.Webserver;
 import net.doubledoordev.backend.server.rcon.RCon;
 import org.apache.logging.log4j.LogManager;
@@ -64,9 +66,6 @@ public class Main
         mkdirs();
         LOGGER.info("Starting webserver...");
         Webserver.WEBSERVER.start();
-
-        LOGGER.info("New, filled GSON config:");
-        LOGGER.info(GSON.toJson(Settings.SETTINGS));
 
         LOGGER.info("+-------------------------------------------------------+");
         LOGGER.info("| Loading done. Press any key to terminate the program. |");
@@ -123,5 +122,17 @@ public class Main
             }
         }
         LOGGER.info("Bye!");
+    }
+
+    public static void printdebug(NanoHTTPD.IHTTPSession session, DataObject dataObject)
+    {
+        LOGGER.debug("getParms: " + session.getParms());
+        LOGGER.debug("getHeaders: " + session.getHeaders());
+        LOGGER.debug("getUri: " + session.getUri());
+        LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
+        LOGGER.debug("getMethod: " + session.getMethod());
+        LOGGER.debug("getCookies: " + session.getCookies());
+        LOGGER.debug("USER: " + dataObject.getUser());
+        LOGGER.debug("-----================================-----");
     }
 }

@@ -29,15 +29,48 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.permissions;
+package net.doubledoordev.backend.util;
+
+import net.doubledoordev.backend.server.Server;
+
+import java.util.HashSet;
 
 /**
  * @author Dries007
  */
-public enum Group
+public class PortRange
 {
-    ADMIN,
-    NORMAL
+    public int min = 25500;
+    public int max = 25600;
+
+    public int getNextAvailablePort(int ignored) throws OutOfPortsException
+    {
+        HashSet<Integer> usedPorts = new HashSet<>();
+        for (Server server : Settings.SETTINGS.servers)
+        {
+            usedPorts.add(server.getServerPort());
+            usedPorts.add(server.getRconPort());
+        }
+        for (int port = min; port < max; port ++)
+        {
+            if (!usedPorts.contains(port) && port != ignored) return port;
+        }
+        throw new OutOfPortsException();
+    }
+
+    public int getNextAvailablePort() throws OutOfPortsException
+    {
+        return getNextAvailablePort(-1);
+    }
+
+    public static class OutOfPortsException extends Throwable
+    {
+        private OutOfPortsException()
+        {
+            super("We have run out of available ports...");
+        }
+    }
 }

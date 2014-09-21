@@ -33,20 +33,56 @@
 
 package net.doubledoordev.backend.permissions;
 
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.PasswordHash;
+import net.doubledoordev.backend.util.Settings;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
 /**
  * @author Dries007
  */
 public class User
 {
     private String username, passhash;
-    private String cookiekey;
-    private int maxServers;
-    private Group group;
+    private int maxServers, maxRam;
+    private Group group = Group.NORMAL;
 
     public User(String username, String passhash)
     {
         this.username = username;
         this.passhash = passhash;
+    }
+
+    public boolean verify(String password)
+    {
+        try
+        {
+            return PasswordHash.validatePassword(password, passhash);
+        }
+        catch (InvalidKeySpecException | NoSuchAlgorithmException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public boolean updatePassword(String oldPass, String newPass)
+    {
+        if (verify(oldPass))
+        {
+            try
+            {
+                passhash = PasswordHash.createHash(newPass);
+                Settings.save();
+            }
+            catch (InvalidKeySpecException | NoSuchAlgorithmException e)
+            {
+                throw new RuntimeException(e);
+            }
+            return true;
+        }
+        else return false;
     }
 
     public String getUsername()
@@ -59,11 +95,6 @@ public class User
         return passhash;
     }
 
-    public String getCookiekey()
-    {
-        return cookiekey;
-    }
-
     public Group getGroup()
     {
         return group;
@@ -74,18 +105,39 @@ public class User
         return maxServers;
     }
 
-    public void setCookiekey(String cookiekey)
+    public int getMaxRam()
     {
-        this.cookiekey = cookiekey;
+        return maxRam;
+    }
+
+    public int getMaxRamLeft()
+    {
+        if (getMaxRam() == -1) return -1;
+        int leftover = getMaxRam();
+        for (Server server : Settings.SETTINGS.servers) leftover -= server.getRamMax();
+        return leftover > 0 ? leftover : 0;
+    }
+
+    public void setGroup(String group)
+    {
+        setGroup(Group.valueOf(group));
     }
 
     public void setGroup(Group group)
     {
         this.group = group;
+        Settings.save();
     }
 
     public void setMaxServers(int maxServers)
     {
         this.maxServers = maxServers;
+        Settings.save();
+    }
+
+    public void setMaxRam(int maxRam)
+    {
+        this.maxRam = maxRam;
+        Settings.save();
     }
 }

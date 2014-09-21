@@ -43,6 +43,7 @@ import net.doubledoordev.backend.util.winreg.JavaInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 /**
  * @author Dries007
@@ -51,6 +52,8 @@ public class Constants
 {
     public static final String NAME = "D3 Backend";
     public static final String LOCALHOST = "localhost";
+    public static String COOKIE_KEY = "user";
+    public static final Pattern USERNAME_CHECK = Pattern.compile("^[\\w-]+$");
 
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Server.class, new Server.Deserializer())
@@ -62,6 +65,8 @@ public class Constants
 
     public static final File ROOT = getRootFile();
     public static final File CONFIG_FILE = new File(ROOT, "config.json");
+    public static final File SERVERS_FILE = new File(ROOT, "servers.json");
+    public static final File USERS_FILE = new File(ROOT, "users.json");
     public static final File SERVERS = new File(ROOT, "servers");
 
     private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();

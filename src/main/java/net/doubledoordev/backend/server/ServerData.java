@@ -45,19 +45,16 @@ public class ServerData
 {
     public String name;
     public int serverPort = 25565;
-    public boolean fixedServerPort = false;
     public int rconPort = 25575;
-    public boolean fixedRConPort = false;
     public String ip = "";
-    public boolean fixedIP = false;
     public int ramMin = 1024;
     public int ramMax = 2048;
     public int permGen = 128;
     public List<String> extraJavaParameters = new ArrayList<>();
     public List<String> extraMCParameters = new ArrayList<>();
-    public String folderName = "server1";
     public String jarName = "minecraft_server.jar";
     public String rconPswd = Constants.randomString(10);
     public boolean autoStart = false;
-    public String owner = "";
+    public String owner;
+    public List<String> admins = new ArrayList<>();
 }

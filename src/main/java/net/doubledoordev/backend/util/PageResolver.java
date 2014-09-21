@@ -46,8 +46,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.doubledoordev.backend.util.DataObject.DATA_OBJECT;
-
 /**
  * @author Dries007
  */
@@ -64,19 +62,20 @@ public class PageResolver
         freemarkerCfg.setIncompatibleImprovements(new Version(2, 3, 20));  // FreeMarker 2.3.20
     }
 
-    public static String resolve(String uri, NanoHTTPD.IHTTPSession session)
+    public static String resolve(DataObject dataObject, String uri, NanoHTTPD.IHTTPSession session)
     {
         String[] args = uri.split("/");
+        dataObject.adapt(args);
         StringWriter stringWriter = new StringWriter();
         try
         {
-            freemarkerCfg.getTemplate(getTemplateFor(args, session)).process(DATA_OBJECT.adapt(args, session), stringWriter);
+            freemarkerCfg.getTemplate(getTemplateFor(args, session)).process(dataObject, stringWriter);
         }
         catch (FileNotFoundException e)
         {
             try
             {
-                freemarkerCfg.getTemplate("404.ftl").process(DATA_OBJECT.adapt(e, session), stringWriter);
+                freemarkerCfg.getTemplate("404.ftl").process(dataObject, stringWriter);
             }
             catch (Exception e1)
             {
@@ -88,7 +87,7 @@ public class PageResolver
         {
             try
             {
-                freemarkerCfg.getTemplate("500.ftl").process(DATA_OBJECT.adapt(e, session), stringWriter);
+                freemarkerCfg.getTemplate("500.ftl").process(dataObject.adapt(e), stringWriter);
             }
             catch (Exception e1)
             {
@@ -107,6 +106,8 @@ public class PageResolver
                 return args[0] + ".ftl";
             case "servers":
                 return args.length > 1 ? "server.ftl" : "serverlist.ftl";
+            case "users":
+                return args.length > 1 ? "user.ftl" : "userlist.ftl";
         }
     }
 }

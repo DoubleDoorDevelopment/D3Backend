@@ -33,19 +33,22 @@
 
 package net.doubledoordev.backend.util;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static net.doubledoordev.backend.util.Constants.CONFIG_FILE;
-import static net.doubledoordev.backend.util.Constants.GSON;
+import static net.doubledoordev.backend.Main.LOGGER;
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * Global settings
@@ -55,41 +58,65 @@ import static net.doubledoordev.backend.util.Constants.GSON;
 @SuppressWarnings("ALL")
 public class Settings
 {
-    public static final Settings SETTINGS;
+    public static final Settings SETTINGS = new Settings();
 
     static
     {
-        Settings SETTINGS1;
+        JsonParser jsonParser = new JsonParser();
         try
         {
-            SETTINGS1 = GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
+            JsonObject jsonElement = jsonParser.parse(new FileReader(CONFIG_FILE)).getAsJsonObject();
+            SETTINGS.hostname = jsonElement.get("hostname").getAsString();
+            SETTINGS.port = jsonElement.get("port").getAsInt();
+            SETTINGS.useJava8 = jsonElement.get("useJava8").getAsBoolean();
+            SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
+            SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
+            SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
+
+            if (SERVERS_FILE.exists()) Collections.addAll(SETTINGS.servers, GSON.fromJson(new FileReader(SERVERS_FILE), Server[].class));
+
+            if (USERS_FILE.exists()) Collections.addAll(SETTINGS.users, GSON.fromJson(new FileReader(USERS_FILE), User[].class));
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
-            SETTINGS1 = new Settings();
+            // we don't care yet. TODO <<-
         }
-        SETTINGS = SETTINGS1;
     }
+    public List<Server> servers = new ArrayList<>();
+    public List<User> users = new ArrayList<>();
 
     public String hostname = "localhost";
     public int port = 80;
     public boolean useJava8 = false;
-    public List<Server> servers = new ArrayList<>();
-    public List<User> users = new ArrayList<>();
+    public boolean fixedPorts = false;
+    public boolean fixedIP = false;
+    public PortRange portRange = new PortRange();
 
     private Settings()
     {
     }
 
-    public void save()
+    public static void save()
     {
         try
         {
-            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(this));
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("hostname", SETTINGS.hostname);
+            jsonObject.addProperty("port", SETTINGS.port);
+            jsonObject.addProperty("useJava8", SETTINGS.useJava8);
+            jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
+            jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
+            jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
+            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
+
+            FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers));
+            FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users));
+
+            LOGGER.info("Saved settings.");
         }
         catch (IOException e)
         {
-            Main.LOGGER.error("Error saving the config file...", e);
+            LOGGER.error("Error saving the config file...", e);
         }
     }
 }

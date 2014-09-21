@@ -33,13 +33,14 @@
 
 package net.doubledoordev.backend.util;
 
+import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 
-import java.io.IOException;
 import java.util.List;
 
+import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
 import static net.doubledoordev.backend.util.Settings.*;
 
 /**
@@ -49,13 +50,21 @@ import static net.doubledoordev.backend.util.Settings.*;
  */
 public class DataObject
 {
-    public static final DataObject DATA_OBJECT = new DataObject();
-
-    private List<Server> servers = SETTINGS.servers;
-    private List<User> users  = SETTINGS.users;
+    private static List<Server> servers = SETTINGS.servers;
+    private static List<User> users  = SETTINGS.users;
     private Server server;
     private User user;
     private String message;
+
+    public DataObject(NanoHTTPD.IHTTPSession session)
+    {
+        if (session.getCookies().has(COOKIE_KEY))
+        {
+            String[] cookie = session.getCookies().read(COOKIE_KEY).split("\\|");
+            User user = getUserByName(cookie[0]);
+            if (user != null && user.getPasshash().equals(cookie[1])) this.user = user;
+        }
+    }
 
     public List<Server> getServers()
     {
@@ -66,7 +75,7 @@ public class DataObject
     {
         if (name == null) return null;
         for (Server server : SETTINGS.servers) if (server.getName().equalsIgnoreCase(name)) return server;
-        throw new IllegalArgumentException(String.format("Server name %s is invalid.", name));
+        return null;
     }
 
     public List<User> getUsers()
@@ -78,7 +87,7 @@ public class DataObject
     {
         if (name == null) return null;
         for (User user : SETTINGS.users) if (user.getUsername().equalsIgnoreCase(name)) return user;
-        throw new IllegalArgumentException(String.format("Server name %s is invalid.", name));
+        return null;
     }
 
     public Server getServer()
@@ -91,33 +100,64 @@ public class DataObject
         return user;
     }
 
-    public DataObject adapt(String[] args, NanoHTTPD.IHTTPSession session)
+    public String getMessage()
     {
-        String server = null;
-        switch (args[0])
+        return message;
+    }
+
+    public boolean getAdmin()
+    {
+        return user != null && user.getGroup() == Group.ADMIN;
+    }
+
+    public int getNextAvailablePort(int ignored) throws PortRange.OutOfPortsException
+    {
+        return SETTINGS.portRange.getNextAvailablePort(ignored);
+    }
+
+    public int getNextAvailablePort() throws PortRange.OutOfPortsException
+    {
+        return SETTINGS.portRange.getNextAvailablePort();
+    }
+
+    public boolean getFixedports()
+    {
+        return Settings.SETTINGS.fixedPorts;
+    }
+
+    public boolean getFixedip()
+    {
+        return Settings.SETTINGS.fixedIP;
+    }
+
+    public String randomString(int length)
+    {
+        return Constants.randomString(length);
+    }
+
+    public DataObject adapt(String[] args)
+    {
+        if (args.length > 0)
         {
-            case "console":
-            case "servers":
-                if (args.length > 1) server = args[1];
-                break;
+            switch (args[0])
+            {
+                case "console":
+                case "servers":
+                    if (args.length > 1) server = getServerByName(args[1]);
+                    break;
+            }
         }
-        this.server = getServerByName(server);
-
-        String username = session.getCookies().read("username");
-        this.user = getUserByName(username);
-        if (user != null && !user.getPasshash().equals(session.getCookies().read("userhash"))) this.user = null;
-
         return this;
     }
 
-    public Object adapt(Throwable e, NanoHTTPD.IHTTPSession session)
+    public Object adapt(Throwable e)
     {
         this.message = e.getLocalizedMessage();
-
-        String username = session.getCookies().read("username");
-        this.user = getUserByName(username);
-        if (user != null && !user.getPasshash().equals(session.getCookies().read("userhash"))) this.user = null;
-
         return this;
+    }
+
+    public void setUser(User user)
+    {
+        this.user = user;
     }
 }

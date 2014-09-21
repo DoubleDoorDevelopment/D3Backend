@@ -1628,6 +1628,11 @@ public abstract class NanoHTTPD
             }
         }
 
+        public boolean has(String name)
+        {
+            return cookies.containsKey(name);
+        }
+
         @Override
         public Iterator<String> iterator()
         {
