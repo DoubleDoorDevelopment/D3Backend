@@ -65,7 +65,7 @@ public class Main
         LOGGER.info("Finding Java versions...");
         //noinspection ResultOfMethodCallIgnored
         Constants.JAVAPATH.length();
-
+        Settings.save();
         LOGGER.info("Making necessary folders...");
         mkdirs();
         LOGGER.info("Starting webserver...");

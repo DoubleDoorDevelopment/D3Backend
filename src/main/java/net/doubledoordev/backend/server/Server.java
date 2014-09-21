@@ -562,6 +562,7 @@ public class Server
     @SuppressWarnings("UnusedDeclaration")
     public String getPropertiesAsText()
     {
+        getProperties();
         StringWriter stringWriter = new StringWriter();
         try
         {
@@ -644,12 +645,11 @@ public class Server
                         amount = getPermGen();
                         if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
                     }
-
-                    arguments.addAll(data.extraJavaParameters);
+                    for (String s : data.extraJavaParameters) if (s.trim().length() != 0) arguments.add(s.trim());
                     arguments.add("-jar");
                     arguments.add(data.jarName);
                     arguments.add("nogui");
-                    arguments.addAll(data.extraMCParameters);
+                    for (String s : data.extraMCParameters) if (s.trim().length() != 0) arguments.add(s.trim());
 
                     // Debug printout
                     logger.info("Arguments: " + arguments.toString());
