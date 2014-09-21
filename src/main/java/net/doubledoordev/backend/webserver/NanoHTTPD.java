@@ -1181,7 +1181,7 @@ public abstract class NanoHTTPD
 
                 // If the method is POST, there may be parameters
                 // in data section, too, read it:
-                if (Method.POST.equals(method))
+                if (Method.POST.equals(method) || Method.PUT.equals(method))
                 {
                     String contentType = "";
                     String contentTypeHeader = headers.get("content-type");
@@ -1238,10 +1238,6 @@ public abstract class NanoHTTPD
                             files.put("postData", postLine);
                         }
                     }
-                }
-                else if (Method.PUT.equals(method))
-                {
-                    files.put("content", saveTmpFile(fbuf, 0, fbuf.limit()));
                 }
             }
             finally

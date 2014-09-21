@@ -38,7 +38,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/font-awesome.css" rel="stylesheet">
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
     <style>
         body {
             padding-top: 70px;
@@ -61,24 +61,28 @@
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li id="homeNavTab"><a href="/">Home</a></li>
-                <#if user??>
-                    <li id="serverListNavTab"><a href="/servers">Server List</a></li>
-                    <li id="serversNavTab" class="dropdown">
-                        <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu">
-                            <#list servers as server>
-                                <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name} <span class="label pull-right label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></a></li>
-                            </#list>
-                        </ul>
-                    </li>
-                    <li id="newserverListNavTab"> <a href="/newserver">New Server</a></li>
-                </#if>
+            <#if user??>
+                <li id="serverListNavTab"><a href="/servers">Server List</a></li>
+                <li id="serversNavTab" class="dropdown">
+                    <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span
+                            class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <#list Settings.servers as server>
+                            <#if server.canUserControl(user)>
+                                <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name}</a></li>
+                            </#if>
+                        </#list>
+                    </ul>
+                </li>
+                <li id="newserverListNavTab"><a href="/newserver">New Server</a></li>
                 <li id="usersNavTab"><a href="/users">Users</a></li>
+            </#if>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li id="loginNavTab"><a href="/login"><#if user??>${user.username}<#else>Log in</#if></a></li>
             </ul>
-        </div><!--/.nav-collapse -->
+        </div>
+        <!--/.nav-collapse -->
     </div>
 </div>
 <div class="container">

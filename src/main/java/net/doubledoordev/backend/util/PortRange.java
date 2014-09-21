@@ -39,6 +39,8 @@ import net.doubledoordev.backend.server.Server;
 import java.util.HashSet;
 
 /**
+ * Used to make sure all port assigned are within a range
+ *
  * @author Dries007
  */
 public class PortRange
@@ -49,12 +51,12 @@ public class PortRange
     public int getNextAvailablePort(int ignored) throws OutOfPortsException
     {
         HashSet<Integer> usedPorts = new HashSet<>();
-        for (Server server : Settings.SETTINGS.servers)
+        for (Server server : Settings.SETTINGS.servers.values())
         {
             usedPorts.add(server.getServerPort());
             usedPorts.add(server.getRconPort());
         }
-        for (int port = min; port < max; port ++)
+        for (int port = min; port < max; port++)
         {
             if (!usedPorts.contains(port) && port != ignored) return port;
         }
@@ -66,7 +68,7 @@ public class PortRange
         return getNextAvailablePort(-1);
     }
 
-    public static class OutOfPortsException extends Throwable
+    public static class OutOfPortsException extends Exception
     {
         private OutOfPortsException()
         {

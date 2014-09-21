@@ -40,27 +40,24 @@
     <link href="/static/css/font-awesome.css" rel="stylesheet">
 </head>
 <body>
-    <b>Note: This is not a real console. This is just a command interface that displays responses.</b>
-    <textarea class="textarea form-control" id="text" style="height: 445px;"></textarea>
-    <input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
-    <script>
-        function sendCommand($input)
-        {
-            xmlhttp=new XMLHttpRequest();
-            xmlhttp.open('PUT', window.location.origin + "/console/${server.name}/" + encodeURIComponent($input.value), true)
-            xmlhttp.send(null);
+<b>Note: This is not a real console. This is just a command interface that displays responses.</b>
+<textarea class="textarea form-control" id="text" style="height: 445px;"></textarea>
+<input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
+<script>
+    function sendCommand($input) {
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('PUT', window.location.origin + "/console/${server.name}/" + encodeURIComponent($input.value), true)
+        xmlhttp.send(null);
 
-            xmlhttp.onreadystatechange=function()
-            {
-                if (xmlhttp.readyState == 4)
-                {
-                    if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                    else document.getElementById("text").value += xmlhttp.responseText + "\n";
-                }
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
+                else document.getElementById("text").value += xmlhttp.responseText + "\n";
             }
-
-            $input.value="";
         }
-    </script>
+
+        $input.value = "";
+    }
+</script>
 </body>
 </html>

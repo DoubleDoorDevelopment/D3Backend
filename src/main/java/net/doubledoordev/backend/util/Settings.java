@@ -33,19 +33,16 @@
 
 package net.doubledoordev.backend.util;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import net.doubledoordev.backend.Main;
+import com.google.gson.*;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.*;
 
 import static net.doubledoordev.backend.Main.LOGGER;
 import static net.doubledoordev.backend.util.Constants.*;
@@ -62,38 +59,76 @@ public class Settings
 
     static
     {
-        JsonParser jsonParser = new JsonParser();
         try
         {
-            JsonObject jsonElement = jsonParser.parse(new FileReader(CONFIG_FILE)).getAsJsonObject();
-            SETTINGS.hostname = jsonElement.get("hostname").getAsString();
-            SETTINGS.port = jsonElement.get("port").getAsInt();
-            SETTINGS.useJava8 = jsonElement.get("useJava8").getAsBoolean();
-            SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
-            SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
-            SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
+            FileReader fileReader;
+            if (CONFIG_FILE.exists())
+            {
+                fileReader = new FileReader(CONFIG_FILE);
+                JsonObject jsonElement = Constants.JSONPARSER.parse(fileReader).getAsJsonObject();
+                if (jsonElement.has("hostname")) SETTINGS.hostname =  jsonElement.get("hostname").getAsString();
+                if (jsonElement.has("port")) SETTINGS.port = jsonElement.get("port").getAsInt();
+                if (jsonElement.has("useJava8")) SETTINGS.useJava8 = jsonElement.get("useJava8").getAsBoolean();
+                if (jsonElement.has("fixedPorts")) SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
+                if (jsonElement.has("fixedIP")) SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
+                if (jsonElement.has("portRange")) SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
 
-            if (SERVERS_FILE.exists()) Collections.addAll(SETTINGS.servers, GSON.fromJson(new FileReader(SERVERS_FILE), Server[].class));
+                if (jsonElement.has("anonPages"))
+                {
+                    SETTINGS.anonPages = new ArrayList<>();
+                    JsonArray array = jsonElement.getAsJsonArray("anonPages");
+                    for (int i = 0; i < array.size(); i ++)
+                        SETTINGS.anonPages.add(array.get(i).getAsString());
+                }
+                fileReader.close();
+            }
 
-            if (USERS_FILE.exists()) Collections.addAll(SETTINGS.users, GSON.fromJson(new FileReader(USERS_FILE), User[].class));
+            if (SERVERS_FILE.exists())
+            {
+                fileReader = new FileReader(SERVERS_FILE);
+                if (SERVERS_FILE.exists())
+                    for (Server server : GSON.fromJson(fileReader, Server[].class))
+                        SETTINGS.servers.put(server.getName(), server);
+                fileReader.close();
+            }
+
+            if (USERS_FILE.exists())
+            {
+                fileReader = new FileReader(USERS_FILE);
+                if (USERS_FILE.exists())
+                    for (User user : GSON.fromJson(fileReader, User[].class))
+                        SETTINGS.users.put(user.getUsername(), user);
+                fileReader.close();
+            }
         }
         catch (Exception e)
         {
-            // we don't care yet. TODO <<-
+            throw new RuntimeException(e);
         }
     }
-    public List<Server> servers = new ArrayList<>();
-    public List<User> users = new ArrayList<>();
 
-    public String hostname = "localhost";
+    public Map<String, Server> servers = new HashMap<>();
+    public Map<String, User> users = new HashMap<>();
+
+    public String hostname;
     public int port = 80;
     public boolean useJava8 = false;
     public boolean fixedPorts = false;
     public boolean fixedIP = false;
     public PortRange portRange = new PortRange();
+    public List<String> anonPages = Arrays.asList("index", "login", "register");
 
     private Settings()
     {
+        try
+        {
+            hostname = Inet4Address.getLocalHost().getHostAddress();
+        }
+        catch (UnknownHostException e)
+        {
+            e.printStackTrace();
+            hostname = "";
+        }
     }
 
     public static void save()
@@ -106,11 +141,14 @@ public class Settings
             jsonObject.addProperty("useJava8", SETTINGS.useJava8);
             jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
             jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
+            JsonArray anonPages = new JsonArray();
+            for (String s : SETTINGS.anonPages) anonPages.add(new JsonPrimitive(s));
+            jsonObject.add("anonPages", anonPages);
             jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
             FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
 
-            FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers));
-            FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users));
+            FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
+            FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
 
             LOGGER.info("Saved settings.");
         }
@@ -118,5 +156,55 @@ public class Settings
         {
             LOGGER.error("Error saving the config file...", e);
         }
+    }
+
+    public Collection<Server> getServers()
+    {
+        return servers.values();
+    }
+
+    public Collection<User> getUsers()
+    {
+        return users.values();
+    }
+
+    public static Server getServerByName(String name)
+    {
+        return SETTINGS.servers.get(name);
+    }
+
+    public static User getUserByName(String name)
+    {
+        return SETTINGS.users.get(name);
+    }
+
+    public String getHostname()
+    {
+        return hostname;
+    }
+
+    public int getPort()
+    {
+        return port;
+    }
+
+    public boolean isUseJava8()
+    {
+        return useJava8;
+    }
+
+    public boolean isFixedPorts()
+    {
+        return fixedPorts;
+    }
+
+    public boolean isFixedIP()
+    {
+        return fixedIP;
+    }
+
+    public PortRange getPortRange()
+    {
+        return portRange;
     }
 }

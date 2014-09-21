@@ -771,6 +771,7 @@ public class RCon
 
     /**
      * Send raw command in parts.
+     *
      * @param parts
      * @return
      * @throws Exception

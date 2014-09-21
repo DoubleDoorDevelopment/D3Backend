@@ -34,13 +34,18 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.*;
-import net.doubledoordev.backend.Main;
-import net.doubledoordev.backend.util.Constants;
-import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
+import net.doubledoordev.backend.permissions.Group;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
 import net.doubledoordev.backend.server.rcon.RCon;
+import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
+import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,13 +53,11 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.*;
 
-import static net.doubledoordev.backend.util.Constants.LOCALHOST;
-import static net.doubledoordev.backend.util.Constants.NAME;
-import static net.doubledoordev.backend.util.Constants.SERVERS;
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * Class that holds methods related to Server instances.
@@ -67,25 +70,47 @@ public class Server
     private static final String SERVER_PROPERTIES = "server.properties";
     private static final String SERVER_PORT = "server-port";
     private static final String QUERY_PORT = "query.port";
+    private static final String QUERY_ENABLE = "enable-query";
+    private static final String RCON_ENABLE = "enable-rcon";
+    private static final String RCON_PASSWORD = "rcon.password";
     private static final String RCON_PORT = "rcon.port";
     private static final String SERVER_IP = "server-ip";
+    /**
+     * 10 seconds
+     */
     private static final int CACHE_TIMEOUT = 1000 * 10;
 
+    /**
+     * Java bean holding all the config data
+     */
     private final ServerData data;
 
+    /**
+     * Used to reroute server output to our console.
+     * NOT LOGGED TO FILE!
+     */
     private Logger logger;
     private File folder;
     private File propertiesFile;
     private boolean propertiesLoaded = false;
     private Properties properties = new Properties();
 
+    /**
+     * RCon instance + timer to avoid long page load times.
+     */
     private RCon rCon;
     private long lastRcon = 0L;
 
+    /**
+     * MCQuery and QueryResponse instances + timer to avoid long page load times.
+     */
     private MCQuery query;
     private long lastQuery = 0L;
     private QueryResponse cachedResponse;
 
+    /**
+     * The process the server will be running in
+     */
     private Process process;
 
     public Server(ServerData data)
@@ -95,8 +120,8 @@ public class Server
         this.folder = new File(SERVERS, data.name);
         this.propertiesFile = new File(folder, SERVER_PROPERTIES);
 
-        if (folder.exists()) saveProperties();
-        else Main.LOGGER.warn("Server folder " + folder.getName() + " does not exist.");
+        if (!folder.exists()) folder.mkdir();
+        saveProperties();
 
         // Check to see if the server is running outside the backend, if so reboot please!
         if (getRCon() != null)
@@ -109,7 +134,8 @@ public class Server
                     try
                     {
                         RCon rCon = getRCon();
-                        for (String user : getPlayerList()) rCon.send("kick", user, NAME + " is taking over! Server Reboot!");
+                        for (String user : getPlayerList())
+                            rCon.send("kick", user, NAME + " is taking over! Server Reboot!");
                         rCon.stop();
                         startServer();
                     }
@@ -121,19 +147,25 @@ public class Server
             }).start();
         }
 
+        // Handle autostart
         if (!getOnline() && getAutoStart())
         {
             try
             {
                 startServer();
             }
-            catch (ServerOnlineException e)
+            catch (Exception e)
             {
                 //
             }
         }
     }
 
+    /**
+     * Proper way of obtaining a RCon instance
+     *
+     * @return null if offine!
+     */
     public RCon getRCon()
     {
         if (rCon == null && System.currentTimeMillis() - lastRcon > CACHE_TIMEOUT)
@@ -151,12 +183,19 @@ public class Server
         return rCon;
     }
 
+    /**
+     * Proper way of obtaining a MCQuery instance
+     */
     public MCQuery getQuery()
     {
         if (query == null) query = new MCQuery(LOCALHOST, data.serverPort);
         return query;
     }
 
+    /**
+     * The properties from the server.properties file
+     * Reloads form file!
+     */
     public Properties getProperties()
     {
         propertiesLoaded = true;
@@ -164,7 +203,9 @@ public class Server
         {
             try
             {
-                properties.load(new FileReader(propertiesFile));
+                FileReader fileReader = new FileReader(propertiesFile);
+                properties.load(fileReader);
+                fileReader.close();
             }
             catch (IOException e)
             {
@@ -174,6 +215,9 @@ public class Server
         return properties;
     }
 
+    /**
+     * Saves the server.properties
+     */
     public void saveProperties()
     {
         if (!propertiesLoaded) getProperties();
@@ -195,11 +239,17 @@ public class Server
         if (!Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
         else data.rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(data.rconPort)));
 
+        properties.put(RCON_ENABLE, "true");
+        properties.put(QUERY_ENABLE, "true");
+        properties.put(RCON_PASSWORD, data.rconPswd);
+
         try
         {
             if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
                 propertiesFile.createNewFile();
-            properties.store(new FileWriter(propertiesFile), "Minecraft server properties\nModified by D3Backend");
+            FileWriter fileWriter = new FileWriter(propertiesFile);
+            properties.store(fileWriter, "Minecraft server properties\nModified by D3Backend");
+            fileWriter.close();
         }
         catch (IOException e)
         {
@@ -207,6 +257,10 @@ public class Server
         }
     }
 
+    /**
+     * Check to see if the cachedResponse is still valid.
+     * If not, its automatically renewed.
+     */
     private void checkCachedResponse()
     {
         if (System.currentTimeMillis() - lastQuery > CACHE_TIMEOUT)
@@ -216,6 +270,11 @@ public class Server
         }
     }
 
+    /**
+     * Check server online status.
+     * Ony detects when the process is started by us.
+     * Bypass this limitation with RCon
+     */
     public boolean getOnline()
     {
         try
@@ -230,21 +289,15 @@ public class Server
         }
     }
 
-    public boolean isPortAvailable(int port)
-    {
-        try
-        {
-            ServerSocket socket = new ServerSocket();
-            socket.bind(data.ip == null || data.ip.trim().length() == 0 ? new InetSocketAddress(port) : new InetSocketAddress(data.ip, port));
-            socket.close();
-            return true;
-        }
-        catch (IOException e)
-        {
-            return false;
-        }
-    }
-
+    /**
+     * Invokes getter method with reflection.
+     * Used in templates as 'get($key)' where $key can be assigned by a list.
+     *
+     * @param name of property
+     * @return null or the result of the method
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
     public Object get(String name) throws InvocationTargetException, IllegalAccessException
     {
         for (Method method : this.getClass().getDeclaredMethods())
@@ -252,146 +305,261 @@ public class Server
         return null;
     }
 
+    /**
+     * @return Human readable server address
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public String getDisplayAddress()
     {
         StringBuilder builder = new StringBuilder(25);
-        if (data.ip == null || data.ip.trim().length() == 0) builder.append(LOCALHOST);
-        else builder.append(data.ip);
+        if (data.ip != null && data.ip.trim().length() != 0) builder.append(data.ip);
+        else builder.append(Settings.SETTINGS.hostname);
         builder.append(':').append(data.serverPort);
         return builder.toString();
     }
 
+    /**
+     * Set a server.properties property and save the file.
+     *
+     * @param key   the key
+     * @param value the value
+     * @throws ServerOnlineException when the server is online
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public void setProperty(String key, String value) throws ServerOnlineException
     {
         if (getOnline()) throw new ServerOnlineException();
         properties.put(key, value);
-        saveAll();
+        saveProperties();
     }
 
+    /**
+     * Get a server.properties
+     *
+     * @param key the key
+     * @return the value
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public String getProperty(String key)
     {
         return properties.getProperty(key);
     }
 
+    /**
+     * Get all server.properties keys
+     *
+     * @return the value
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public Enumeration<Object> getPropertyKeys()
     {
         return properties.keys();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getServerPort()
     {
         return Integer.parseInt(getProperty(SERVER_PORT));
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getRconPort()
     {
         return Integer.parseInt(getProperty(RCON_PORT));
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getOnlinePlayers()
     {
         checkCachedResponse();
         return cachedResponse == null ? -1 : cachedResponse.getOnlinePlayers();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getSlots()
     {
         checkCachedResponse();
         return cachedResponse == null ? -1 : cachedResponse.getMaxPlayers();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getMotd()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getMotd();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getGameMode()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getGameMode();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getMapName()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getMapName();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public ArrayList<String> getPlayerList()
     {
         checkCachedResponse();
         return cachedResponse == null ? new ArrayList<String>() : cachedResponse.getPlayerList();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getPlugins()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getPlugins();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getVersion()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getVersion();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getGameID()
     {
         checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getGameID();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getName()
     {
         return data.name;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public int getRamMin()
     {
         return data.ramMin;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setRamMin(int ramMin) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.ramMin = ramMin;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public int getRamMax()
     {
         return data.ramMax;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setRamMax(int ramMax) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.ramMax = ramMax;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public int getPermGen()
     {
         return data.permGen;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setPermGen(int permGen) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.permGen = permGen;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public List<String> getExtraJavaParameters()
     {
         return data.extraJavaParameters;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setExtraJavaParameters(String list) throws ServerOnlineException
+    {
+        setExtraJavaParameters(Arrays.asList(list.split(",")));
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setExtraJavaParameters(List<String> list) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.extraJavaParameters = list;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public List<String> getExtraMCParameters()
     {
         return data.extraMCParameters;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setExtraMCParameters(String list) throws ServerOnlineException
+    {
+        setExtraMCParameters(Arrays.asList(list.split(",")));
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void setExtraMCParameters(List<String> list) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.extraMCParameters = list;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public String getJarName()
     {
         return data.jarName;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setJarName(String jarName) throws ServerOnlineException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        data.jarName = jarName;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public boolean getAutoStart()
     {
         return data.autoStart;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public void setAutoStart(boolean autoStart)
+    {
+        logger.error("setAutoStart " + autoStart);
+        data.autoStart = autoStart;
+        Settings.save();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public String getOwner()
     {
         return data.owner;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public List<String> getAdmins()
     {
         return data.admins;
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public String getPropertiesAsText()
     {
         StringWriter stringWriter = new StringWriter();
@@ -406,12 +574,13 @@ public class Server
         return stringWriter.toString();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
     public void setPropertiesAsText(String urlEncodedText)
     {
         try
         {
             properties.load(new StringReader(urlEncodedText));
-            saveAll();
+            saveProperties();
         }
         catch (IOException e)
         {
@@ -419,78 +588,40 @@ public class Server
         }
     }
 
-    public void setAutoStart(boolean autoStart)
-    {
-        logger.error("setAutoStart " + autoStart);
-        data.autoStart = autoStart;
-        saveAll();
-    }
-
-    public void setRamMin(int ramMin) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.ramMin = ramMin;
-        saveAll();
-    }
-
-    public void setRamMax(int ramMax) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.ramMax = ramMax;
-        saveAll();
-    }
-
-    public void setPermGen(int permGen) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.permGen = permGen;
-        saveAll();
-    }
-
-    public void setExtraJavaParameters(List<String> list) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.extraJavaParameters = list;
-        saveAll();
-    }
-
-    public void setExtraMCParameters(List<String> list) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.extraMCParameters = list;
-        saveAll();
-    }
-
-    public void setExtraJavaParameters(String list) throws ServerOnlineException
-    {
-        setExtraJavaParameters(Arrays.asList(list.split(",")));
-    }
-
-    public void setExtraMCParameters(String list) throws ServerOnlineException
-    {
-        setExtraMCParameters(Arrays.asList(list.split(",")));
-    }
-
+    /**
+     * Clear the extraJavaParameters array.
+     *
+     * @throws ServerOnlineException
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public void setExtraJavaParameters() throws ServerOnlineException
     {
         setExtraJavaParameters(Arrays.asList(new String[0]));
     }
 
+    /**
+     * Clear the extraMCParameters array.
+     *
+     * @throws ServerOnlineException
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public void setExtraMCParameters() throws ServerOnlineException
     {
         setExtraMCParameters(Arrays.asList(new String[0]));
     }
 
-    public void setJarName(String jarName) throws ServerOnlineException
+    /**
+     * Start the server in a process controlled by us.
+     * Threaded to avoid haning.
+     *
+     * @throws ServerOnlineException
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public void startServer() throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
-        data.jarName = jarName;
-        saveAll();
-    }
-
-    public void startServer() throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
+        if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
+        if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
         new Thread(new Runnable()
         {
             @Override
@@ -499,6 +630,9 @@ public class Server
                 logger.info("Starting server ................");
                 try
                 {
+                    /**
+                     * Build arguments list.
+                     */
                     List<String> arguments = new ArrayList<>();
                     arguments.add(Constants.JAVAPATH);
                     arguments.add("-server");
@@ -517,8 +651,12 @@ public class Server
                     arguments.add("nogui");
                     arguments.addAll(data.extraMCParameters);
 
+                    // Debug printout
                     logger.info("Arguments: " + arguments.toString());
 
+                    /**
+                     * Make ProcessBuilder, set rundir, and make sure the io gets redirected
+                     */
                     ProcessBuilder pb = new ProcessBuilder(arguments);
                     pb.directory(folder);
                     pb.redirectErrorStream(true);
@@ -541,6 +679,9 @@ public class Server
                         }
                     }, data.name.concat("-streamEater")).start();
 
+                    /**
+                     * Renews cashed vars so they are up to date when the page is refreshed.
+                     */
                     lastRcon = 0L;
                     getRCon();
                     lastQuery = 0L;
@@ -551,9 +692,16 @@ public class Server
                     logger.error(e);
                 }
             }
-        }).start();
+        }, "ServerStarter-" + getName()).start(); // <-- Very important call.
     }
 
+    /**
+     * Stop the server gracefully
+     *
+     * @return true if successful
+     * @throws ServerOnlineException
+     */
+    @SuppressWarnings("UnusedDeclaration")
     public boolean stopServer() throws ServerOnlineException
     {
         if (!getOnline()) return false;
@@ -570,17 +718,13 @@ public class Server
         }
     }
 
-    public boolean forceStopServer() throws ServerOnlineException
+    @SuppressWarnings("UnusedDeclaration")
+    public boolean forceStopServer() throws ServerOfflineException
     {
-        if (!getOnline()) return false;
+        if (!getOnline()) throw new ServerOfflineException();
+        logger.warn("Killing server process!");
         process.destroy();
         return true;
-    }
-
-    private void saveAll()
-    {
-        saveProperties();
-        Settings.save();
     }
 
     public Process getProcess()
@@ -588,6 +732,57 @@ public class Server
         return process;
     }
 
+    public boolean canUserControl(User user)
+    {
+        if (user == null) return false;
+        if (user.getGroup() == Group.ADMIN || user.getUsername().equals(getOwner())) return true;
+        for (String admin : getAdmins()) if (admin.equals(user.getUsername())) return true;
+        return false;
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void delete() throws ServerOnlineException, IOException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        FileUtils.deleteDirectory(folder);
+        Settings.SETTINGS.servers.remove(getName());
+    }
+
+    /**
+     * Remove the old and download the new server jar file
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public void setVersion(String version) throws ServerOnlineException, IOException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        File jarfile = new File(folder, getJarName());
+        if (jarfile.exists()) jarfile.delete();
+        File tempFile = new File(folder, getJarName() + ".tmp");
+        FileUtils.copyURLToFile(new URL(Constants.JAR_URL.replace("%ID%", version)), tempFile);
+        tempFile.renameTo(jarfile);
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void downloadModpack(String zipURL, boolean purge) throws IOException, ZipException
+    {
+        if (purge) FileUtils.deleteDirectory(folder);
+        folder.mkdir();
+
+        File zip = new File(folder, "modpack.zip");
+        FileUtils.copyURLToFile(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+
+        ZipFile zipFile = new ZipFile(zip);
+        zipFile.extractAll(folder.getCanonicalPath());
+    }
+
+    public File getFolder()
+    {
+        return folder;
+    }
+
+    /*
+     ---------------------------------------------------------------- GSON ----------------------------------------------------------------
+      */
     public static class Deserializer implements JsonDeserializer<Server>
     {
         @Override

@@ -33,12 +33,14 @@
 
 package net.doubledoordev.backend.server;
 
-import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.Helper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Java bean for server data
+ *
  * @author Dries007
  */
 public class ServerData
@@ -53,7 +55,7 @@ public class ServerData
     public List<String> extraJavaParameters = new ArrayList<>();
     public List<String> extraMCParameters = new ArrayList<>();
     public String jarName = "minecraft_server.jar";
-    public String rconPswd = Constants.randomString(10);
+    public String rconPswd = Helper.randomString(10);
     public boolean autoStart = false;
     public String owner;
     public List<String> admins = new ArrayList<>();

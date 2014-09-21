@@ -34,6 +34,8 @@
 package net.doubledoordev.backend.permissions;
 
 /**
+ * Simple 2 group based system.
+ *
  * @author Dries007
  */
 public enum Group

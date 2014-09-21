@@ -33,17 +33,17 @@
 
 package net.doubledoordev.backend;
 
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.DataObject;
+import net.doubledoordev.backend.server.rcon.RCon;
+import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 import net.doubledoordev.backend.webserver.Webserver;
-import net.doubledoordev.backend.server.rcon.RCon;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import static net.doubledoordev.backend.util.Constants.GSON;
+import java.util.HashMap;
+
 import static net.doubledoordev.backend.util.Constants.NAME;
 
 /**
@@ -52,6 +52,10 @@ import static net.doubledoordev.backend.util.Constants.NAME;
 public class Main
 {
     public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
+
+    private Main()
+    {
+    }
 
     public static void main(String[] args) throws Exception
     {
@@ -93,7 +97,7 @@ public class Main
     public static synchronized void shutdown()
     {
         LOGGER.info("Attempting graceful shutdown of all servers...");
-        for (final Server server : Settings.SETTINGS.servers)
+        for (final Server server : Settings.SETTINGS.servers.values())
         {
             if (server.getOnline())
             {
@@ -111,7 +115,7 @@ public class Main
                         server.getProcess().destroy();
                     }
 
-                    LOGGER.info("Waiting for server "+ server.getName() + " to shutdown...");
+                    LOGGER.info("Waiting for server " + server.getName() + " to shutdown...");
                     server.getProcess().waitFor();
                 }
                 catch (Exception e)
@@ -124,7 +128,13 @@ public class Main
         LOGGER.info("Bye!");
     }
 
-    public static void printdebug(NanoHTTPD.IHTTPSession session, DataObject dataObject)
+    /**
+     * Useful when debugging requests
+     *
+     * @param session
+     * @param dataObject
+     */
+    public static void printdebug(NanoHTTPD.IHTTPSession session, HashMap<String, Object> dataObject)
     {
         LOGGER.debug("getParms: " + session.getParms());
         LOGGER.debug("getHeaders: " + session.getHeaders());
@@ -132,7 +142,7 @@ public class Main
         LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
         LOGGER.debug("getMethod: " + session.getMethod());
         LOGGER.debug("getCookies: " + session.getCookies());
-        LOGGER.debug("USER: " + dataObject.getUser());
+        LOGGER.debug("dataObject: " + dataObject);
         LOGGER.debug("-----================================-----");
     }
 }

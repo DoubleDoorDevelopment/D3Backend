@@ -41,6 +41,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
 /**
+ * User object. Read from Json file with GSON
+ *
  * @author Dries007
  */
 public class User
@@ -63,6 +65,7 @@ public class User
         }
         catch (InvalidKeySpecException | NoSuchAlgorithmException e)
         {
+            // Hash algorithm doesn't work.
             throw new RuntimeException(e);
         }
     }
@@ -78,6 +81,7 @@ public class User
             }
             catch (InvalidKeySpecException | NoSuchAlgorithmException e)
             {
+                // Hash algorithm doesn't work.
                 throw new RuntimeException(e);
             }
             return true;
@@ -100,22 +104,10 @@ public class User
         return group;
     }
 
-    public int getMaxServers()
+    public void setGroup(Group group)
     {
-        return maxServers;
-    }
-
-    public int getMaxRam()
-    {
-        return maxRam;
-    }
-
-    public int getMaxRamLeft()
-    {
-        if (getMaxRam() == -1) return -1;
-        int leftover = getMaxRam();
-        for (Server server : Settings.SETTINGS.servers) leftover -= server.getRamMax();
-        return leftover > 0 ? leftover : 0;
+        this.group = group;
+        Settings.save();
     }
 
     public void setGroup(String group)
@@ -123,10 +115,9 @@ public class User
         setGroup(Group.valueOf(group));
     }
 
-    public void setGroup(Group group)
+    public int getMaxServers()
     {
-        this.group = group;
-        Settings.save();
+        return maxServers;
     }
 
     public void setMaxServers(int maxServers)
@@ -135,9 +126,31 @@ public class User
         Settings.save();
     }
 
+    public int getMaxRam()
+    {
+        return maxRam;
+    }
+
     public void setMaxRam(int maxRam)
     {
         this.maxRam = maxRam;
         Settings.save();
+    }
+
+    public int getMaxRamLeft()
+    {
+        if (getMaxRam() == -1) return -1;
+        int leftover = getMaxRam();
+        for (Server server : Settings.SETTINGS.servers.values())
+            if (server.getOwner().equals(username)) leftover -= server.getRamMax();
+        return leftover > 0 ? leftover : 0;
+    }
+
+    public int getServerCount()
+    {
+        int i = 0;
+        for (Server server : Settings.SETTINGS.servers.values())
+            if (server.getOwner().equals(username)) i++;
+        return i;
     }
 }

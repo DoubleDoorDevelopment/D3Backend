@@ -10,13 +10,16 @@
     </tr>
     </thead>
     <tbody>
-    <#list servers as server>
-        <tr class="<#if server.online>success<#else>danger</#if>" style="cursor:pointer;" onclick="window.document.location='/servers/${server.name}'">
-            <td>${server.name}</td>
-            <td>${server.displayAddress}</td>
-            <td>${server.onlinePlayers}/${server.slots}</td>
-            <td>${server.motd}</td>
-        </tr>
+    <#list Settings.servers as server>
+        <#if server.canUserControl(user)>
+            <tr class="<#if server.online>success<#else>danger</#if>" style="cursor:pointer;"
+                onclick="window.document.location='/servers/${server.name}'">
+                <td>${server.name}</td>
+                <td>${server.displayAddress}</td>
+                <td>${server.onlinePlayers}/${server.slots}</td>
+                <td>${server.motd}</td>
+            </tr>
+        </#if>
     </#list>
     </tbody>
 </table>

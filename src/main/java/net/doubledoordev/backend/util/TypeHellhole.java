@@ -35,7 +35,6 @@ package net.doubledoordev.backend.util;
 
 import net.doubledoordev.backend.Main;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,11 +53,15 @@ public class TypeHellhole
      */
     static final Map<Class, Method> MAP = new HashMap<>();
 
+    private TypeHellhole()
+    {
+    }
+
     /**
      * Only useful method in this class.
      *
      * @param clazz target
-     * @param s subject
+     * @param s     subject
      * @return Hopefully a casted version of the string.
      * @throws Exception because it will go wrong.
      */
