@@ -142,7 +142,7 @@ public class User
         if (getMaxRam() == -1) return -1;
         int leftover = getMaxRam();
         for (Server server : Settings.SETTINGS.servers.values())
-            if (server.getOwner().equals(username)) leftover -= server.getRamMax();
+            if (server.getOwner().equals(username) && server.getOnline()) leftover -= server.getRamMax();
         return leftover > 0 ? leftover : 0;
     }
 

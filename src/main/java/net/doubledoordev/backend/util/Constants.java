@@ -46,6 +46,8 @@ import net.doubledoordev.backend.util.winreg.JavaInfo;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Pattern;
 
@@ -79,6 +81,7 @@ public class Constants
     public static final JsonParser JSONPARSER = new JsonParser();
     public static final String VERIONSURL = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
     public static final String JAR_URL = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
+    public static final Pattern ILLEGAL_OPTIONS[] = {Pattern.compile("^-Xms.*$"), Pattern.compile("^-Xmx.*$"), Pattern.compile("^-XX:MaxPermSize=.*$")};
 
     /**
      * Methods that only get called to init the Constants

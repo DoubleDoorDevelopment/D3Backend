@@ -56,6 +56,7 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
@@ -491,15 +492,18 @@ public class Server
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraJavaParameters(String list) throws ServerOnlineException
+    public void setExtraJavaParameters(String list) throws Exception
     {
         setExtraJavaParameters(Arrays.asList(list.split(",")));
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraJavaParameters(List<String> list) throws ServerOnlineException
+    public void setExtraJavaParameters(List<String> list) throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
+        for (String s : list)
+            for (Pattern pattern : Constants.ILLEGAL_OPTIONS)
+                if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraJavaParameters = list;
         Settings.save();
     }
@@ -511,15 +515,18 @@ public class Server
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraMCParameters(String list) throws ServerOnlineException
+    public void setExtraMCParameters(String list) throws Exception
     {
         setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraMCParameters(List<String> list) throws ServerOnlineException
+    public void setExtraMCParameters(List<String> list) throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
+        for (String s : list)
+            for (Pattern pattern : Constants.ILLEGAL_OPTIONS)
+                if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraMCParameters = list;
         Settings.save();
     }
@@ -599,7 +606,7 @@ public class Server
      * @throws ServerOnlineException
      */
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraJavaParameters() throws ServerOnlineException
+    public void setExtraJavaParameters() throws Exception
     {
         setExtraJavaParameters(Arrays.asList(new String[0]));
     }
@@ -610,7 +617,7 @@ public class Server
      * @throws ServerOnlineException
      */
     @SuppressWarnings("UnusedDeclaration")
-    public void setExtraMCParameters() throws ServerOnlineException
+    public void setExtraMCParameters() throws Exception
     {
         setExtraMCParameters(Arrays.asList(new String[0]));
     }
@@ -628,6 +635,10 @@ public class Server
         if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
         if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
         saveProperties();
+        User user = Settings.getUserByName(getOwner());
+        if (user == null) throw new Exception("No owner set??");
+        if (getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
+
         new Thread(new Runnable()
         {
             @Override
