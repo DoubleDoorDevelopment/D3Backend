@@ -637,7 +637,7 @@ public class Server
         saveProperties();
         User user = Settings.getUserByName(getOwner());
         if (user == null) throw new Exception("No owner set??");
-        if (getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
+        if (user.getMaxRamLeft() != -1 && getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
 
         new Thread(new Runnable()
         {
