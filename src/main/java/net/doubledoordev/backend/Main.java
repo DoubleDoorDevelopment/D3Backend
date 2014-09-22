@@ -42,6 +42,8 @@ import net.doubledoordev.backend.webserver.Webserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
@@ -59,6 +61,11 @@ public class Main
 
     public static void main(String[] args) throws Exception
     {
+        System.setProperty("file.encoding","UTF-8");
+        Field charset = Charset.class.getDeclaredField("defaultCharset");
+        charset.setAccessible(true);
+        charset.set(null,null);
+
         LOGGER.info("+-------------------------------------------------------+");
         LOGGER.info("| ...................... Loading ...................... |");
         LOGGER.info("+-------------------------------------------------------+");

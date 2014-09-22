@@ -79,6 +79,8 @@ public class Post
         {
             session.parseBody(new HashMap<String, String>());
             Map<String, String> map = session.getParms();
+            Main.printdebug(session, dataObject);
+
             String split[] = session.getUri().substring(1).split("/");
             switch (split[0]) // 0 => type id
             {
@@ -99,6 +101,9 @@ public class Post
                         dataObject.put("message", e.getLocalizedMessage());
                     }
                     break;
+                case "servers":
+                    Settings.getServerByName(split[1]).setPropertiesAsText(map.get("serverProperties"));
+                    break;
             }
         }
         catch (IOException | ResponseException e)
@@ -114,7 +119,7 @@ public class Post
     {
         User user = (User) dataObject.get("user");
         if (user == null) throw new Exception("Not logged in.");
-        if (user.getMaxServers() != -1 && user.getServerCount() + 1 >= user.getMaxServers()) throw new Exception("Max server count reached.");
+        if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new Exception("Max server count reached.");
         ServerData data = new ServerData();
 
         data.name = user.getUsername() + "_" + map.get("name");

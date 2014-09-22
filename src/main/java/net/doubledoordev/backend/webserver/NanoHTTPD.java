@@ -345,7 +345,7 @@ public abstract class NanoHTTPD
         String decoded = null;
         try
         {
-            decoded = URLDecoder.decode(str, "UTF8");
+            decoded = URLDecoder.decode(str, "UTF-8");
         }
         catch (UnsupportedEncodingException ignored)
         {

@@ -121,7 +121,7 @@ public class Server
         this.propertiesFile = new File(folder, SERVER_PROPERTIES);
 
         if (!folder.exists()) folder.mkdir();
-        saveProperties();
+        normalizeProperties();
 
         // Check to see if the server is running outside the backend, if so reboot please!
         if (getRCon() != null)
@@ -222,6 +222,24 @@ public class Server
     {
         if (!propertiesLoaded) getProperties();
 
+        normalizeProperties();
+
+        try
+        {
+            if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
+                propertiesFile.createNewFile();
+            FileWriter fileWriter = new FileWriter(propertiesFile);
+            properties.store(fileWriter, "Minecraft server properties\nModified by D3Backend");
+            fileWriter.close();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private void normalizeProperties()
+    {
         if (!Settings.SETTINGS.fixedPorts)
         {
             properties.setProperty(SERVER_PORT, String.valueOf(data.serverPort));
@@ -242,19 +260,6 @@ public class Server
         properties.put(RCON_ENABLE, "true");
         properties.put(QUERY_ENABLE, "true");
         properties.put(RCON_PASSWORD, data.rconPswd);
-
-        try
-        {
-            if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
-                propertiesFile.createNewFile();
-            FileWriter fileWriter = new FileWriter(propertiesFile);
-            properties.store(fileWriter, "Minecraft server properties\nModified by D3Backend");
-            fileWriter.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -330,7 +335,7 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         properties.put(key, value);
-        saveProperties();
+        normalizeProperties();
     }
 
     /**
@@ -562,7 +567,6 @@ public class Server
     @SuppressWarnings("UnusedDeclaration")
     public String getPropertiesAsText()
     {
-        getProperties();
         StringWriter stringWriter = new StringWriter();
         try
         {
@@ -575,13 +579,13 @@ public class Server
         return stringWriter.toString();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public void setPropertiesAsText(String urlEncodedText)
     {
         try
         {
+            properties.clear();
             properties.load(new StringReader(urlEncodedText));
-            saveProperties();
+            normalizeProperties();
         }
         catch (IOException e)
         {
@@ -623,6 +627,7 @@ public class Server
         if (getOnline()) throw new ServerOnlineException();
         if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
         if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
+        saveProperties();
         new Thread(new Runnable()
         {
             @Override

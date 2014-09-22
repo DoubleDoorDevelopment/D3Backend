@@ -24,7 +24,7 @@
             <td><input type="number" min="-1" class="form-control" placeholder="-1 is infinite"
                        value="${user.maxServers?c}"
                        onchange="call('users', '${user.username}', 'setMaxServers', this.value)"></td>
-            <td><input type="number" min="-1" class="form-control" placeholder="0 is infinite" value="${user.maxRam?c}"
+            <td><input type="number" min="-1" class="form-control" placeholder="-1 is infinite" value="${user.maxRam?c}"
                        onchange="call('users', '${user.username}', 'setMaxRam', this.value)"></td>
         <#else>
             <td>${user.group}</td>

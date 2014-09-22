@@ -108,10 +108,10 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>No checks are preformed when submitting. Be careful!</p>
-                <form class="form-horizontal" role="form" style="padding-left: 10px; padding-right: 10px;">
-                    <textarea id="serverProperties" class="form-control" rows="25" <#if allowModify && server.online>disabled</#if>>${server.propertiesAsText}</textarea>
+                <form class="form-horizontal" role="form" style="padding-left: 10px; padding-right: 10px;" method="post">
+                    <textarea id="serverProperties" name="serverProperties" class="form-control" rows="25" <#if allowModify && server.online>disabled</#if>>${server.propertiesAsText}</textarea>
                     <br>
-                    <button class="btn btn-primary btn-lg btn-block" <#if allowModify && !server.online>onclick="call('server', '${server.name}', 'setPropertiesAsText', encodeURIComponent(document.getElementById('serverProperties').value))" <#else>disabled</#if>>Send!
+                    <button class="btn btn-primary btn-lg btn-block" <#if allowModify && !server.online>type="submit" <#else>disabled</#if>>Send!
                     </button>
                 </form>
             </div>
