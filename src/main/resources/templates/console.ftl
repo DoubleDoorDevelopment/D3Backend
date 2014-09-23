@@ -37,27 +37,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/font-awesome.css" rel="stylesheet">
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
 </head>
 <body>
 <b>Note: This is not a real console. This is just a command interface that displays responses.</b>
 <textarea class="textarea form-control" id="text" style="height: 445px;"></textarea>
 <input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
+<script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
+        execute('PUT', window.location.origin, ["console", "${server.name}", $input.value], function () {$input.value = ""; })
+    }
+
+    var callURL = window.location.origin + "/consoleText/${server.name}";
+    setInterval(function()
+    {
         xmlhttp = new XMLHttpRequest();
-        xmlhttp.open('PUT', window.location.origin + "/console/${server.name}/" + encodeURIComponent($input.value), true)
+        xmlhttp.open("GET", callURL, true)
+        xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
         xmlhttp.send(null);
 
         xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
                 if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                else document.getElementById("text").value += xmlhttp.responseText + "\n";
+                else document.getElementById("text").value = xmlhttp.responseText;
             }
         }
-
-        $input.value = "";
-    }
+    }, 5000);
 </script>
 </body>
 </html>

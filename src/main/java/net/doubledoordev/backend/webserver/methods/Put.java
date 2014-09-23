@@ -72,6 +72,7 @@ public class Put
         try
         {
             session.parseBody(new HashMap<String, String>());
+            Main.printdebug(session, dataObject);
             Map<String, String> map = session.getParms();
             String[] split = new String[Integer.parseInt(map.get("lengh"))];
             for (int i = 0; i < split.length; i++)
@@ -92,12 +93,13 @@ public class Put
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     if (!server.getOnline())
                         return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, "Server Offline.");
-                    return new Response(OK, MIME_PLAINTEXT, server.getRCon().send(split[2]));
+                    server.send(split[2]);
+                    return new Response(OK, MIME_PLAINTEXT, "");
             }
         }
         catch (Exception e)
         {
-            return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.getLocalizedMessage());
+            return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
         }
         return new Response(NOT_FOUND, MIME_PLAINTEXT, "Method not found");
     }
@@ -125,7 +127,7 @@ public class Put
                 catch (InvocationTargetException e)
                 {
                     Main.LOGGER.warn(e.getCause());
-                    return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.getCause().getLocalizedMessage());
+                    return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.getCause().toString());
                 }
             }
         }

@@ -113,6 +113,8 @@ public class Server
      * The process the server will be running in
      */
     private Process process;
+    private boolean starting = false;
+    private final LinkedList<String> last25LogLines = new LinkedList<>();
 
     public Server(ServerData data)
     {
@@ -205,6 +207,7 @@ public class Server
             try
             {
                 FileReader fileReader = new FileReader(propertiesFile);
+                logger.debug("Reading properties with encoding: " + fileReader.getEncoding());
                 properties.load(fileReader);
                 fileReader.close();
             }
@@ -230,6 +233,7 @@ public class Server
             if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
                 propertiesFile.createNewFile();
             FileWriter fileWriter = new FileWriter(propertiesFile);
+            logger.debug("Saving properties with encoding: " + fileWriter.getEncoding());
             properties.store(fileWriter, "Minecraft server properties\nModified by D3Backend");
             fileWriter.close();
         }
@@ -592,7 +596,7 @@ public class Server
         {
             properties.clear();
             properties.load(new StringReader(urlEncodedText));
-            normalizeProperties();
+            saveProperties();
         }
         catch (IOException e)
         {
@@ -631,13 +635,14 @@ public class Server
     @SuppressWarnings("UnusedDeclaration")
     public void startServer() throws Exception
     {
-        if (getOnline()) throw new ServerOnlineException();
+        if (getOnline() || starting) throw new ServerOnlineException();
         if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
         if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
-        saveProperties();
         User user = Settings.getUserByName(getOwner());
         if (user == null) throw new Exception("No owner set??");
         if (user.getMaxRamLeft() != -1 && getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
+        saveProperties();
+        starting = true;
 
         new Thread(new Runnable()
         {
@@ -684,9 +689,15 @@ public class Server
                         {
                             try
                             {
+                                last25LogLines.clear();
                                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                                 String line;
-                                while ((line = reader.readLine()) != null) logger.info(line);
+                                while ((line = reader.readLine()) != null)
+                                {
+                                    logger.info(line);
+                                    last25LogLines.addLast(line);
+                                    if (last25LogLines.size() > 25) last25LogLines.removeFirst();
+                                }
                             }
                             catch (IOException e)
                             {
@@ -707,6 +718,7 @@ public class Server
                 {
                     logger.error(e);
                 }
+                starting = false;
             }
         }, "ServerStarter-" + getName()).start(); // <-- Very important call.
     }
@@ -714,7 +726,7 @@ public class Server
     /**
      * Stop the server gracefully
      *
-     * @return true if successful
+     * @return true if successful via RCon
      * @throws ServerOnlineException
      */
     @SuppressWarnings("UnusedDeclaration")
@@ -729,7 +741,9 @@ public class Server
         }
         catch (Exception e)
         {
-            logger.error("Error stopping server.", e);
+            PrintWriter printWriter = new PrintWriter(process.getOutputStream());
+            printWriter.println("stop");
+            printWriter.flush();
             return false;
         }
     }
@@ -794,6 +808,23 @@ public class Server
     public File getFolder()
     {
         return folder;
+    }
+
+    public String getLast25LogLinesAsText()
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        synchronized (last25LogLines)
+        {
+            for (String line : last25LogLines) stringBuilder.append(line).append('\n');
+        }
+        return stringBuilder.toString();
+    }
+
+    public void send(String s)
+    {
+        PrintWriter printWriter = new PrintWriter(process.getOutputStream());
+        printWriter.println(s);
+        printWriter.flush();
     }
 
     /*

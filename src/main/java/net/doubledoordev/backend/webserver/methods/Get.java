@@ -113,6 +113,8 @@ public class Get
             {
                 switch (args[0])
                 {
+                    case "consoleText":
+                        return new Response(OK, MIME_PLAINTEXT, getServerByName(args[1]).getLast25LogLinesAsText());
                     case "console":
                     case "servers":
                         if (args.length > 1) dataObject.put("server", getServerByName(args[1]));
@@ -125,7 +127,7 @@ public class Get
         catch (Exception e)
         {
             e.printStackTrace();
-            return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.getLocalizedMessage());
+            return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
         }
     }
 
@@ -149,7 +151,7 @@ public class Get
             catch (Exception e1)
             {
                 e.printStackTrace();
-                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.getLocalizedMessage());
+                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.toString());
             }
         }
         catch (Exception e)
@@ -157,13 +159,13 @@ public class Get
             try
             {
                 stringWriter = new StringWriter();
-                dataObject.put("message", e.getLocalizedMessage());
+                dataObject.put("message", e.toString());
                 FREEMARKER_CFG.getTemplate(INTERNAL_ERROR.getDescription() + ".ftl").process(dataObject, stringWriter);
             }
             catch (Exception e1)
             {
                 e.printStackTrace();
-                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.getLocalizedMessage());
+                return String.format("<h1>Error!</h1><p>Message:<br><pre>%s</pre></p>", e.toString());
             }
         }
         return stringWriter.toString();

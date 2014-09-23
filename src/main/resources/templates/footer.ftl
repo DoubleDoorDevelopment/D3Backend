@@ -1,6 +1,7 @@
 </div>
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
+<script src="/static/js/commands.js"></script>
 <script>
     function navTab($args) {
         switch ($args[3]) {
@@ -29,27 +30,9 @@
 
     function call() {
         var args = Array.prototype.slice.apply(arguments);
-        execute('PUT', window.location.origin, args);
-    }
-
-    function execute($method, $url, $data) {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.open($method, $url, true)
-        xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
-        var parms = "lengh=" + $data.length;
-        for (index = 0; index < $data.length; ++index) {
-            parms += "&p" + index + "=" + encodeURI($data[index]);
-        }
-        xmlhttp.send(parms);
-
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4) {
-                if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                else setTimeout(function () {
-                    location.reload()
-                }, 2500);
-            }
-        }
+        execute('PUT', window.location.origin, args, setTimeout(function () {
+            location.reload()
+        }, 2500));
     }
 
     jQuery(function ($) {

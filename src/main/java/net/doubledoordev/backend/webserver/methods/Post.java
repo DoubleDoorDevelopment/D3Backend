@@ -98,7 +98,7 @@ public class Post
                     catch (Exception e)
                     {
                         e.printStackTrace();
-                        dataObject.put("message", e.getLocalizedMessage());
+                        dataObject.put("message", e.toString());
                     }
                     break;
                 case "servers":
