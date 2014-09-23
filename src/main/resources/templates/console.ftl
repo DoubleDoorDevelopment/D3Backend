@@ -50,7 +50,7 @@
     }
 
     var callURL = window.location.origin + "/consoleText/${server.name}";
-    setInterval(function()
+    var getConsoleText = function()
     {
         xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", callURL, true)
@@ -63,7 +63,9 @@
                 else document.getElementById("text").value = xmlhttp.responseText;
             }
         }
-    }, 5000);
+    };
+    setInterval(getConsoleText, 5000);
+    getConsoleText();
 </script>
 </body>
 </html>

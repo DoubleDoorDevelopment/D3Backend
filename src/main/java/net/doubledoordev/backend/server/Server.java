@@ -749,11 +749,28 @@ public class Server
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public boolean forceStopServer() throws ServerOfflineException
+    public boolean forceStopServer() throws Exception
     {
         if (!getOnline()) throw new ServerOfflineException();
         logger.warn("Killing server process!");
         process.destroy();
+        try
+        {
+            process.getOutputStream().close();
+        }
+        catch (IOException ignored) {}
+        try
+        {
+            process.getErrorStream().close();
+        }
+        catch (IOException ignored) {}
+        try
+        {
+            process.getInputStream().close();
+        }
+        catch (IOException ignored) {}
+        process.destroy();
+        process.exitValue();
         return true;
     }
 
