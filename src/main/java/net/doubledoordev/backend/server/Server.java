@@ -93,7 +93,7 @@ public class Server
     private Logger logger;
     private File folder;
     private File propertiesFile;
-    private boolean propertiesLoaded = false;
+    private long propertiesFileLastModified = 0L;
     private Properties properties = new Properties();
 
     /**
@@ -201,8 +201,7 @@ public class Server
      */
     public Properties getProperties()
     {
-        propertiesLoaded = true;
-        if (propertiesFile.exists())
+        if (propertiesFile.exists() && propertiesFile.lastModified() > propertiesFileLastModified)
         {
             try
             {
@@ -216,6 +215,7 @@ public class Server
                 e.printStackTrace();
             }
         }
+        normalizeProperties();
         return properties;
     }
 
@@ -224,10 +224,7 @@ public class Server
      */
     public void saveProperties()
     {
-        if (!propertiesLoaded) getProperties();
-
-        normalizeProperties();
-
+        getProperties();
         try
         {
             if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
@@ -236,6 +233,7 @@ public class Server
             logger.debug("Saving properties with encoding: " + fileWriter.getEncoding());
             properties.store(fileWriter, "Minecraft server properties\nModified by D3Backend");
             fileWriter.close();
+            propertiesFileLastModified = propertiesFile.lastModified();
         }
         catch (IOException e)
         {
@@ -578,6 +576,7 @@ public class Server
     @SuppressWarnings("UnusedDeclaration")
     public String getPropertiesAsText()
     {
+        getProperties();
         StringWriter stringWriter = new StringWriter();
         try
         {
@@ -690,6 +689,7 @@ public class Server
                             try
                             {
                                 last25LogLines.clear();
+                                last25LogLines.add("----=====##### STARTING SERVER #####=====-----");
                                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                                 String line;
                                 while ((line = reader.readLine()) != null)
@@ -737,6 +737,7 @@ public class Server
         try
         {
             getRCon().stop();
+            last25LogLines.add("----=====##### STOPPING SERVER WITH RCON #####=====-----");
             return true;
         }
         catch (Exception e)
@@ -744,6 +745,7 @@ public class Server
             PrintWriter printWriter = new PrintWriter(process.getOutputStream());
             printWriter.println("stop");
             printWriter.flush();
+            last25LogLines.add("----=====##### STOPPING SERVER VIA STREAM #####=====-----");
             return false;
         }
     }
@@ -753,6 +755,7 @@ public class Server
     {
         if (!getOnline()) throw new ServerOfflineException();
         logger.warn("Killing server process!");
+        last25LogLines.add("----=====##### KILLING SERVER #####=====-----");
         process.destroy();
         try
         {
@@ -769,8 +772,6 @@ public class Server
             process.getInputStream().close();
         }
         catch (IOException ignored) {}
-        process.destroy();
-        process.exitValue();
         return true;
     }
 
