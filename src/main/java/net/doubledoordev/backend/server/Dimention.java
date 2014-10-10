@@ -38,37 +38,59 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.exceptions;
+package net.doubledoordev.backend.server;
+
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
- * Throws when server was offline.
- * Used in MCQuery.
- *
  * @author Dries007
  */
-public class ServerOfflineException extends Exception
+public class Dimention
 {
-    public ServerOfflineException()
+    int          dimid;
+    WorldManager worldManager;
+
+    private Dimention()
     {
     }
 
-    public ServerOfflineException(String message)
+    public Dimention(int dimid)
     {
-        super(message);
+        this.dimid = dimid;
     }
 
-    public ServerOfflineException(String message, Throwable cause)
+    public int getDimid()
     {
-        super(message, cause);
+        return dimid;
     }
 
-    public ServerOfflineException(Throwable cause)
+    public void makeBackup()
     {
-        super(cause);
+        worldManager.doBackup(new File(new File(worldManager.server.getBackupFolder(), DIM + dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(), dimid == 0 ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
     }
 
-    public ServerOfflineException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+    public File getFolder()
     {
-        super(message, cause, enableSuppression, writableStackTrace);
+        return dimid == 0 ? worldManager.worldFolder : new File(worldManager.worldFolder, DIM + dimid);
+    }
+
+    public void update(WorldManager worldManager)
+    {
+        this.worldManager = worldManager;
+    }
+
+    public void delete() throws IOException
+    {
+        for (File file : getFolder().listFiles(dimid == 0 ? NOT_DIM_FILTER : ACCEPT_ALL_FILTER))
+        {
+            if (file.isFile()) file.delete();
+            else if (file.isDirectory()) FileUtils.deleteDirectory(file);
+        }
     }
 }

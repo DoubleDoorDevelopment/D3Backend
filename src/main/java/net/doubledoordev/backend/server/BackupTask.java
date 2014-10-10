@@ -38,37 +38,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.util.exceptions;
+package net.doubledoordev.backend.server;
+
+import net.doubledoordev.backend.util.Constants;
+import net.lingala.zip4j.core.ZipFile;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.model.ZipParameters;
+
+import java.io.File;
+import java.util.Date;
+import java.util.TimerTask;
 
 /**
- * Throws when server was offline.
- * Used in MCQuery.
- *
  * @author Dries007
  */
-public class ServerOfflineException extends Exception
+public class BackupTask extends TimerTask
 {
-    public ServerOfflineException()
+    private final Server server;
+
+    public BackupTask(Server server)
     {
+        this.server = server;
     }
 
-    public ServerOfflineException(String message)
+    @Override
+    public void run()
     {
-        super(message);
+        if (server.getOnline())
+        {
+            server.send("say Making backup....");
+            server.send("save-off");
+            server.send("save-all");
+
+            try
+            {
+                ZipParameters parameters = new ZipParameters();
+                parameters.setIncludeRootFolder(false);
+                ZipFile zipFile = new ZipFile(new File(server.getBackupFolder(), Constants.BACKUP_SDF.format(new Date()) + ".zip"));
+                zipFile.addFolder(server.getFolder(), parameters);
+            }
+            catch (ZipException e)
+            {
+                server.send("say Error when making backup");
+                server.logger.warn(e);
+            }
+
+            server.send("save-on");
+        }
     }
 
-    public ServerOfflineException(String message, Throwable cause)
+    private void removeOldestBackup()
     {
-        super(message, cause);
-    }
-
-    public ServerOfflineException(Throwable cause)
-    {
-        super(cause);
-    }
-
-    public ServerOfflineException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
-    {
-        super(message, cause, enableSuppression, writableStackTrace);
+        File oldest = null;
+        //noinspection ConstantConditions
+        for (File file : server.getBackupFolder().listFiles())
+        {
+            if (oldest == null) oldest = file;
+            if (file.lastModified() < oldest.lastModified()) oldest = file;
+        }
+        if (oldest == null || !oldest.delete()) server.logger.warn("Could not delete old backup file " + oldest);
+        else server.logger.warn("Deleted old backup " + oldest);
     }
 }

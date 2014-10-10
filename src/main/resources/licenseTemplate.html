@@ -38,55 +38,13 @@
   ~ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   ~ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
+
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Console ${server.name}</title>
-    <!-- Le meta -->
-    <meta name="author" content="Dries007">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Le styles -->
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <title></title>
 </head>
 <body>
-<b>Note: This is not a real console. This is just a command interface that displays responses.</b>
-<textarea class="textarea form-control" id="text" style="height: 445px;"></textarea>
-<input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
-<script src="/static/js/commands.js"></script>
-<script>
-    function sendCommand($input) {
-        execute('PUT', window.location.origin, ["console", "${server.name}", $input.value], function () {$input.value = ""; })
-    }
 
-    var callURL = window.location.origin + "/consoleText/${server.name}";
-    var lines = 0;
-    var textarea = document.getElementById('text');
-    var autoScroll = true;
-
-    var getConsoleText = function()
-    {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", callURL  + "/" + lines , true)
-        xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
-        xmlhttp.send(null);
-
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4) {
-                if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                else
-                {
-                    autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
-                    responce = JSON.parse(xmlhttp.responseText);
-                    textarea.value += responce["text"];
-                    lines = responce["size"];
-                    if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
-                }
-            }
-        }
-    };
-    setInterval(getConsoleText, 5000);
-    getConsoleText();
-</script>
 </body>
 </html>
