@@ -40,13 +40,19 @@
 
 package net.doubledoordev.backend.webserver;
 
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.methods.Get;
 import net.doubledoordev.backend.webserver.methods.Post;
 import net.doubledoordev.backend.webserver.methods.Put;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import static net.doubledoordev.backend.util.Constants.*;
@@ -80,11 +86,14 @@ public class Webserver extends SimpleWebServer
 
         // We want to split off static ASAP.
         if (session.getUri().startsWith(STATIC_PATH))
-            return super.respond(session.getHeaders(), session.getUri().substring(STATIC_PATH.length()));
+            return super.respond(session.getUri().substring(STATIC_PATH.length()));
 
         // stupid favicon.ico
         if (session.getUri().contains(FAVOTICON))
-            return super.respond(session.getHeaders(), session.getUri());
+            return super.respond(session.getUri());
+
+        if (session.getUri().startsWith(P2S_PATH))
+            return servePay2SpawnFile(session.getUri().split("/"));
 
         /**
          * Populate data map with user (if logged in) and admin status.
@@ -120,5 +129,27 @@ public class Webserver extends SimpleWebServer
             default:
                 return new Response(Response.Status.NO_CONTENT, MIME_PLAINTEXT, "No Content");
         }
+    }
+
+    private Response servePay2SpawnFile(String[] uri)
+    {
+        if (uri.length != 4) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, "Error 400, Arguments accepted are only server and name.");
+        Server server = Settings.getServerByName(uri[2]);
+        if (server == null) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, String.format("Error 400, Server '%s' doesn't exits.", uri[2]));
+        File file = new File(server.getFolder(), String.format("pay2spawn/%s.html", uri[3]));
+        if (!file.exists()) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, String.format("Error 400, User '%s' does not have a Pay2Spawn file on the server '%s'.", uri[3], uri[2]));
+        Response res;
+        try
+        {
+            InputStream stream = new FileInputStream(file);
+            int fileLen = stream.available();
+            res = createResponse(Response.Status.OK, "text/html", stream);
+            res.addHeader("Content-Length", "" + fileLen);
+        }
+        catch (IOException ioe)
+        {
+            res = getForbiddenResponse("Reading file failed.");
+        }
+        return res == null ? getNotFoundResponse() : res;
     }
 }

@@ -42,6 +42,7 @@ package net.doubledoordev.backend;
 
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.rcon.RCon;
+import net.doubledoordev.backend.util.Cache;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
@@ -85,6 +86,7 @@ public class Main
         LOGGER.info("Starting webserver...");
         Webserver.WEBSERVER.start();
         LOGGER.info("Setting up caching...");
+        Cache.init();
 
         LOGGER.info("+-------------------------------------------------------+");
         LOGGER.info("| Loading done. Press any key to terminate the program. |");

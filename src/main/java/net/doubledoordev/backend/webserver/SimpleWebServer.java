@@ -135,7 +135,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
         return newUri;
     }
 
-    protected Response respond(Map<String, String> headers, String uri)
+    protected Response respond(String uri)
     {
         // Remove URL arguments
         uri = uri.trim().replace(File.separatorChar, '/');
@@ -155,8 +155,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
             return getNotFoundResponse();
         }
 
-        String mimeTypeForFile = getMimeTypeForFile(uri);
-        Response response = serveFile(uri, headers, mimeTypeForFile);
+        Response response = serveResourceFile(uri);
         return response != null ? response : getNotFoundResponse();
     }
 
@@ -178,14 +177,14 @@ public abstract class SimpleWebServer extends NanoHTTPD
     /**
      * Serves file from homeDir and its' subdirectories (only). Uses only URI, ignores all headers and HTTP parameters.
      */
-    Response serveFile(String uri, Map<String, String> header, String mime)
+    Response serveResourceFile(String uri)
     {
         Response res;
         try
         {
             InputStream stream = getClass().getResourceAsStream(rootDir + uri);
             int fileLen = stream.available();
-            res = createResponse(Response.Status.OK, mime, stream);
+            res = createResponse(Response.Status.OK, getMimeTypeForFile(uri), stream);
             res.addHeader("Content-Length", "" + fileLen);
         }
         catch (IOException ioe)
@@ -197,7 +196,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     }
 
     // Get MIME type from file name extension, if possible
-    private String getMimeTypeForFile(String uri)
+    public String getMimeTypeForFile(String uri)
     {
         int dot = uri.lastIndexOf('.');
         String mime = null;
@@ -209,7 +208,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     }
 
     // Announce that the file server accepts partial content requests
-    private Response createResponse(Response.Status status, String mimeType, InputStream message)
+    Response createResponse(Response.Status status, String mimeType, InputStream message)
     {
         Response res = new Response(status, mimeType, message);
         res.addHeader("Accept-Ranges", "bytes");
@@ -217,7 +216,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     }
 
     // Announce that the file server accepts partial content requests
-    private Response createResponse(Response.Status status, String mimeType, String message)
+    Response createResponse(Response.Status status, String mimeType, String message)
     {
         Response res = new Response(status, mimeType, message);
         res.addHeader("Accept-Ranges", "bytes");

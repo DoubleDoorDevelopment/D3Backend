@@ -281,7 +281,7 @@ public abstract class NanoHTTPD
      * Override this to customize the server.
      * <p/>
      * <p/>
-     * (By default, this delegates to serveFile() and allows directory listing.)
+     * (By default, this delegates to serveResourceFile() and allows directory listing.)
      *
      * @param uri     Percent-decoded URI without parameters, for example "/index.cgi"
      * @param method  "GET", "POST" etc.
@@ -300,7 +300,7 @@ public abstract class NanoHTTPD
      * Override this to customize the server.
      * <p/>
      * <p/>
-     * (By default, this delegates to serveFile() and allows directory listing.)
+     * (By default, this delegates to serveResourceFile() and allows directory listing.)
      *
      * @param session The HTTP session
      * @return HTTP response, see class Response for details

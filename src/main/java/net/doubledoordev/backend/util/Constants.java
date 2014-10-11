@@ -82,6 +82,7 @@ public class Constants
     public static final    File             SERVERS                        = new File(ROOT, "servers");
     public static final    File             BACKUPS                        = new File(ROOT, "backups");
     public static final    String           STATIC_PATH                    = "/static/";
+    public static final    String           P2S_PATH                       = "/pay2spawn/";
     public static final    String           FAVOTICON                      = "favicon.ico";
     public static final    String           COOKIE_KEY                     = "user";
     public static final    JsonParser       JSONPARSER                     = new JsonParser();
