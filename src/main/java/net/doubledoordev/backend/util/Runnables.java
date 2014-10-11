@@ -82,21 +82,29 @@ public class Runnables
                 JsonObject latest = versionList.getAsJsonObject("promos");
                 HashSet<Integer> buildsWithoutInstaller = new HashSet<>();
 
-                nameBuildMap.put("~~==## \\/ Recommended Versions \\/ ##==~~", null);
                 for (Map.Entry<String, JsonElement> element : latest.entrySet())
                 {
                     nameBuildMap.put(String.format("%s (build %d)", element.getKey(), element.getValue().getAsInt()), element.getValue().getAsInt());
                 }
-                nameBuildMap.put("~~==## \\/ Specific Versions \\/ ##==~~", null);
-                for (Map.Entry<String, JsonElement> entry : versionList.getAsJsonObject("number").entrySet())
+                String lastMc = "";
+                ArrayList<Map.Entry<String, JsonElement>> entries = new ArrayList<>(versionList.getAsJsonObject("number").entrySet());
+                for (int i = entries.size() - 1; i > 0; i--)
                 {
-                    JsonObject object = entry.getValue().getAsJsonObject();
+                    JsonObject object = entries.get(i).getValue().getAsJsonObject();
+                    String mc = object.get("mcversion").getAsString();
+                    String version = object.get("version").getAsString();
+                    int build = object.get("build").getAsInt();
 
-                    nameBuildMap.put(String.format("%s (MC %s)", object.get("version").getAsString(), object.get("mcversion").getAsString()), object.get("build").getAsInt());
-                    buildVersionMap.put(object.get("build").getAsInt(), String.format("%s-%s", object.get("mcversion").getAsString(), object.get("version").getAsString()));
+                    if (!lastMc.equals(mc) && hasInstaller(object))
+                    {
+                        nameBuildMap.put(String.format("~~~~~~~~~~========== %s ==========~~~~~~~~~~", mc), 0);
+                        lastMc = mc;
+                    }
 
-                    if (!hasInstaller(object)) buildsWithoutInstaller.add(object.get("build").getAsInt());
+                    nameBuildMap.put(String.format("%s (MC %s)", version, mc), build);
+                    buildVersionMap.put(build, String.format("%s-%s", mc, version));
 
+                    if (!hasInstaller(object)) buildsWithoutInstaller.add(build);
                 }
                 synchronized (NAME_VERSION_MAP)
                 {
@@ -115,8 +123,8 @@ public class Runnables
         }
 
     };
-    static       long                          lastMCVersions     = 0L;
-    static final Runnable MC_VERSIONS_DOWNLOADER    = new Runnable()
+    static       long     lastMCVersions         = 0L;
+    static final Runnable MC_VERSIONS_DOWNLOADER = new Runnable()
     {
         @Override
         public void run()

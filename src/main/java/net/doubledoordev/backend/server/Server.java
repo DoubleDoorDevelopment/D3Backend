@@ -852,16 +852,16 @@ public class Server
         if (!getOnline()) return false;
         try
         {
-            getRCon().stop();
             printLine("----=====##### STOPPING SERVER WITH RCON #####=====-----");
+            getRCon().stop();
             return true;
         }
         catch (Exception e)
         {
+            printLine("----=====##### STOPPING SERVER VIA STREAM #####=====-----");
             PrintWriter printWriter = new PrintWriter(process.getOutputStream());
             printWriter.println("stop");
             printWriter.flush();
-            printLine("----=====##### STOPPING SERVER VIA STREAM #####=====-----");
             return false;
         }
     }
