@@ -180,4 +180,9 @@ public class User
             if (server.getOwner().equals(username)) leftover -= server.getDiskspaceUse();
         return leftover > 0 ? leftover : 0;
     }
+
+    public boolean isAdmin()
+    {
+        return this.getGroup() == Group.ADMIN;
+    }
 }

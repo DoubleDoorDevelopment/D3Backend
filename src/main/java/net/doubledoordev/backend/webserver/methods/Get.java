@@ -43,6 +43,7 @@ package net.doubledoordev.backend.webserver.methods;
 import freemarker.template.*;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
 
 import java.io.FileNotFoundException;
@@ -118,11 +119,13 @@ public class Get
             {
                 switch (args[0])
                 {
-                    case "consoleText":
+                    case "serverConsoleText":
                         return new Response(OK, MIME_PLAINTEXT, getServerByName(args[1]).getLogLinesAfter(Integer.parseInt(args[2])));
+                    case "backendConsoleText":
+                        return new Response(OK, MIME_PLAINTEXT, CustomLogAppender.getLogLinesAfter(Integer.parseInt(args[1])));
                     case "worldmanager":
                         if (args.length > 1) dataObject.put("wm", getServerByName(args[1]).getWorldManager());
-                    case "console":
+                    case "serverconsole":
                     case "servers":
                         if (args.length > 1) dataObject.put("server", getServerByName(args[1]));
                         break;

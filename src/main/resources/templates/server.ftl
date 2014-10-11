@@ -5,7 +5,7 @@
 <p>
     <div class="btn-group">
         <button type="button" <#if allowModify && !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success">Start</button>
-        <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/console/${server.name}')" <#else>disabled</#if>>Console</button>
+        <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole/${server.name}')" <#else>disabled</#if>>Console</button>
         <button type="button" <#if allowModify && server.online>onclick="call('server', '${server.name}', 'stopServer')" <#else>disabled</#if> class="btn btn-warning">Stop</button>
         <button type="button" <#if allowModify && server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.name}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger">Kill</button>
     </div>

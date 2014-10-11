@@ -69,6 +69,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.CustomLogAppender.LOG_LINES_KEPT;
 
 /**
  * Class that holds methods related to Server instances.
@@ -889,7 +890,7 @@ public class Server
     public boolean canUserControl(User user)
     {
         if (user == null) return false;
-        if (user.getGroup() == Group.ADMIN || user.getUsername().equalsIgnoreCase(getOwner())) return true;
+        if (user.isAdmin() || user.getUsername().equalsIgnoreCase(getOwner())) return true;
         for (String admin : getAdmins()) if (admin.equalsIgnoreCase(user.getUsername())) return true;
         for (String admin : getCoOwners()) if (admin.equalsIgnoreCase(user.getUsername())) return true;
         return false;
@@ -898,7 +899,7 @@ public class Server
     public boolean isCoOwner(User user)
     {
         if (user == null) return false;
-        if (user.getGroup() == Group.ADMIN || user.getUsername().equalsIgnoreCase(getOwner())) return true;
+        if (user.isAdmin() || user.getUsername().equalsIgnoreCase(getOwner())) return true;
         for (String admin : getCoOwners()) if (admin.equalsIgnoreCase(user.getUsername())) return true;
         return false;
     }

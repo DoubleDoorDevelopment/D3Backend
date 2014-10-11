@@ -146,7 +146,6 @@ public class Constants
     public static final    TemplateModel    HELPER_TEMPLATE_MODEL          = getStaticHelper();
     public static final    Timer            TIMER                          = new Timer();
     protected static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    public static          int              LOG_LINES_KEPT                 = 1000;
 
     /**
      * Methods that only get called to init the Constants

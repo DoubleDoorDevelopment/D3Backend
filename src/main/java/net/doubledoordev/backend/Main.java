@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend;
 
+import com.google.gson.JsonObject;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Cache;

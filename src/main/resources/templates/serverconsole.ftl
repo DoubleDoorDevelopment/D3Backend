@@ -41,60 +41,51 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>D3 Backend</title>
+    <title>Console ${server.name}</title>
     <!-- Le meta -->
     <meta name="author" content="Dries007">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
-    <style>
-        body {
-            padding-top: 70px;
-        }
-    </style>
 </head>
 <body>
-<!-- Fixed navbar -->
-<div class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">D3 Backend</a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li id="homeNavTab"><a href="/">Home</a></li>
-            <#if user??>
-                <li id="serverListNavTab"><a href="/servers">Server List</a></li>
-                <li id="serversNavTab" class="dropdown">
-                    <a href="/servers" class="dropdown-toggle" data-toggle="dropdown">Servers <span
-                            class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <#list Settings.servers as server>
-                            <#if server.canUserControl(user)>
-                                <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name}</a></li>
-                            </#if>
-                        </#list>
-                    </ul>
-                </li>
-                <li id="newserverListNavTab"><a href="/newserver">New Server</a></li>
-                <li id="usersNavTab"><a href="/users">Users</a></li>
-                <#if user.isAdmin()>
-                    <li id="consoleNavTab"><a href="/console">Console</a></li>
-                </#if>
-            </#if>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li id="loginNavTab"><a href="/login"><#if user??>${user.username}<#else>Log in</#if></a></li>
-            </ul>
-        </div>
-        <!--/.nav-collapse -->
-    </div>
-</div>
-<div class="container">
+<textarea class="textarea form-control" id="text" style="height: 465px;"></textarea>
+<input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
+<script src="/static/js/commands.js"></script>
+<script>
+    function sendCommand($input) {
+        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {$input.value = ""; })
+    }
+
+    var callURL = window.location.origin + "/serverConsoleText/${server.name}";
+    var lines = 0;
+    var textarea = document.getElementById('text');
+    var autoScroll = true;
+
+    var getConsoleText = function()
+    {
+        xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("GET", callURL  + "/" + lines , true)
+        xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
+        xmlhttp.send(null);
+
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4) {
+                if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
+                else
+                {
+                    autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
+                    responce = JSON.parse(xmlhttp.responseText);
+                    textarea.value += responce["text"];
+                    lines = responce["size"];
+                    if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
+                }
+            }
+        }
+    };
+    setInterval(getConsoleText, 5000);
+    getConsoleText();
+</script>
+</body>
+</html>
