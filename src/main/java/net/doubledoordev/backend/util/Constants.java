@@ -55,6 +55,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Random;
+import java.util.Timer;
 import java.util.regex.Pattern;
 
 /**
@@ -86,7 +87,6 @@ public class Constants
     public static final    JsonParser       JSONPARSER                     = new JsonParser();
     public static final    String           MC_VERIONS_URL                 = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
     public static final    String           FORGE_VERIONS_URL              = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
-    public static final    Integer          CAPACITY_FORGE_MAP             = 2000;
     public static final    String           MC_SERVER_JAR_URL              = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
     public static final    String           FORGE_INSTALLER_URL            = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
     public static final    Pattern          ILLEGAL_OPTIONS[]              = {Pattern.compile("^-Xms.*$"), Pattern.compile("^-Xmx.*$"), Pattern.compile("^-XX:MaxPermSize=.*$")};
@@ -143,8 +143,8 @@ public class Constants
         }
     };
     public static final    TemplateModel    HELPER_TEMPLATE_MODEL          = getStaticHelper();
+    public static final    Timer            TIMER                          = new Timer();
     protected static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    public static          long             CACHE_TIMEOUT                  = 1000 * 60 * 1;// 1 hour
     public static          int              LOG_LINES_KEPT                 = 1000;
 
     /**

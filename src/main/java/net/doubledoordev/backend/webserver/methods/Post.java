@@ -157,7 +157,7 @@ public class Post
         data.ip = map.get("ip");
         data.autoStart = map.containsKey("autostart") && map.get("autostart").equals("on");
 
-        Server server = new Server(data);
+        Server server = new Server(data, true);
         Settings.SETTINGS.servers.put(data.name, server);
         Settings.save();
         dataObject.put("step2", true);

@@ -42,25 +42,28 @@ package net.doubledoordev.backend.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.webserver.Webserver;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 
-import static net.doubledoordev.backend.util.Constants.CAPACITY_FORGE_MAP;
+import static net.doubledoordev.backend.util.Constants.FORGE_VERIONS_URL;
+import static net.doubledoordev.backend.util.Constants.TIMER;
 
 /**
  * Contains static Runnables that are used often
  *
  * @author Dries007
  */
-public class Runnables
+public class Cache extends TimerTask
 {
-    final static ArrayList<String>             CASHED_MC_VERSIONS = new ArrayList<>();
-    final static LinkedHashMap<String, String> NAME_VERSION_MAP   = new LinkedHashMap<>(CAPACITY_FORGE_MAP);
-    static       long                          lastForgeVersions  = 0L;
-    static final Runnable FORGE_VERSIONS_DOWNLOADER = new Runnable()
+    private static final int                           FORGE_MAP_CAPACITY        = 2000;
+    private static final LinkedHashMap<String, String> FORGE_NAME_VERSION_MAP    = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
+    private static final Runnable                      FORGE_VERSIONS_DOWNLOADER = new Runnable()
     {
         private boolean hasInstaller(JsonObject object)
         {
@@ -76,9 +79,9 @@ public class Runnables
         {
             try
             {
-                LinkedHashMap<String, Integer> nameBuildMap = new LinkedHashMap<>(Constants.CAPACITY_FORGE_MAP);
-                HashMap<Integer, String> buildVersionMap = new HashMap<>(Constants.CAPACITY_FORGE_MAP);
-                JsonObject versionList = Constants.JSONPARSER.parse(IOUtils.toString(new URL(Constants.FORGE_VERIONS_URL).openStream())).getAsJsonObject();
+                LinkedHashMap<String, Integer> nameBuildMap = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
+                HashMap<Integer, String> buildVersionMap = new HashMap<>(FORGE_MAP_CAPACITY);
+                JsonObject versionList = Constants.JSONPARSER.parse(IOUtils.toString(new URL(FORGE_VERIONS_URL).openStream())).getAsJsonObject();
                 JsonObject latest = versionList.getAsJsonObject("promos");
                 HashSet<Integer> buildsWithoutInstaller = new HashSet<>();
 
@@ -106,25 +109,22 @@ public class Runnables
 
                     if (!hasInstaller(object)) buildsWithoutInstaller.add(build);
                 }
-                synchronized (NAME_VERSION_MAP)
+                synchronized (FORGE_NAME_VERSION_MAP)
                 {
-                    NAME_VERSION_MAP.clear();
+                    FORGE_NAME_VERSION_MAP.clear();
                     for (Map.Entry<String, Integer> entry : nameBuildMap.entrySet())
                     {
-                        if (!buildsWithoutInstaller.contains(entry.getValue())) NAME_VERSION_MAP.put(entry.getKey(), buildVersionMap.get(entry.getValue()));
+                        if (!buildsWithoutInstaller.contains(entry.getValue())) FORGE_NAME_VERSION_MAP.put(entry.getKey(), buildVersionMap.get(entry.getValue()));
                     }
                 }
-                lastForgeVersions = System.currentTimeMillis();
             }
-            catch (IOException e)
+            catch (IOException ignored)
             {
-                //
             }
         }
-
     };
-    static       long     lastMCVersions         = 0L;
-    static final Runnable MC_VERSIONS_DOWNLOADER = new Runnable()
+    private static final ArrayList<String> CASHED_MC_VERSIONS     = new ArrayList<>();
+    private static final Runnable          MC_VERSIONS_DOWNLOADER = new Runnable()
     {
         @Override
         public void run()
@@ -146,12 +146,107 @@ public class Runnables
                                 CASHED_MC_VERSIONS.add(o.get("id").getAsString());
                     }
                 }
-                lastMCVersions = System.currentTimeMillis();
             }
-            catch (IOException e)
+            catch (IOException ignored)
             {
-                //
             }
         }
     };
+    private static final Runnable SIZE_COUNTER = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            for (Server server : Settings.SETTINGS.servers.values())
+            {
+                try
+                {
+                    SizeCounter sizeCounter = new SizeCounter();
+                    Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
+                    if (server.getBackupFolder().exists()) Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
+                    server.size = sizeCounter.getSizeInMB();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+    /**
+     * Time vars
+     */
+    public static long LONG_CACHE_TIMEOUT   = 1000 * 60 * 60;   // 1 hour
+    public static long MEDIUM_CACHE_TIMEOUT = 1000 * 60;       // 1 minute
+    public static long SHORT_CACHE_TIMEOUT  = 1000 * 10;       // 20 seconds
+    /**
+     * Forge version related things
+     */
+    private static       long                          lastForgeVersions         = 0L;
+    /**
+     * MC version related things
+     */
+    private static       long              lastMCVersions         = 0L;
+    /**
+     * Size counter related things
+     */
+    private static       long     lastSize     = 0L;
+    /**
+     * Timer related things
+     */
+    private static Cache instance;
+
+    private Cache()
+    {
+
+    }
+
+    public static Collection<String> getForgeNames()
+    {
+        return FORGE_NAME_VERSION_MAP.keySet();
+    }
+
+    public static String getForgeVersionForName(String name)
+    {
+        return FORGE_NAME_VERSION_MAP.get(name);
+    }
+
+    public static Collection<String> getMcVersions()
+    {
+        return CASHED_MC_VERSIONS;
+    }
+
+    public static void init()
+    {
+        if (instance != null) return;
+        instance = new Cache();
+        TIMER.scheduleAtFixedRate(instance, 0, SHORT_CACHE_TIMEOUT);
+    }
+
+    @Override
+    public void run()
+    {
+        long now = System.currentTimeMillis();
+
+        if (now - Webserver.WEBSERVER.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
+
+        if (now - lastMCVersions > LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
+        if (now - lastForgeVersions > LONG_CACHE_TIMEOUT) new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();
+        if (now - lastSize > MEDIUM_CACHE_TIMEOUT) new Thread(SIZE_COUNTER, "cache-sizeCounter").start();
+
+        lastMCVersions = lastForgeVersions = lastSize = now;
+
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (Server server : Settings.SETTINGS.servers.values())
+                {
+                    server.renewQuery();
+                    if (server.getRCon() == null) server.makeRcon();
+                }
+            }
+        }, "cache-rConAndQuery").start();
+    }
 }

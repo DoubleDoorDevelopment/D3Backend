@@ -41,81 +41,32 @@
 package net.doubledoordev.backend.util;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.util.Collection;
-
-import static net.doubledoordev.backend.util.Constants.RANDOM;
-import static net.doubledoordev.backend.util.Constants.symbols;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * Public static helper methods
- * Passed to template engine
- *
  * @author Dries007
  */
-public class Helper
+public class SizeCounter extends SimpleFileVisitor<Path>
 {
-    private Helper()
+    private long size = 0L;
+
+    @Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
     {
+        size += attrs.size();
+        return super.visitFile(file, attrs);
     }
 
-    /**
-     * Checks to see if a port/hostname combo is available through opening a socked and closing it again
-     *
-     * @param hostname the hostname, if null this is bypassed
-     * @param port     the port to check
-     * @return true if available
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public static boolean isPortAvailable(String hostname, int port)
+    public long getSize()
     {
-        try
-        {
-            ServerSocket socket = new ServerSocket();
-            socket.bind(hostname == null || hostname.length() == 0 ? new InetSocketAddress(port) : new InetSocketAddress(hostname, port));
-            socket.close();
-            return true;
-        }
-        catch (IOException e)
-        {
-            return false;
-        }
+        return size;
     }
 
-    public static String randomString(int length)
+    public int getSizeInMB()
     {
-        return new String(randomCharArray(length));
-    }
-
-    public static char[] randomCharArray(int length)
-    {
-        if (length < 1) throw new IllegalArgumentException("length < 1: " + length);
-
-        final char[] buf = new char[length];
-
-        for (int idx = 0; idx < buf.length; ++idx) buf[idx] = symbols[RANDOM.nextInt(symbols.length)];
-        return buf;
-    }
-
-    /**
-     * @return set of all MC versions we can grab from mojang
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public static Collection<String> getAllMCVersions()
-    {
-        return Cache.getMcVersions();
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public static Collection<String> getForgeNames()
-    {
-        return Cache.getForgeNames();
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public static String getForgeVersionForName(String name)
-    {
-        return Cache.getForgeVersionForName(name);
+        return (int) (size / (1000 * 1000));
     }
 }

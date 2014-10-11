@@ -49,6 +49,7 @@ import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.SizeCounter;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.lingala.zip4j.core.ZipFile;
@@ -63,11 +64,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -90,16 +87,17 @@ public class Server
     private static final String RCON_PASSWORD     = "rcon.password";
     private static final String RCON_PORT         = "rcon.port";
     private static final String SERVER_IP         = "server-ip";
-    /**
-     * 10 seconds
-     */
-    private static final int    CACHE_TIMEOUT     = 1000 * 10;
 
     /**
      * Java bean holding all the config data
      */
     private final ServerData data;
     private final ArrayList<String> log = new ArrayList<>(LOG_LINES_KEPT + 10);
+    /**
+     * Diskspace var + timer to avoid long page load times.
+     */
+    public  int           size;
+    public  QueryResponse cachedResponse;
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
@@ -112,14 +110,11 @@ public class Server
     /**
      * RCon instance + timer to avoid long page load times.
      */
-    private RCon rCon;
-    private long lastRcon = 0L;
+    private RCon          rCon;
     /**
      * MCQuery and QueryResponse instances + timer to avoid long page load times.
      */
-    private MCQuery query;
-    private long lastQuery = 0L;
-    private QueryResponse cachedResponse;
+    private MCQuery       query;
     /**
      * The process the server will be running in
      */
@@ -129,7 +124,7 @@ public class Server
     private WorldManager worldManager = new WorldManager(this);
     private User ownerObject;
 
-    public Server(ServerData data)
+    public Server(ServerData data, boolean isNewServer)
     {
         this.data = data;
         this.logger = LogManager.getLogger(data.name);
@@ -157,9 +152,8 @@ public class Server
                         rCon.stop();
                         startServer();
                     }
-                    catch (Exception e)
+                    catch (Exception ignored)
                     {
-                        e.printStackTrace();
                     }
                 }
             }).start();
@@ -172,9 +166,22 @@ public class Server
             {
                 startServer();
             }
-            catch (Exception e)
+            catch (Exception ignored)
             {
-                //
+            }
+        }
+
+        if (isNewServer)
+        {
+            try
+            {
+                SizeCounter sizeCounter = new SizeCounter();
+                Files.walkFileTree(getFolder().toPath(), sizeCounter);
+                if (getBackupFolder().exists()) Files.walkFileTree(getBackupFolder().toPath(), sizeCounter);
+                size = sizeCounter.getSizeInMB();
+            }
+            catch (IOException ignored)
+            {
             }
         }
     }
@@ -186,19 +193,18 @@ public class Server
      */
     public RCon getRCon()
     {
-        if (rCon == null && System.currentTimeMillis() - lastRcon > CACHE_TIMEOUT)
-        {
-            lastRcon = System.currentTimeMillis();
-            try
-            {
-                rCon = new RCon(LOCALHOST, data.rconPort, data.rconPswd.toCharArray());
-            }
-            catch (Exception e)
-            {
-                // Server offline.
-            }
-        }
         return rCon;
+    }
+
+    public void makeRcon()
+    {
+        try
+        {
+            rCon = new RCon(LOCALHOST, data.rconPort, data.rconPswd.toCharArray());
+        }
+        catch (Exception ignored) // Server offline.
+        {
+        }
     }
 
     /**
@@ -208,6 +214,11 @@ public class Server
     {
         if (query == null) query = new MCQuery(LOCALHOST, data.serverPort);
         return query;
+    }
+
+    public void renewQuery()
+    {
+        cachedResponse = getQuery().fullStat();
     }
 
     /**
@@ -332,19 +343,6 @@ public class Server
     }
 
     /**
-     * Check to see if the cachedResponse is still valid.
-     * If not, its automatically renewed.
-     */
-    private void checkCachedResponse()
-    {
-        if (System.currentTimeMillis() - lastQuery > CACHE_TIMEOUT)
-        {
-            cachedResponse = getQuery().fullStat();
-            lastQuery = System.currentTimeMillis();
-        }
-    }
-
-    /**
      * Check server online status.
      * Ony detects when the process is started by us.
      * Bypass this limitation with RCon
@@ -404,49 +402,41 @@ public class Server
 
     public int getOnlinePlayers()
     {
-        checkCachedResponse();
         return cachedResponse == null ? -1 : cachedResponse.getOnlinePlayers();
     }
 
     public int getSlots()
     {
-        checkCachedResponse();
         return cachedResponse == null ? -1 : cachedResponse.getMaxPlayers();
     }
 
     public String getMotd()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getMotd();
     }
 
     public String getGameMode()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getGameMode();
     }
 
     public String getMapName()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getMapName();
     }
 
     public ArrayList<String> getPlayerList()
     {
-        checkCachedResponse();
         return cachedResponse == null ? new ArrayList<String>() : cachedResponse.getPlayerList();
     }
 
     public String getPlugins()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getPlugins();
     }
 
     public String getVersion()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getVersion();
     }
 
@@ -554,7 +544,6 @@ public class Server
 
     public String getGameID()
     {
-        checkCachedResponse();
         return cachedResponse == null ? "?" : cachedResponse.getGameID();
     }
 
@@ -604,11 +593,6 @@ public class Server
         return data.extraJavaParameters;
     }
 
-    public void setExtraJavaParameters(String list) throws Exception
-    {
-        setExtraJavaParameters(Arrays.asList(list.split(",")));
-    }
-
     public void setExtraJavaParameters(List<String> list) throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
@@ -619,14 +603,14 @@ public class Server
         Settings.save();
     }
 
+    public void setExtraJavaParameters(String list) throws Exception
+    {
+        setExtraJavaParameters(Arrays.asList(list.split(",")));
+    }
+
     public List<String> getExtraMCParameters()
     {
         return data.extraMCParameters;
-    }
-
-    public void setExtraMCParameters(String list) throws Exception
-    {
-        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public void setExtraMCParameters(List<String> list) throws Exception
@@ -637,6 +621,11 @@ public class Server
                 if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraMCParameters = list;
         Settings.save();
+    }
+
+    public void setExtraMCParameters(String list) throws Exception
+    {
+        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public String getJarName()
@@ -679,15 +668,15 @@ public class Server
         return data.admins;
     }
 
-    public void setAdmins(String list) throws Exception
-    {
-        setAdmins(Arrays.asList(list.split(",")));
-    }
-
     public void setAdmins(List<String> strings)
     {
         data.admins = strings;
         Settings.save();
+    }
+
+    public void setAdmins(String list) throws Exception
+    {
+        setAdmins(Arrays.asList(list.split(",")));
     }
 
     public void setAdmins()
@@ -700,15 +689,15 @@ public class Server
         return data.coOwners;
     }
 
-    public void setCoOwners(String list) throws Exception
-    {
-        setCoOwners(Arrays.asList(list.split(",")));
-    }
-
     public void setCoOwners(List<String> strings)
     {
         data.coOwners = strings;
         Settings.save();
+    }
+
+    public void setCoOwners(String list) throws Exception
+    {
+        setCoOwners(Arrays.asList(list.split(",")));
     }
 
     public void setCoOwners()
@@ -819,10 +808,7 @@ public class Server
                     /**
                      * Renews cashed vars so they are up to date when the page is refreshed.
                      */
-                    lastRcon = 0L;
-                    getRCon();
-                    lastQuery = 0L;
-                    checkCachedResponse();
+                    makeRcon();
                 }
                 catch (IOException e)
                 {
@@ -969,47 +955,7 @@ public class Server
 
     public int getDiskspaceUse()
     {
-        final long[] size = {0};
-        try
-        {
-            Files.walkFileTree(getFolder().toPath(), new SimpleFileVisitor<Path>()
-            {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
-                {
-                    size[0] += attrs.size();
-                    return super.visitFile(file, attrs);
-                }
-            });
-        }
-        catch (IOException e)
-        {
-            logger.warn(e);
-            e.printStackTrace();
-        }
-
-        if (getBackupFolder().exists())
-        {
-            try
-            {
-                Files.walkFileTree(getBackupFolder().toPath(), new SimpleFileVisitor<Path>()
-                {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
-                    {
-                        size[0] += attrs.size();
-                        return super.visitFile(file, attrs);
-                    }
-                });
-            }
-            catch (IOException e)
-            {
-                logger.warn(e);
-                e.printStackTrace();
-            }
-        }
-
-        return (int) size[0] / (1024 * 1024);
+        return size;
     }
 
     public WorldManager getWorldManager()
@@ -1026,7 +972,7 @@ public class Server
         public Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
         {
             ServerData serverData = context.deserialize(json, ServerData.class);
-            Server server = new Server(serverData);
+            Server server = new Server(serverData, false);
             if (json.getAsJsonObject().has("dimentions"))
             {
                 Dimention[] dimentions = context.deserialize(json.getAsJsonObject().get("dimentions"), Dimention[].class);

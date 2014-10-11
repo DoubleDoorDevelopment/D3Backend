@@ -42,7 +42,6 @@ package net.doubledoordev.backend.webserver;
 
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.methods.Get;
 import net.doubledoordev.backend.webserver.methods.Post;
@@ -50,8 +49,8 @@ import net.doubledoordev.backend.webserver.methods.Put;
 
 import java.util.HashMap;
 
-import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
-import static net.doubledoordev.backend.util.Constants.STATIC_PATH;
+import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * NanoHTTPD based server
@@ -60,11 +59,12 @@ import static net.doubledoordev.backend.util.Constants.STATIC_PATH;
  */
 public class Webserver extends SimpleWebServer
 {
-    public static final Webserver WEBSERVER = new Webserver();
+    public static final Webserver WEBSERVER   = new Webserver();
+    public              long      lastRequest = System.currentTimeMillis();
 
     private Webserver()
     {
-        super(Settings.SETTINGS.hostname, Settings.SETTINGS.port, STATIC_PATH);
+        super(SETTINGS.hostname, SETTINGS.port, STATIC_PATH);
     }
 
     /**
@@ -76,12 +76,14 @@ public class Webserver extends SimpleWebServer
     @Override
     public Response serve(IHTTPSession session)
     {
+        lastRequest = System.currentTimeMillis();
+
         // We want to split off static ASAP.
         if (session.getUri().startsWith(STATIC_PATH))
             return super.respond(session.getHeaders(), session.getUri().substring(STATIC_PATH.length()));
 
         // stupid favicon.ico
-        if (session.getUri().contains(Constants.FAVOTICON))
+        if (session.getUri().contains(FAVOTICON))
             return super.respond(session.getHeaders(), session.getUri());
 
         /**

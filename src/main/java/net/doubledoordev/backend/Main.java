@@ -43,7 +43,6 @@ package net.doubledoordev.backend;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Constants;
-import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 import net.doubledoordev.backend.webserver.Webserver;
@@ -85,8 +84,7 @@ public class Main
         mkdirs();
         LOGGER.info("Starting webserver...");
         Webserver.WEBSERVER.start();
-        LOGGER.info("Running Helper init...");
-        Helper.init();
+        LOGGER.info("Setting up caching...");
 
         LOGGER.info("+-------------------------------------------------------+");
         LOGGER.info("| Loading done. Press any key to terminate the program. |");
