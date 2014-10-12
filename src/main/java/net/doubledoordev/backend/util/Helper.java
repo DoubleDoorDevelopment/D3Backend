@@ -40,6 +40,8 @@
 
 package net.doubledoordev.backend.util;
 
+import net.doubledoordev.backend.server.Server;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -54,6 +56,7 @@ import static net.doubledoordev.backend.util.Constants.symbols;
  *
  * @author Dries007
  */
+@SuppressWarnings("UnusedDeclaration")
 public class Helper
 {
     private Helper()
@@ -67,7 +70,6 @@ public class Helper
      * @param port     the port to check
      * @return true if available
      */
-    @SuppressWarnings("UnusedDeclaration")
     public static boolean isPortAvailable(String hostname, int port)
     {
         try
@@ -101,21 +103,32 @@ public class Helper
     /**
      * @return set of all MC versions we can grab from mojang
      */
-    @SuppressWarnings("UnusedDeclaration")
     public static Collection<String> getAllMCVersions()
     {
         return Cache.getMcVersions();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public static Collection<String> getForgeNames()
     {
         return Cache.getForgeNames();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public static String getForgeVersionForName(String name)
     {
         return Cache.getForgeVersionForName(name);
+    }
+
+    public static int getTotalRamUsed()
+    {
+        int total = 0;
+        for (Server server : Settings.SETTINGS.getOnlineServers()) total += server.getRamMax();
+        return total;
+    }
+
+    public static int getTotalDiskspaceUsed()
+    {
+        int total = 0;
+        for (Server server : Settings.SETTINGS.getServers()) total += server.getDiskspaceUse();
+        return total;
     }
 }

@@ -43,11 +43,13 @@ package net.doubledoordev.backend.webserver.methods;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Dimention;
+import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,8 +79,6 @@ public class Put
         try
         {
             session.parseBody(new HashMap<String, String>());
-            // TODO debug code
-            Main.printdebug(session, dataObject);
             Map<String, String> map = session.getParms();
             String[] split = new String[Integer.parseInt(map.get("lengh"))];
             for (int i = 0; i < split.length; i++)
@@ -89,6 +89,11 @@ public class Put
                     Server server = Settings.getServerByName(split[1]);
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     return invokeWithRefectionMagic(server, split, 2);
+                // ----------------------------------------------------------------------------------------------------------
+                case "filemanager":
+                    server = Settings.getServerByName(split[1]);
+                    if (!server.isCoOwner((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
+                    return invokeWithRefectionMagic(new FileManager(server, split[2]), split, 3);
                 // ----------------------------------------------------------------------------------------------------------
                 case "worldmanager":
                     server = Settings.getServerByName(split[1]);

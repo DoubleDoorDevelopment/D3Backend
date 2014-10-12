@@ -1,5 +1,5 @@
 <#include "header.ftl">
-<textarea class="textarea form-control" id="text" style="height: 800px;"></textarea>
+<textarea class="textarea form-control" id="text" style="height: 800px;" wrap="off"></textarea>
 <script>
     var callURL = window.location.origin + "/backendConsoleText";
     var lines = 0;

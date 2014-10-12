@@ -124,6 +124,7 @@
                 <div class="btn-group">
                     <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">Delete server</button>
                     <a type="button" href='/worldmanager/${server.name}' class="btn btn-info">World Manager</a>
+                    <a type="button" href='/filemanager/${server.name}' class="btn btn-info">File Manager</a>
                 </div>
                 <hr>
                 <div class="form-group">

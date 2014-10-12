@@ -7,8 +7,8 @@
         <th class="col-sm-2">Server Address</th>
         <th class="col-sm-1">Players</th>
         <th class="col-sm-1">Size</th>
-        <th class="col-sm-3"></th>
-        <th class="col-sm-3">MOTD</th>
+        <th class="col-sm-2"></th>
+        <th class="col-sm-4">MOTD</th>
     </tr>
     </thead>
     <tbody>

@@ -255,7 +255,7 @@ public class JavaFinder
                     if (!preferred.is64bits && aJava32.compareTo(preferred) == 1) preferred = aJava32;
                 }
             }
-            Main.LOGGER.debug("Preferred: " + String.valueOf(preferred));
+            Main.LOGGER.info("Preferred: " + String.valueOf(preferred));
         }
 
         if (preferred != null)

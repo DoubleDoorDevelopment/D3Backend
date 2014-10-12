@@ -60,7 +60,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     /**
      * Hashtable mapping (String)FILENAME_EXTENSION -> (String)MIME_TYPE
      */
-    private static final Map<String, String> MIME_TYPES          = new HashMap<String, String>()
+    public static final Map<String, String> MIME_TYPES          = new HashMap<String, String>()
     {{
             put("css", "text/css");
             put("htm", "text/html");

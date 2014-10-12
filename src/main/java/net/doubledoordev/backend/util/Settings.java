@@ -61,7 +61,7 @@ import static net.doubledoordev.backend.util.Constants.*;
  *
  * @author Dries007
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings("UnusedDeclaration")
 public class Settings
 {
     public static final Settings SETTINGS = new Settings();
@@ -180,6 +180,13 @@ public class Settings
     public Collection<Server> getServers()
     {
         return servers.values();
+    }
+
+    public Collection<Server> getOnlineServers()
+    {
+        HashSet<Server> onlineServers = new HashSet<>();
+        for (Server server : getServers()) if (server.getOnline()) onlineServers.add(server);
+        return onlineServers;
     }
 
     public Collection<User> getUsers()

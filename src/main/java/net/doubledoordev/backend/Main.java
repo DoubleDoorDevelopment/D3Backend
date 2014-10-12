@@ -56,6 +56,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * @author Dries007
@@ -75,9 +76,6 @@ public class Main
         charset.setAccessible(true);
         charset.set(null, null);
 
-        LOGGER.info("+-------------------------------------------------------+");
-        LOGGER.info("| ...................... Loading ...................... |");
-        LOGGER.info("+-------------------------------------------------------+");
         LOGGER.info("Finding Java versions...");
         //noinspection ResultOfMethodCallIgnored
         Constants.JAVAPATH.length();
@@ -89,9 +87,8 @@ public class Main
         LOGGER.info("Setting up caching...");
         Cache.init();
 
-        LOGGER.info("+-------------------------------------------------------+");
-        LOGGER.info("| Loading done. Press any key to terminate the program. |");
-        LOGGER.info("+-------------------------------------------------------+");
+        LOGGER.info("Loading done. Press any key to terminate the program.");
+        LOGGER.info("Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.port);
         // Wait for user input.
         try
         {

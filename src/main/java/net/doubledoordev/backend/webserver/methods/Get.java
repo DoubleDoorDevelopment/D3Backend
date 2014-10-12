@@ -42,6 +42,9 @@ package net.doubledoordev.backend.webserver.methods;
 
 import freemarker.template.*;
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.FileManager;
+import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
@@ -124,14 +127,33 @@ public class Get
                     case "backendConsoleText":
                         return new Response(OK, MIME_PLAINTEXT, CustomLogAppender.getLogLinesAfter(Integer.parseInt(args[1])));
                     case "worldmanager":
-                        if (args.length > 1) dataObject.put("wm", getServerByName(args[1]).getWorldManager());
+                        if (args.length > 1)
+                        {
+                            Server server = getServerByName(args[1]);
+                            dataObject.put("wm", server.getWorldManager());
+                            dataObject.put("server", server);
+                        }
+                        else return new Response(BAD_REQUEST, MIME_PLAINTEXT, "No server provided.");
+                        break;
+                    case "filemanager":
+                        if (args.length > 1)
+                        {
+                            Server server = getServerByName(args[1]);
+                            if (!server.isCoOwner((User) dataObject.get("user")))
+                            {
+                                args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
+                                return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
+                            }
+                            dataObject.put("fm", new FileManager(server, session.getParms().get("file")));
+                        }
+                        else return new Response(BAD_REQUEST, MIME_PLAINTEXT, "No server provided.");
+                        break;
                     case "serverconsole":
                     case "servers":
                         if (args.length > 1) dataObject.put("server", getServerByName(args[1]));
                         break;
                 }
             }
-
             return new Response(resolveTemplate(dataObject, args, session));
         }
         catch (Exception e)
