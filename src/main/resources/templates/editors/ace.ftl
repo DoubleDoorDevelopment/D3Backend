@@ -11,7 +11,10 @@
 <script>
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/chrome");
-    editor.getSession().setMode("ace/mode/html");
+    /**
+     *  TODO: Make proper lang detection with manual override on the page itself. (dropdown?) See http://ajaxorg.github.io/ace-builds/kitchen-sink.html
+     *  editor.getSession().setMode("ace/mode/html");
+     */
     editor.getSession().setTabSize(4);
     editor.getSession().setUseSoftTabs(true);
     editor.setShowPrintMargin(false);
