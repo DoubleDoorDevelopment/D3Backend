@@ -7,7 +7,7 @@
         window.location = "../servers/${server.name}";
     </script>
 <#else>
-    <form class="form-horizontal" role="form" method="post">
+    <form class="form-horizontal" name="form" role="form" method="post" onsubmit="return validateForm()">
         <#if admin>
             <div class="form-group">
                 <label for="owner" class="col-sm-2 control-label">Owner</label>
@@ -21,12 +21,12 @@
                 </div>
             </div>
         </#if>
-        <div class="form-group">
+        <div class="form-group" id="name-div">
             <label for="name" class="col-sm-2 control-label">Server Name</label>
 
             <div class="col-sm-10">
-                <input type="text" class="form-control" id="name" name="name" required>
-                <span class="help-block">"${user.username}-" will be used as a prefix automatically.</span>
+                <input type="text" class="form-control" id="name" name="name" required onchange="checkName()">
+                <span class="help-block" id="name-help" >"${user.username}-" will be used as a prefix automatically.</span>
             </div>
         </div>
         <#if !Settings.fixedPorts>
@@ -129,10 +129,33 @@
         <!-- submit btn -->
         <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-                <button type="submit" class="btn btn-primary">Submit!</button>
+                <button id="submit" type="submit" class="btn btn-primary">Submit!</button>
                 <span class="help-block">By clicking submit you indicate that you agree to <a href="https://account.mojang.com/documents/minecraft_eula">Mojang's EULA.</a></span>
             </div>
         </div>
     </form>
+<script>
+    function checkName() {
+        var name = document.getElementById("name").value;
+        while (!name.match(/^[\w]+$/))
+        {
+            name = prompt('Your server name contains non allowed characters.\nPlease remove all spaces and special characters.', name);
+            if (name == null) break;
+        }
+
+        if (name == null || !name.match(/^[\w]+$/))
+        {
+            document.getElementById("submit").disabled = true;
+            document.getElementById("name-div").className = "form-group has-error";
+
+        }
+        else
+        {
+            document.getElementById("name").value = name;
+            document.getElementById("submit").disabled = false;
+            document.getElementById("name-div").className = "form-group";
+        }
+    }
+</script>
 </#if>
 <#include "footer.ftl">
