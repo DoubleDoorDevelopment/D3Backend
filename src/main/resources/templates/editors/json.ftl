@@ -29,7 +29,7 @@
         }
     };
 
-    var json = ${fm.getFileContentsAsString()};
+    var json = ${fm.getRawFileContents()};
 
     var editor = new JSONEditor(container, options, json);
 </script>

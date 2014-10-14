@@ -120,7 +120,7 @@ public class Put
                     if (!(boolean) dataObject.get("admin")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     return invokeWithRefectionMagic(Settings.getUserByName(split[1]), split, 2);
                 // ----------------------------------------------------------------------------------------------------------
-                case "console":
+                case "serverconsole":
                     server = Settings.getServerByName(split[1]);
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     if (!server.getOnline())

@@ -193,6 +193,11 @@ public class FileManager
         }
     }
 
+    public String getRawFileContents() throws IOException
+    {
+        return FileUtils.readFileToString(file);
+    }
+
     public String getFileContentsAsString() throws IOException
     {
         return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
