@@ -6,7 +6,7 @@
         <th class="col-sm-2">Server Name</th>
         <th class="col-sm-2">Server Address</th>
         <th class="col-sm-1">Players</th>
-        <th class="col-sm-1">Size</th>
+        <th class="col-sm-1">Total Size</th>
         <th class="col-sm-2"></th>
         <th class="col-sm-4">MOTD</th>
     </tr>
@@ -18,7 +18,7 @@
                 <td onclick="window.document.location='/servers/${server.name}'">${server.name}</td>
                 <td onclick="window.document.location='/servers/${server.name}'">${server.displayAddress}</td>
                 <td onclick="window.document.location='/servers/${server.name}'">${server.onlinePlayers}/${server.slots}</td>
-                <td onclick="window.document.location='/servers/${server.name}'">${server.diskspaceUse} MB</td>
+                <td onclick="window.document.location='/servers/${server.name}'">${server.diskspaceUse[2]} MB</td>
                 <td>
                     <div class="btn-group">
                         <button type="button" <#if !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success btn-xs">Start</button>
