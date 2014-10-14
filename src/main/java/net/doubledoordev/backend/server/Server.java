@@ -97,7 +97,7 @@ public class Server
     /**
      * Diskspace var + timer to avoid long page load times.
      */
-    public  int           size;
+    public  int[]         size = new int[3];
     public  QueryResponse cachedResponse;
     /**
      * Used to reroute server output to our console.
@@ -178,8 +178,11 @@ public class Server
             {
                 SizeCounter sizeCounter = new SizeCounter();
                 Files.walkFileTree(getFolder().toPath(), sizeCounter);
+                size[0] = sizeCounter.getSizeInMB();
+                sizeCounter = new SizeCounter();
                 if (getBackupFolder().exists()) Files.walkFileTree(getBackupFolder().toPath(), sizeCounter);
-                size = sizeCounter.getSizeInMB();
+                size[1] = sizeCounter.getSizeInMB();
+                size[2] = size[0] + size[1];
             }
             catch (IOException ignored)
             {
@@ -924,9 +927,9 @@ public class Server
     public void delete() throws ServerOnlineException, IOException
     {
         if (getOnline()) throw new ServerOnlineException();
+        Settings.SETTINGS.servers.remove(getName()); // Needs to happen first because
         FileUtils.deleteDirectory(folder);
         FileUtils.deleteDirectory(backupFolder);
-        Settings.SETTINGS.servers.remove(getName());
     }
 
     public void downloadModpack(String zipURL, boolean purge) throws IOException, ZipException
@@ -971,7 +974,7 @@ public class Server
         return backupFolder;
     }
 
-    public int getDiskspaceUse()
+    public int[] getDiskspaceUse()
     {
         return size;
     }

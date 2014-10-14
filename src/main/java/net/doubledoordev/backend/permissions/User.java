@@ -182,7 +182,7 @@ public class User
         if (getMaxDiskspace() == -1) return -1;
         int leftover = getDiskspaceLeft();
         for (Server server : Settings.SETTINGS.servers.values())
-            if (server.getOwner().equals(username)) leftover -= server.getDiskspaceUse();
+            if (server.getOwner().equals(username)) leftover -= server.getDiskspaceUse()[2];
         return leftover > 0 ? leftover : 0;
     }
 

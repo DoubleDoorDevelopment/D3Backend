@@ -40,7 +40,12 @@
                     </#list>
                     </tbody>
                 </table>
-                <p>Diskspace in use by server + backups: ${server.diskspaceUse} MB</p>
+                <p>
+                    Diskspace in use:<br>
+                    by server: ${server.diskspaceUse[0]}MB<br>
+                    by backups: ${server.diskspaceUse[1]}MB<br>
+                    total: ${server.diskspaceUse[2]}MB
+                </p>
             </div>
         </div>
     </div>

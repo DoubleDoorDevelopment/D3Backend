@@ -135,7 +135,7 @@ public class Helper
     public static int getTotalDiskspaceUsed()
     {
         int total = 0;
-        for (Server server : Settings.SETTINGS.getServers()) total += server.getDiskspaceUse();
+        for (Server server : Settings.SETTINGS.getServers()) total += server.getDiskspaceUse()[2];
         return total;
     }
 

@@ -75,6 +75,7 @@ public class WorldManager
     {
         worldFolder = new File(server.getFolder(), getWorldName());
         if (!worldFolder.exists()) return;
+        if (worldFolder.list().length == 0) return;
         if (!dimentionMap.containsKey(0)) dimentionMap.put(0, new Dimention(0));
         for (String file : worldFolder.list(DIM_ONLY_FILTER))
         {
@@ -108,6 +109,7 @@ public class WorldManager
 
     public void doBackup(File zip, File folder, FilenameFilter filter)
     {
+        if (!folder.exists()) return; // Prevent derp
         LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getName(), folder.getPath(), zip.getPath()));
         if (server.getOnline())
         {
