@@ -1,6 +1,6 @@
 <#include "header.ftl">
-<#assign allowModify = server.canUserControl(user) >
-<#assign isCoOwner = server.isCoOwner(user) >
+<#assign allowModify = server.canUserControl(user) || admin>
+<#assign isCoOwner = server.isCoOwner(user) || admin >
 <h1>${server.name} <small> ${server.getDisplayAddress()}   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small></h1>
 <p>
     <div class="btn-group">
@@ -32,7 +32,7 @@
                     </thead>
                     <tbody>
                     <#list ["name", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
-                        <#assign value = server.get(key)>
+                    <#assign value = server.get(key)>
                     <tr>
                         <td style="text-align: right;">${key}</td>
                         <td style="text-align: left;"><#if value?is_number>${value?c}<#elseif value?is_boolean>${value?string}<#elseif value?is_sequence>${value?join(", ")}<#else>${value}</#if></td>
@@ -132,7 +132,7 @@
                     <a type="button" href='/filemanager/${server.name}' class="btn btn-info">File Manager</a>
                 </div>
                 <div class="btn-group">
-                    <#if server.ownerObject == user><button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.name}', 'setOwner', name);}" class="btn btn-danger">Change owner</button></#if>
+                    <#if server.ownerObject == user || admin><button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.name}', 'setOwner', name);}" class="btn btn-danger">Change owner</button></#if>
                     <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">Delete server</button>
                 </div>
                 <hr>
