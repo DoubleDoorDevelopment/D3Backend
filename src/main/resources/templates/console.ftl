@@ -1,5 +1,6 @@
 <#include "header.ftl">
 <textarea class="textarea form-control" id="text" style="height: 800px;" wrap="off"></textarea>
+<p>Ps: You can't give any input from this page. You need SSH access for that.</p>
 <script>
     var callURL = window.location.origin + "/backendConsoleText";
     var lines = 0;
