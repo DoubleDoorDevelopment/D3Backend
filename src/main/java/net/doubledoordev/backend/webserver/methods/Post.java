@@ -127,7 +127,10 @@ public class Post
         if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new Exception("Max server count reached.");
         ServerData data = new ServerData();
 
-        data.name = user.getUsername() + "_" + map.get("name");
+        if (user.getGroup() == Group.ADMIN && map.containsKey("owner")) data.owner = map.get("owner");
+        else data.owner = user.getUsername();
+
+        data.name = data.owner + "_" + map.get("name");
         if (Settings.getServerByName(data.name) != null) throw new Exception("Duplicate server name");
 
         data.ramMin = Integer.parseInt(map.get("RAMmin"));
@@ -143,9 +146,6 @@ public class Post
 
         data.permGen = Integer.parseInt(map.get("PermGen"));
         if (data.permGen < 2) throw new Exception("PermGen settings invalid.");
-
-        if (user.getGroup() == Group.ADMIN && map.containsKey("owner")) data.owner = map.get("owner");
-        else data.owner = user.getUsername();
 
         if (map.get("extraJavaParameters").trim().length() == 0) data.extraJavaParameters = Arrays.asList(map.get("extraJavaParameters").trim().split("\n"));
         if (map.get("extraMCParameters").trim().length() == 0) data.extraMCParameters = Arrays.asList(map.get("extraMCParameters").trim().split("\n"));
