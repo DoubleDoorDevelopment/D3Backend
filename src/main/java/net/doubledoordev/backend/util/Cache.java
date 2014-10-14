@@ -42,12 +42,15 @@ package net.doubledoordev.backend.util;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.webserver.Webserver;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -79,6 +82,7 @@ public class Cache extends TimerTask
         {
             try
             {
+                Main.LOGGER.info("[Cache] Refreshing Forge version cache....");
                 LinkedHashMap<String, Integer> nameBuildMap = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
                 HashMap<Integer, String> buildVersionMap = new HashMap<>(FORGE_MAP_CAPACITY);
                 JsonObject versionList = Constants.JSONPARSER.parse(IOUtils.toString(new URL(FORGE_VERIONS_URL).openStream())).getAsJsonObject();
@@ -108,6 +112,26 @@ public class Cache extends TimerTask
                     buildVersionMap.put(build, String.format("%s-%s", mc, version));
 
                     if (!hasInstaller(object)) buildsWithoutInstaller.add(build);
+                    else
+                    {
+                        try
+                        {
+                            String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", String.format("%s-%s", mc, version));
+                            HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
+                            urlConnection.setRequestMethod("GET");
+                            urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
+                            urlConnection.connect();
+                            if (urlConnection.getResponseCode() != 200)
+                            {
+                                buildsWithoutInstaller.add(build);
+                                Main.LOGGER.debug("[Cache] FORGE - Excluded " + version + ". Return was (" + urlConnection.getResponseCode() + ") " + urlConnection.getResponseMessage());
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 synchronized (FORGE_NAME_VERSION_MAP)
                 {
@@ -117,14 +141,15 @@ public class Cache extends TimerTask
                         if (!buildsWithoutInstaller.contains(entry.getValue())) FORGE_NAME_VERSION_MAP.put(entry.getKey(), buildVersionMap.get(entry.getValue()));
                     }
                 }
+                Main.LOGGER.info("[Cache] Done refreshing Forge version cache.");
             }
             catch (IOException ignored)
             {
             }
         }
     };
-    private static final ArrayList<String> CASHED_MC_VERSIONS     = new ArrayList<>();
-    private static final Runnable          MC_VERSIONS_DOWNLOADER = new Runnable()
+    private static final ArrayList<String>             CASHED_MC_VERSIONS        = new ArrayList<>();
+    private static final Runnable                      MC_VERSIONS_DOWNLOADER    = new Runnable()
     {
         @Override
         public void run()
@@ -152,7 +177,7 @@ public class Cache extends TimerTask
             }
         }
     };
-    private static final Runnable SIZE_COUNTER = new Runnable()
+    private static final Runnable                      SIZE_COUNTER              = new Runnable()
     {
         @Override
         public void run()
@@ -179,9 +204,9 @@ public class Cache extends TimerTask
     /**
      * Time vars
      */
-    public static long LONG_CACHE_TIMEOUT   = 1000 * 60 * 60;   // 1 hour
-    public static long MEDIUM_CACHE_TIMEOUT = 1000 * 60;       // 1 minute
-    public static long SHORT_CACHE_TIMEOUT  = 1000 * 10;       // 20 seconds
+    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;   // 1 hour
+    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;       // 1 minute
+    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;       // 20 seconds
     /**
      * Forge version related things
      */
@@ -189,11 +214,11 @@ public class Cache extends TimerTask
     /**
      * MC version related things
      */
-    private static       long              lastMCVersions         = 0L;
+    private static       long                          lastMCVersions            = 0L;
     /**
      * Size counter related things
      */
-    private static       long     lastSize     = 0L;
+    private static       long                          lastSize                  = 0L;
     /**
      * Timer related things
      */

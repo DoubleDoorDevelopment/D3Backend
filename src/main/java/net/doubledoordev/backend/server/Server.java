@@ -539,6 +539,7 @@ public class Server
                 {
                     printLine("##################################################################");
                     printLine("Error installing a new forge version (version " + version + ")");
+                    printLine(e.toString());
                     printLine("##################################################################");
                     e.printStackTrace();
                 }
