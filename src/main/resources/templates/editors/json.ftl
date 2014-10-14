@@ -15,9 +15,12 @@
         height: 500px;
     }
 </style>
-
 <div id="jsoneditor"></div>
-
+<#if !readonly>
+<button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.name}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(editor.get()));">Save</button>
+<#else>
+<p>File is readonly.</p>
+</#if>
 <script type="text/javascript" >
     var container = document.getElementById('jsoneditor');
 
@@ -29,12 +32,13 @@
         }
     };
 
-    var json = ${fm.getRawFileContents()};
+    var json = ${fm.getFileContentsAsJson()!"null"};
 
-    var editor = new JSONEditor(container, options, json);
+    if (json == null)
+    {
+        alert("Data file might be currupt. It can't be read by our parser.");
+        document.getElementById("savebtn").disabled = true;
+        document.getElementById("jsoneditor").innerHTML = "Error. File corrupt?";
+    }
+    else editor = new JSONEditor(container, options, json);
 </script>
-<#if !readonly>
-<button type="button" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.name}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(editor.get()));">Save</button>
-<#else>
-<p>File is readonly.</p>
-</#if>

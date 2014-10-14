@@ -40,24 +40,31 @@
 
 package net.doubledoordev.backend.server;
 
+import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.Helper;
+import net.doubledoordev.backend.util.JsonNBTHelper;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 import net.doubledoordev.backend.webserver.SimpleWebServer;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.apache.commons.codec.binary.Base64;
+import org.spout.nbt.Tag;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 
 import static net.doubledoordev.backend.webserver.NanoHTTPD.MIME_PLAINTEXT;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.FORBIDDEN;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.INTERNAL_ERROR;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.OK;
+import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
 
 /**
+ * Current limitations:
+ * You can't make a new NBT file, as it will not be able to parse the compression state.
+ *
  * @author Dries007
  */
 @SuppressWarnings("UnusedDeclaration")
@@ -128,7 +135,7 @@ public class FileManager
     public String stripServer(File file)
     {
         if (file.equals(serverFolder)) return serverFolder.getName();
-        return file.toString().substring(serverFolder.toString().length() + 1);
+        return file.toString().substring(serverFolder.toString().length() + 1).replace('\\', '/');
     }
 
     public boolean canEdit(File file)
@@ -147,6 +154,10 @@ public class FileManager
 
     public String getEditor()
     {
+        if (file.getName().equals("ops.json")) return "ops.ftl";
+        if (file.getName().equals("whitelist.json")) return "whitelist.ftl";
+        if (file.getName().equals("banned-players.json")) return "banned-players.ftl";
+        if (file.getName().equals("banned-ips.json")) return "banned-ips.ftl";
         switch (getExtension())
         {
             case "jar":
@@ -155,6 +166,7 @@ public class FileManager
                 return null;
 
             case "json":
+            case "dat":
                 return "json.ftl";
 
             case "jpg":
@@ -174,6 +186,7 @@ public class FileManager
         {
             case "html":
             case "json":
+            case "dat":
                 return "file-code-o";
 
             case "txt":
@@ -193,9 +206,19 @@ public class FileManager
         }
     }
 
-    public String getRawFileContents() throws IOException
+    public String getFileContentsAsJson() throws IOException
     {
-        return FileUtils.readFileToString(file);
+        switch (getExtension())
+        {
+            case "json":
+                return FileUtils.readFileToString(file);
+            case "dat":
+                Tag tag = Helper.readRawNBT(file, true);
+                if (tag == null) tag = Helper.readRawNBT(file, false);
+                if (tag != null) return JsonNBTHelper.parseNBT(tag).toString();
+            default:
+                return null;
+        }
     }
 
     public String getFileContentsAsString() throws IOException
@@ -213,12 +236,22 @@ public class FileManager
         if (!file.canWrite()) return new NanoHTTPD.Response(FORBIDDEN, MIME_PLAINTEXT, "File is write protected.");
         try
         {
-            FileUtils.writeStringToFile(file, contents);
+            switch (getExtension())
+            {
+                case "dat":
+                    Helper.writeRawNBT(file, Helper.readRawNBT(file, true) != null, JsonNBTHelper.parseJSON(Constants.JSONPARSER.parse(contents)));
+                    break;
+                default:
+                    FileUtils.writeStringToFile(file, contents);
+                    break;
+            }
         }
         catch (IOException e)
         {
+            e.printStackTrace();
             return new NanoHTTPD.Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
         }
+
         return new NanoHTTPD.Response(OK, MIME_PLAINTEXT, "OK");
     }
 

@@ -55,7 +55,7 @@
 <script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
-        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {$input.value = ""; })
+        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {$input.value = ""; getConsoleText();})
     }
 
     var callURL = window.location.origin + "/serverConsoleText/${server.name}";

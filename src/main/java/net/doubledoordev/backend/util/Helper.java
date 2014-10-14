@@ -41,11 +41,16 @@
 package net.doubledoordev.backend.util;
 
 import net.doubledoordev.backend.server.Server;
+import org.spout.nbt.Tag;
+import org.spout.nbt.stream.NBTInputStream;
+import org.spout.nbt.stream.NBTOutputStream;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 
 import static net.doubledoordev.backend.util.Constants.RANDOM;
 import static net.doubledoordev.backend.util.Constants.symbols;
@@ -130,5 +135,70 @@ public class Helper
         int total = 0;
         for (Server server : Settings.SETTINGS.getServers()) total += server.getDiskspaceUse();
         return total;
+    }
+
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+
+    public static String getNowInBanFormat()
+    {
+        return dateFormat.format(new Date());
+    }
+
+    public static Tag<?> readRawNBT(File file, boolean compressed)
+    {
+        Tag<?> tag = null;
+        try
+        {
+            InputStream is = new FileInputStream(file);
+            NBTInputStream ns = new NBTInputStream(is, compressed);
+            try
+            {
+                tag = ns.readTag();
+            }
+            finally
+            {
+                try
+                {
+                    ns.close();
+                }
+                catch (IOException ignored)
+                {
+
+                }
+            }
+        }
+        catch (Exception ignored)
+        {
+
+        }
+        return tag;
+    }
+
+    public static void writeRawNBT(File file, boolean compressed, Tag<?> tag)
+    {
+        try
+        {
+            OutputStream is = new FileOutputStream(file);
+            NBTOutputStream ns = new NBTOutputStream(is, compressed);
+            try
+            {
+                ns.writeTag(tag);
+            }
+            finally
+            {
+                try
+                {
+                    ns.close();
+                }
+                catch (IOException ignored)
+                {
+
+                }
+            }
+        }
+        catch (Exception ignored)
+        {
+
+        }
     }
 }

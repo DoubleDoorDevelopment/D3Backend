@@ -48,6 +48,8 @@ import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.webserver.SimpleWebServer;
+import net.doubledoordev.backend.webserver.Webserver;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
@@ -144,7 +146,9 @@ public class Get
                                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
                                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
                             }
-                            dataObject.put("fm", new FileManager(server, session.getParms().get("file")));
+                            FileManager fileManager = new FileManager(server, session.getParms().get("file"));
+                            if (session.getParms().containsKey("raw")) return Webserver.WEBSERVER.serveFile(fileManager.getFile());
+                            dataObject.put("fm", fileManager);
                         }
                         else return new Response(BAD_REQUEST, MIME_PLAINTEXT, "No server provided.");
                         break;

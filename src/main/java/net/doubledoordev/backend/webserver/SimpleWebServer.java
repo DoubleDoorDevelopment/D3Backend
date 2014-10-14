@@ -40,6 +40,8 @@
 
 package net.doubledoordev.backend.webserver;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
@@ -177,7 +179,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     /**
      * Serves file from homeDir and its' subdirectories (only). Uses only URI, ignores all headers and HTTP parameters.
      */
-    Response serveResourceFile(String uri)
+    public Response serveResourceFile(String uri)
     {
         Response res;
         try
@@ -185,6 +187,24 @@ public abstract class SimpleWebServer extends NanoHTTPD
             InputStream stream = getClass().getResourceAsStream(rootDir + uri);
             int fileLen = stream.available();
             res = createResponse(Response.Status.OK, getMimeTypeForFile(uri), stream);
+            res.addHeader("Content-Length", "" + fileLen);
+        }
+        catch (IOException ioe)
+        {
+            res = getForbiddenResponse("Reading file failed.");
+        }
+
+        return res;
+    }
+
+    public Response serveFile(File file)
+    {
+        Response res;
+        try
+        {
+            InputStream stream = new FileInputStream(file);
+            int fileLen = stream.available();
+            res = createResponse(Response.Status.OK, MIME_TYPES.get(FilenameUtils.getExtension(file.getName().toLowerCase())), stream);
             res.addHeader("Content-Length", "" + fileLen);
         }
         catch (IOException ioe)
@@ -208,7 +228,7 @@ public abstract class SimpleWebServer extends NanoHTTPD
     }
 
     // Announce that the file server accepts partial content requests
-    Response createResponse(Response.Status status, String mimeType, InputStream message)
+    public Response createResponse(Response.Status status, String mimeType, InputStream message)
     {
         Response res = new Response(status, mimeType, message);
         res.addHeader("Accept-Ranges", "bytes");
@@ -216,110 +236,10 @@ public abstract class SimpleWebServer extends NanoHTTPD
     }
 
     // Announce that the file server accepts partial content requests
-    Response createResponse(Response.Status status, String mimeType, String message)
+    public Response createResponse(Response.Status status, String mimeType, String message)
     {
         Response res = new Response(status, mimeType, message);
         res.addHeader("Accept-Ranges", "bytes");
         return res;
-    }
-
-    private String findIndexFileInDirectory(File directory)
-    {
-        for (String fileName : INDEX_FILE_NAMES)
-        {
-            File indexFile = new File(directory, fileName);
-            if (indexFile.exists())
-            {
-                return fileName;
-            }
-        }
-        return null;
-    }
-
-    protected String listDirectory(String uri, File f)
-    {
-        String heading = "Directory " + uri;
-        StringBuilder msg = new StringBuilder("<html><head><title>" + heading + "</title><style><!--\n" +
-                "span.dirname { font-weight: bold; }\n" +
-                "span.filesize { font-size: 75%; }\n" +
-                "// -->\n" +
-                "</style>" +
-                "</head><body><h1>" + heading + "</h1>");
-
-        String up = null;
-        if (uri.length() > 1)
-        {
-            String u = uri.substring(0, uri.length() - 1);
-            int slash = u.lastIndexOf('/');
-            if (slash >= 0 && slash < u.length())
-            {
-                up = uri.substring(0, slash + 1);
-            }
-        }
-
-        List<String> files = Arrays.asList(f.list(new FilenameFilter()
-        {
-            @Override
-            public boolean accept(File dir, String name)
-            {
-                return new File(dir, name).isFile();
-            }
-        }));
-        Collections.sort(files);
-        List<String> directories = Arrays.asList(f.list(new FilenameFilter()
-        {
-            @Override
-            public boolean accept(File dir, String name)
-            {
-                return new File(dir, name).isDirectory();
-            }
-        }));
-        Collections.sort(directories);
-        if (up != null || directories.size() + files.size() > 0)
-        {
-            msg.append("<ul>");
-            if (up != null || directories.size() > 0)
-            {
-                msg.append("<section class=\"directories\">");
-                if (up != null)
-                {
-                    msg.append("<li><a rel=\"directory\" href=\"").append(up).append("\"><span class=\"dirname\">..</span></a></b></li>");
-                }
-                for (String directory : directories)
-                {
-                    String dir = directory + "/";
-                    msg.append("<li><a rel=\"directory\" href=\"").append(encodeUri(uri + dir)).append("\"><span class=\"dirname\">").append(dir).append("</span></a></b></li>");
-                }
-                msg.append("</section>");
-            }
-            if (files.size() > 0)
-            {
-                msg.append("<section class=\"files\">");
-                for (String file : files)
-                {
-                    msg.append("<li><a href=\"").append(encodeUri(uri + file)).append("\"><span class=\"filename\">").append(file).append("</span></a>");
-                    File curFile = new File(f, file);
-                    long len = curFile.length();
-                    msg.append("&nbsp;<span class=\"filesize\">(");
-                    if (len < 1024)
-                    {
-                        msg.append(len).append(" bytes");
-                    }
-                    else if (len < 1024 * 1024)
-                    {
-                        msg.append(len / 1024).append(".").append(len % 1024 / 10 % 100).append(" KB");
-                    }
-                    else
-                    {
-                        msg.append(len / (1024 * 1024)).append(".").append(len % (1024 * 1024) / 10 % 100).append(" MB");
-                    }
-                    msg.append(")</span></li>");
-                }
-                msg.append("</section>");
-            }
-            msg.append("</ul>");
-        }
-        msg.append("</body></html>");
-        return msg.toString();
     }
 }
