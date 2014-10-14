@@ -89,10 +89,20 @@ public class Cache extends TimerTask
                 JsonObject latest = versionList.getAsJsonObject("promos");
                 HashSet<Integer> buildsWithoutInstaller = new HashSet<>();
 
-                for (Map.Entry<String, JsonElement> element : latest.entrySet())
                 {
-                    nameBuildMap.put(String.format("%s (build %d)", element.getKey(), element.getValue().getAsInt()), element.getValue().getAsInt());
+                    LinkedList<String> list = new LinkedList<>();
+                    for (Map.Entry<String, JsonElement> element : latest.entrySet())
+                    {
+                        list.add(element.getKey());
+                    }
+                    Iterator<String> i = list.descendingIterator();
+                    while (i.hasNext())
+                    {
+                        String key = i.next();
+                        nameBuildMap.put(String.format("%s (build %d)", key, latest.get(key).getAsInt()), latest.get(key).getAsInt());
+                    }
                 }
+
                 String lastMc = "";
                 ArrayList<Map.Entry<String, JsonElement>> entries = new ArrayList<>(versionList.getAsJsonObject("number").entrySet());
                 for (int i = entries.size() - 1; i > 0; i--)
