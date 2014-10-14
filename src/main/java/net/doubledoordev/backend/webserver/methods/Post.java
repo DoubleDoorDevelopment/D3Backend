@@ -147,9 +147,10 @@ public class Post
         data.permGen = Integer.parseInt(map.get("PermGen"));
         if (data.permGen < 2) throw new Exception("PermGen settings invalid.");
 
-        if (map.get("extraJavaParameters").trim().length() == 0) data.extraJavaParameters = Arrays.asList(map.get("extraJavaParameters").trim().split("\n"));
-        if (map.get("extraMCParameters").trim().length() == 0) data.extraMCParameters = Arrays.asList(map.get("extraMCParameters").trim().split("\n"));
-        if (map.get("admins").trim().length() == 0) data.admins = Arrays.asList(map.get("admins").trim().split("\n"));
+        if (map.get("extraJavaParameters").trim().length() != 0) data.extraJavaParameters = Arrays.asList(map.get("extraJavaParameters").trim().split("\n"));
+        if (map.get("extraMCParameters").trim().length() != 0) data.extraMCParameters = Arrays.asList(map.get("extraMCParameters").trim().split("\n"));
+        if (map.get("admins").trim().length() != 0) data.admins = Arrays.asList(map.get("admins").trim().split("\n"));
+        if (map.get("coOwners").trim().length() != 0) data.coOwners = Arrays.asList(map.get("coOwners").trim().split("\n"));
 
         data.jarName = map.get("jarname");
         data.rconPswd = map.get("rconpass");

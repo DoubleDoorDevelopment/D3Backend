@@ -120,6 +120,14 @@
             </div>
         </div>
         <div class="form-group">
+            <label for="coOwners" class="col-sm-2 control-label">Co Owners</label>
+
+            <div class="col-sm-10">
+                <textarea class="form-control" rows="3" id="coOwners" name="coOwners"></textarea>
+                <span class="help-block">Don't include yourself... One per line!</span>
+            </div>
+        </div>
+        <div class="form-group">
             <label for="autostart" class="col-sm-2 control-label"></label>
 
             <div class="col-sm-10">
