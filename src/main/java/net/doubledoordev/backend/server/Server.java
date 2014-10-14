@@ -268,7 +268,7 @@ public class Server
 
     private void normalizeProperties()
     {
-        if (!Settings.SETTINGS.fixedPorts)
+        if (Settings.SETTINGS.fixedPorts)
         {
             properties.setProperty(SERVER_PORT, String.valueOf(data.serverPort));
             properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
@@ -279,10 +279,10 @@ public class Server
             properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
         }
 
-        if (!Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, data.ip);
+        if (Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, data.ip);
         else data.ip = properties.getProperty(SERVER_IP, data.ip);
 
-        if (!Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
+        if (Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
         else data.rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(data.rconPort)));
 
         properties.put(RCON_ENABLE, "true");
@@ -805,6 +805,7 @@ public class Server
                     ProcessBuilder pb = new ProcessBuilder(arguments);
                     pb.directory(folder);
                     pb.redirectErrorStream(true);
+                    if (!new File(folder, data.jarName).exists()) return; // for reasons of WTF?
                     process = pb.start();
                     new Thread(new Runnable()
                     {
