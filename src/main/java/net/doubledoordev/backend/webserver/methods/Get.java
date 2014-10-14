@@ -53,7 +53,9 @@ import net.doubledoordev.backend.webserver.Webserver;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
@@ -68,6 +70,7 @@ import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
  */
 public class Get
 {
+    public static final  List<String>  ADMINPAGES     = Arrays.asList("console");
     /**
      * Freemaker template engine config.
      * Used to resolve templates later on
@@ -115,6 +118,12 @@ public class Get
             String[] args = uri.split("/");
 
             if (!dataObject.containsKey("user") && !SETTINGS.anonPages.contains(args[0].toLowerCase()))
+            {
+                args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
+                return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
+            }
+
+            if (ADMINPAGES.contains(args[0].toLowerCase()) && !((User)dataObject.get("user")).isAdmin())
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));

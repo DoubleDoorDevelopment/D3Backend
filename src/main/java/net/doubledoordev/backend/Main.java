@@ -54,6 +54,7 @@ import org.apache.logging.log4j.Logger;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.UUID;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
@@ -64,6 +65,7 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 public class Main
 {
     public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
+    public static String adminKey;
 
     private Main()
     {
@@ -86,6 +88,15 @@ public class Main
         Webserver.WEBSERVER.start();
         LOGGER.info("Setting up caching...");
         Cache.init();
+
+        if (SETTINGS.users.isEmpty())
+        {
+            adminKey = UUID.randomUUID().toString();
+            LOGGER.warn("Your userlist is empty.");
+            LOGGER.warn("Make a new account and use the special admin token in the '2 + 2 = ?' field.");
+            LOGGER.warn("You can only use this key once. It will be regenerated if the userlist is empty when the backend starts.");
+            LOGGER.warn("Admin token: " + adminKey);
+        }
 
         LOGGER.info("Loading done. Press any key to terminate the program.");
         LOGGER.info("Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.port);

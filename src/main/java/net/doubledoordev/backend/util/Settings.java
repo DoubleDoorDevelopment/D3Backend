@@ -106,7 +106,7 @@ public class Settings
                 fileReader = new FileReader(USERS_FILE);
                 if (USERS_FILE.exists())
                     for (User user : GSON.fromJson(fileReader, User[].class))
-                        SETTINGS.users.put(user.getUsername(), user);
+                        SETTINGS.users.put(user.getUsername().toLowerCase(), user);
                 fileReader.close();
             }
         }
@@ -174,7 +174,7 @@ public class Settings
 
     public static User getUserByName(String name)
     {
-        return SETTINGS.users.get(name);
+        return SETTINGS.users.get(name.toLowerCase());
     }
 
     public Collection<Server> getServers()

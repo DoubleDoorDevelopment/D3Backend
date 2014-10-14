@@ -661,7 +661,24 @@ public class Server
     public User getOwnerObject()
     {
         if (ownerObject == null) ownerObject = Settings.getUserByName(getOwner());
+        if (ownerObject == null)
+        {
+            for (User user : Settings.SETTINGS.users.values())
+            {
+                if (user.isAdmin())
+                {
+                    ownerObject = user;
+                    break;
+                }
+            }
+        }
         return ownerObject;
+    }
+
+    public void setOwner(String username)
+    {
+        ownerObject = null;
+        data.owner = username;
     }
 
     public List<String> getAdmins()

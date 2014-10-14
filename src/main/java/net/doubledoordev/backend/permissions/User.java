@@ -81,19 +81,24 @@ public class User
     {
         if (verify(oldPass))
         {
-            try
-            {
-                passhash = PasswordHash.createHash(newPass);
-                Settings.save();
-            }
-            catch (InvalidKeySpecException | NoSuchAlgorithmException e)
-            {
-                // Hash algorithm doesn't work.
-                throw new RuntimeException(e);
-            }
+            setPass(newPass);
             return true;
         }
         else return false;
+    }
+
+    public void setPass(String newPass)
+    {
+        try
+        {
+            passhash = PasswordHash.createHash(newPass);
+            Settings.save();
+        }
+        catch (InvalidKeySpecException | NoSuchAlgorithmException e)
+        {
+            // Hash algorithm doesn't work.
+            throw new RuntimeException(e);
+        }
     }
 
     public String getUsername()
@@ -184,5 +189,11 @@ public class User
     public boolean isAdmin()
     {
         return this.getGroup() == Group.ADMIN;
+    }
+
+    public void delete()
+    {
+        Settings.SETTINGS.users.remove(this.getUsername().toLowerCase());
+        Settings.save();
     }
 }

@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.webserver.methods;
 
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
@@ -177,33 +178,41 @@ public class Post
     {
         if (map.containsKey("username") && map.containsKey("password") && map.containsKey("areyouhuman"))
         {
-            if (!map.get("areyouhuman").trim().equals("4"))
-                dataObject.put("message", "You failed the human test...");
-            else
+            boolean admin = false;
+            if ((Main.adminKey != null && map.get("areyouhuman").equals(Main.adminKey))) admin = true;
+            else if (!map.get("areyouhuman").trim().equals("4")) // only do human test if not admin key
             {
-                User user = Settings.getUserByName(map.get("username"));
-                if (!Constants.USERNAME_CHECK.matcher(map.get("username")).matches())
-                {
-                    dataObject.put("message", "Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
-                }
-                else if (user == null)
-                {
-                    try
-                    {
-                        user = new User(map.get("username"), PasswordHash.createHash(map.get("password")));
-                        Settings.SETTINGS.users.put(user.getUsername(), user);
-                        session.getCookies().set(COOKIE_KEY, user.getUsername() + "|" + user.getPasshash(), 30);
-                        dataObject.put("user", user);
-                        Settings.save();
-                    }
-                    catch (NoSuchAlgorithmException | InvalidKeySpecException e)
-                    {
-                        // Hash algorithm doesn't work.
-                        throw new RuntimeException(e);
-                    }
-                }
-                else dataObject.put("message", "Username taken.");
+                dataObject.put("message", "You failed the human test...");
+                return;
             }
+
+            User user = Settings.getUserByName(map.get("username"));
+            if (!Constants.USERNAME_CHECK.matcher(map.get("username")).matches())
+            {
+                dataObject.put("message", "Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
+            }
+            else if (user == null)
+            {
+                try
+                {
+                    user = new User(map.get("username"), PasswordHash.createHash(map.get("password")));
+                    if (admin)
+                    {
+                        user.setGroup(Group.ADMIN);
+                        Main.adminKey = null;
+                    }
+                    Settings.SETTINGS.users.put(user.getUsername().toLowerCase(), user);
+                    session.getCookies().set(COOKIE_KEY, user.getUsername() + "|" + user.getPasshash(), 30);
+                    dataObject.put("user", user);
+                    Settings.save();
+                }
+                catch (NoSuchAlgorithmException | InvalidKeySpecException e)
+                {
+                    // Hash algorithm doesn't work.
+                    throw new RuntimeException(e);
+                }
+            }
+            else dataObject.put("message", "Username taken.");
         }
         else dataObject.put("message", "Form error.");
     }

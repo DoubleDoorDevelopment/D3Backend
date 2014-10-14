@@ -19,6 +19,7 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>
+                    Server owner is ${server.owner}.<br>
                     Server port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.serverPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.serverPort)> Free<#elseif server.online>In use by us<#else>In use by ?</#if></span><br>
                     RCon port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.rconPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.rconPort)> Free<#elseif server.online>In use by us<#else>In use by ?</#if></span>
                 </p>
@@ -122,9 +123,12 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <div class="btn-group">
-                    <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">Delete server</button>
                     <a type="button" href='/worldmanager/${server.name}' class="btn btn-info">World Manager</a>
                     <a type="button" href='/filemanager/${server.name}' class="btn btn-info">File Manager</a>
+                </div>
+                <div class="btn-group">
+                    <#if server.ownerObject == user><button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.name}', 'setOwner', name);}" class="btn btn-danger">Change owner</button></#if>
+                    <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">Delete server</button>
                 </div>
                 <hr>
                 <div class="form-group">
