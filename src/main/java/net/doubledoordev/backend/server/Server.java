@@ -147,6 +147,7 @@ public class Server
                 {
                     try
                     {
+                        renewQuery();
                         RCon rCon = getRCon();
                         for (String user : getPlayerList())
                             rCon.send("kick", user, NAME + " is taking over! Server Reboot!");
@@ -854,13 +855,16 @@ public class Server
      * @return true if successful via RCon
      * @throws ServerOnlineException
      */
-
-    public boolean stopServer() throws ServerOnlineException
+    public boolean stopServer(String message) throws ServerOnlineException
     {
         if (!getOnline()) return false;
         try
         {
+            renewQuery();
+            makeRcon();
             printLine("----=====##### STOPPING SERVER WITH RCON #####=====-----");
+            for (String user : getPlayerList())
+                getRCon().send("kick", user, message);
             getRCon().stop();
             return true;
         }
