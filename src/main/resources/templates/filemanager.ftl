@@ -23,7 +23,7 @@
                 <#if file.getName() != "server.properties">
                     <td><i class="fa fa-${fm.getIcon(file)}"></i></td>
                     <#if fm.canEdit(file)>
-                        <td class="col-sm-4"><a href="?file=${fm.stripServer(file)}">${file.getName()}</a></td>
+                        <td class="col-sm-4"><a href="?file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></td>
                     <#else>
                         <td class="col-sm-4">${file.getName()}</td>
                     </#if>
@@ -52,7 +52,7 @@
 <#else >
     <#assign readonly = !fm.file.canWrite()>
     <div class="panel panel-<#if readonly>warning<#elseif fm.getEditor()??>success<#else>danger</#if>">
-        <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?file=${fm.stripServer(file)}">${file.getName()}</a></#list></div>
+        <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list></div>
         <div class="panel-body">
             <#if fm.getEditor()??>
                 <#include "editors/" + fm.getEditor()>
@@ -62,4 +62,7 @@
         </div>
     </div>
 </#if>
+<script>
+    $('[rel=tooltip]').tooltip()
+</script>
 <#include "footer.ftl">

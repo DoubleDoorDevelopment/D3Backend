@@ -53,6 +53,9 @@
             padding-top: 70px;
         }
     </style>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/commands.js"></script>
 </head>
 <body>
 <!-- Fixed navbar -->

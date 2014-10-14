@@ -48,10 +48,12 @@ import org.spout.nbt.stream.NBTOutputStream;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
+import java.util.*;
 
+import static net.doubledoordev.backend.util.Constants.JSONPARSER;
 import static net.doubledoordev.backend.util.Constants.RANDOM;
 import static net.doubledoordev.backend.util.Constants.symbols;
 
@@ -200,5 +202,36 @@ public class Helper
         {
 
         }
+    }
+
+    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
+
+    public static String getUsernameFromUUID(String uuid)
+    {
+        if (uuid.endsWith(".dat")) uuid = uuid.substring(0, uuid.lastIndexOf('.'));
+        uuid = uuid.replace("-", "");
+        if (uuid.length() != 32) return null;
+        if (!UUID_USERNMAME_MAP.containsKey(uuid))
+        {
+            // This variable is used so it will only ever check any UUID once. Even if its name is null.
+            String name = null;
+            try
+            {
+                URL url = new URL(String.format("https://api.mojang.com/user/profiles/%s/names", uuid));
+                URLConnection uc = url.openConnection();
+                uc.setUseCaches(false);
+                uc.setDefaultUseCaches(false);
+                uc.addRequestProperty("User-Agent", "minecraft");
+                InputStream in = uc.getInputStream();
+                name = JSONPARSER.parse(new InputStreamReader(in)).getAsJsonArray().get(0).getAsString();
+                in.close();
+            }
+            catch (Exception ignored)
+            {
+
+            }
+            UUID_USERNMAME_MAP.put(uuid, name);
+        }
+        return UUID_USERNMAME_MAP.get(uuid);
     }
 }

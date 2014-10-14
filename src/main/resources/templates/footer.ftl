@@ -1,7 +1,4 @@
 </div>
-<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
-<script src="/static/js/commands.js"></script>
 <script>
     function navTab($args) {
         switch ($args[3]) {
