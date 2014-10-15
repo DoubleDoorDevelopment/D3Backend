@@ -55,7 +55,7 @@ import java.security.spec.InvalidKeySpecException;
 public class User
 {
     private String username, passhash;
-    private int maxServers, maxRam, maxDiskspace;
+    private int maxServers, maxRam, maxDiskspace = Settings.SETTINGS.defaultDiskspace;
     private Group group = Group.NORMAL;
 
     public User(String username, String passhash)
@@ -116,15 +116,15 @@ public class User
         return group;
     }
 
-    public void setGroup(String group)
-    {
-        setGroup(Group.valueOf(group));
-    }
-
     public void setGroup(Group group)
     {
         this.group = group;
         Settings.save();
+    }
+
+    public void setGroup(String group)
+    {
+        setGroup(Group.valueOf(group));
     }
 
     public int getMaxServers()

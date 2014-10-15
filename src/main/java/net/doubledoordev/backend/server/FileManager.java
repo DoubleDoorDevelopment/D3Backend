@@ -71,8 +71,8 @@ import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
 public class FileManager
 {
     private final Server server;
-    private final File serverFolder;
-    private final File file;
+    private final File   serverFolder;
+    private final File   file;
 
     public FileManager(Server server, String fileString)
     {

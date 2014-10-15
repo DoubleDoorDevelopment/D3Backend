@@ -90,7 +90,6 @@
                 <li id="usersNavTab"><a href="/users">Users</a></li>
                 <#if user.isAdmin()>
                     <li id="consoleNavTab"><a href="/console">Console</a></li>
-                    <li id="consoleNavTab"><a href="/users">Console</a></li>
                 </#if>
             </#if>
             </ul>

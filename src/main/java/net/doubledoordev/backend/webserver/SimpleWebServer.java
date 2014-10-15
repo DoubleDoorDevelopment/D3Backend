@@ -51,11 +51,11 @@ public abstract class SimpleWebServer extends NanoHTTPD
     /**
      * Common mime type for dynamic content: binary
      */
-    public static final  String              MIME_DEFAULT_BINARY = "application/octet-stream";
+    public static final String              MIME_DEFAULT_BINARY = "application/octet-stream";
     /**
      * Default Index file names.
      */
-    public static final  List<String>        INDEX_FILE_NAMES    = new ArrayList<String>()
+    public static final List<String>        INDEX_FILE_NAMES    = new ArrayList<String>()
     {{
             add("index.html");
         }};

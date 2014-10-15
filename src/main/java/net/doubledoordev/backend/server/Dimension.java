@@ -40,27 +40,14 @@
 
 package net.doubledoordev.backend.server;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-
-import static net.doubledoordev.backend.util.Constants.*;
-
 /**
  * @author Dries007
  */
-public class Dimention
+public class Dimension
 {
-    int          dimid;
-    WorldManager worldManager;
+    int dimid;
 
-    private Dimention()
-    {
-    }
-
-    public Dimention(int dimid)
+    public Dimension(int dimid)
     {
         this.dimid = dimid;
     }
@@ -68,29 +55,5 @@ public class Dimention
     public int getDimid()
     {
         return dimid;
-    }
-
-    public void makeBackup()
-    {
-        worldManager.doBackup(new File(new File(worldManager.server.getBackupFolder(), DIM + dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(), dimid == 0 ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
-    }
-
-    public File getFolder()
-    {
-        return dimid == 0 ? worldManager.worldFolder : new File(worldManager.worldFolder, DIM + dimid);
-    }
-
-    public void update(WorldManager worldManager)
-    {
-        this.worldManager = worldManager;
-    }
-
-    public void delete() throws IOException
-    {
-        for (File file : getFolder().listFiles(dimid == 0 ? NOT_DIM_FILTER : ACCEPT_ALL_FILTER))
-        {
-            if (file.isFile()) file.delete();
-            else if (file.isDirectory()) FileUtils.deleteDirectory(file);
-        }
     }
 }

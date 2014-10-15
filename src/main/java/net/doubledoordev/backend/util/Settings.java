@@ -48,7 +48,6 @@ import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
 
 import java.io.FileReader;
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -81,6 +80,7 @@ public class Settings
                 if (jsonElement.has("fixedPorts")) SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
                 if (jsonElement.has("fixedIP")) SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
                 if (jsonElement.has("portRange")) SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
+                if (jsonElement.has("defaultDiskspace")) SETTINGS.defaultDiskspace = jsonElement.get("defaultDiskspace").getAsInt();
 
                 if (jsonElement.has("anonPages"))
                 {
@@ -95,18 +95,14 @@ public class Settings
             if (SERVERS_FILE.exists())
             {
                 fileReader = new FileReader(SERVERS_FILE);
-                if (SERVERS_FILE.exists())
-                    for (Server server : GSON.fromJson(fileReader, Server[].class))
-                        SETTINGS.servers.put(server.getName(), server);
+                if (SERVERS_FILE.exists()) for (Server server : GSON.fromJson(fileReader, Server[].class)) SETTINGS.servers.put(server.getName(), server);
                 fileReader.close();
             }
 
             if (USERS_FILE.exists())
             {
                 fileReader = new FileReader(USERS_FILE);
-                if (USERS_FILE.exists())
-                    for (User user : GSON.fromJson(fileReader, User[].class))
-                        SETTINGS.users.put(user.getUsername().toLowerCase(), user);
+                if (USERS_FILE.exists()) for (User user : GSON.fromJson(fileReader, User[].class)) SETTINGS.users.put(user.getUsername().toLowerCase(), user);
                 fileReader.close();
             }
         }
@@ -120,12 +116,13 @@ public class Settings
     public Map<String, User>   users   = new HashMap<>();
 
     public String hostname;
-    public int          port       = 80;
-    public boolean      useJava8   = false;
-    public boolean      fixedPorts = false;
-    public boolean      fixedIP    = false;
-    public PortRange    portRange  = new PortRange();
-    public List<String> anonPages  = Arrays.asList("index", "login", "register");
+    public int          port             = 80;
+    public boolean      useJava8         = false;
+    public boolean      fixedPorts       = false;
+    public boolean      fixedIP          = false;
+    public PortRange    portRange        = new PortRange();
+    public int          defaultDiskspace = -1;
+    public List<String> anonPages        = Arrays.asList("index", "login", "register");
 
     private Settings()
     {
@@ -144,24 +141,36 @@ public class Settings
     {
         try
         {
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("hostname", SETTINGS.hostname);
-            jsonObject.addProperty("port", SETTINGS.port);
-            jsonObject.addProperty("useJava8", SETTINGS.useJava8);
-            jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
-            jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
-            JsonArray anonPages = new JsonArray();
-            for (String s : SETTINGS.anonPages) anonPages.add(new JsonPrimitive(s));
-            jsonObject.add("anonPages", anonPages);
-            jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
-            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
-
-            FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
-            FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
+            // SETTINGS
+            {
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.addProperty("hostname", SETTINGS.hostname);
+                jsonObject.addProperty("port", SETTINGS.port);
+                jsonObject.addProperty("useJava8", SETTINGS.useJava8);
+                jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
+                jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
+                JsonArray anonPages = new JsonArray();
+                for (String s : SETTINGS.anonPages) anonPages.add(new JsonPrimitive(s));
+                jsonObject.add("anonPages", anonPages);
+                jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
+                FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
+            }
+            // SERVERS
+            {
+                //JsonArray servers = new JsonArray();
+                //for (Server server : SETTINGS.servers.values()) servers.add(GSON.toJsonTree(server.toJson()));
+                FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
+            }
+            // USER
+            {
+                //JsonArray users = new JsonArray();
+                //for (User user : SETTINGS.users.values()) users.add(GSON.toJsonTree(user));
+                FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
+            }
 
             LOGGER.info("Saved settings.");
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             LOGGER.error("Error saving the config file...", e);
         }

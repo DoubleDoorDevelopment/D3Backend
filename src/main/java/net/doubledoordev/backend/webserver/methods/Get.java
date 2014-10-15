@@ -48,7 +48,6 @@ import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.webserver.SimpleWebServer;
 import net.doubledoordev.backend.webserver.Webserver;
 
 import java.io.FileNotFoundException;
@@ -123,7 +122,7 @@ public class Get
                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
             }
 
-            if (ADMINPAGES.contains(args[0].toLowerCase()) && !((User)dataObject.get("user")).isAdmin())
+            if (ADMINPAGES.contains(args[0].toLowerCase()) && !((User) dataObject.get("user")).isAdmin())
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));

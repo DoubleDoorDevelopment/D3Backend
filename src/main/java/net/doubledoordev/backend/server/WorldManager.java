@@ -49,7 +49,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Date;
-import java.util.HashMap;
 
 import static net.doubledoordev.backend.Main.LOGGER;
 import static net.doubledoordev.backend.util.Constants.*;
@@ -62,7 +61,6 @@ import static net.doubledoordev.backend.util.Constants.*;
 @SuppressWarnings("UnusedDeclaration")
 public class WorldManager
 {
-    final HashMap<Integer, Dimention> dimentionMap = new HashMap<>();
     final Server server;
     File worldFolder;
 
@@ -76,23 +74,17 @@ public class WorldManager
         worldFolder = new File(server.getFolder(), getWorldName());
         if (!worldFolder.exists()) return;
         if (worldFolder.list().length == 0) return;
-        if (!dimentionMap.containsKey(0)) dimentionMap.put(0, new Dimention(0));
+        if (!server.getDimensionMap().containsKey(0)) server.getDimensionMap().put(0, new Dimension(0));
         for (String file : worldFolder.list(DIM_ONLY_FILTER))
         {
             Integer dimid = Integer.parseInt(file.replace(DIM, ""));
-            if (!dimentionMap.containsKey(dimid)) dimentionMap.put(dimid, new Dimention(dimid));
+            if (!server.getDimensionMap().containsKey(dimid)) server.getDimensionMap().put(dimid, new Dimension(dimid));
         }
-        for (Dimention dimention : dimentionMap.values()) dimention.update(this);
     }
 
     public String getWorldName()
     {
         return server.getProperties().getProperty("level-name", "world");
-    }
-
-    public HashMap<Integer, Dimention> getDimentionMap()
-    {
-        return dimentionMap;
     }
 
     public void makeWorldBackup() throws BackupException
@@ -105,6 +97,26 @@ public class WorldManager
     {
         if (!checkSpace()) throw new BackupException("Out of diskspace.");
         doBackup(new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_FILTER);
+    }
+
+    public void makeBackup(int dimid) throws BackupException
+    {
+        if (!checkSpace()) throw new BackupException("Out of diskspace.");
+        doBackup(new File(new File(server.getBackupFolder(), DIM + dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid == 0 ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
+    }
+
+    public File getFolder(int dimid)
+    {
+        return dimid == 0 ? worldFolder : new File(worldFolder, DIM + dimid);
+    }
+
+    public void delete(int dimid) throws IOException
+    {
+        for (File file : getFolder(dimid).listFiles(dimid == 0 ? NOT_DIM_FILTER : ACCEPT_ALL_FILTER))
+        {
+            if (file.isFile()) file.delete();
+            else if (file.isDirectory()) FileUtils.deleteDirectory(file);
+        }
     }
 
     public void doBackup(File zip, File folder, FilenameFilter filter)

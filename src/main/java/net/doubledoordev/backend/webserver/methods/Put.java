@@ -42,14 +42,12 @@ package net.doubledoordev.backend.webserver.methods;
 
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Dimention;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,22 +98,6 @@ public class Put
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     return invokeWithRefectionMagic(server.getWorldManager(), split, 2);
                 // ----------------------------------------------------------------------------------------------------------
-                case "worldmanager_dim":
-                    server = Settings.getServerByName(split[1]);
-                    if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
-
-                    try
-                    {
-                        Integer dimid = Integer.parseInt(split[2]);
-                        HashMap<Integer, Dimention> dimentionMap = server.getWorldManager().getDimentionMap();
-                        if (dimentionMap.containsKey(dimid)) return invokeWithRefectionMagic(dimentionMap.get(dimid), split, 3);
-                        else return new Response(NOT_FOUND, MIME_PLAINTEXT, "Dimention not found");
-                    }
-                    catch (NumberFormatException e)
-                    {
-                        return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
-                    }
-                    // ----------------------------------------------------------------------------------------------------------
                 case "users":
                     if (!(boolean) dataObject.get("admin")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     return invokeWithRefectionMagic(Settings.getUserByName(split[1]), split, 2);
@@ -158,8 +140,8 @@ public class Put
                 }
                 catch (InvocationTargetException e)
                 {
-                    e.getCause().printStackTrace();
-                    Main.LOGGER.warn(e.getCause());
+                    Main.LOGGER.warn("ERROR invoking method via reflection: " + method.toString());
+                    e.printStackTrace();
                     return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.getCause().toString());
                 }
             }

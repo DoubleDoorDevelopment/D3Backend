@@ -51,11 +51,12 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-import static net.doubledoordev.backend.util.Constants.JSONPARSER;
-import static net.doubledoordev.backend.util.Constants.RANDOM;
-import static net.doubledoordev.backend.util.Constants.symbols;
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * Public static helper methods
@@ -66,6 +67,9 @@ import static net.doubledoordev.backend.util.Constants.symbols;
 @SuppressWarnings("UnusedDeclaration")
 public class Helper
 {
+    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+
     private Helper()
     {
     }
@@ -79,6 +83,7 @@ public class Helper
      */
     public static boolean isPortAvailable(String hostname, int port)
     {
+        if (port == -1) return false;
         try
         {
             ServerSocket socket = new ServerSocket();
@@ -138,8 +143,6 @@ public class Helper
         for (Server server : Settings.SETTINGS.getServers()) total += server.getDiskspaceUse()[2];
         return total;
     }
-
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     public static String getNowInBanFormat()
     {
@@ -203,8 +206,6 @@ public class Helper
 
         }
     }
-
-    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
 
     public static String getUsernameFromUUID(String uuid)
     {

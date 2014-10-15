@@ -41,7 +41,6 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.*;
-import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -93,12 +92,14 @@ public class Server
      * Java bean holding all the config data
      */
     private final ServerData data;
-    private final ArrayList<String> log = new ArrayList<>(LOG_LINES_KEPT + 10);
+    private final Map<Integer, Dimension> dimensionMap = new HashMap<>();
+
+    private final ArrayList<String> log  = new ArrayList<>(LOG_LINES_KEPT + 10);
     /**
      * Diskspace var + timer to avoid long page load times.
      */
-    public  int[]         size = new int[3];
-    public  QueryResponse cachedResponse;
+    public        int[]             size = new int[3];
+    public QueryResponse cachedResponse;
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
@@ -111,15 +112,15 @@ public class Server
     /**
      * RCon instance + timer to avoid long page load times.
      */
-    private RCon          rCon;
+    private RCon    rCon;
     /**
      * MCQuery and QueryResponse instances + timer to avoid long page load times.
      */
-    private MCQuery       query;
+    private MCQuery query;
     /**
      * The process the server will be running in
      */
-    private Process       process;
+    private Process process;
     private boolean starting = false;
     private File backupFolder;
     private WorldManager worldManager = new WorldManager(this);
@@ -188,6 +189,10 @@ public class Server
             catch (IOException ignored)
             {
             }
+        }
+        else
+        {
+            getProperties();
         }
     }
 
@@ -397,12 +402,12 @@ public class Server
 
     public int getServerPort()
     {
-        return Integer.parseInt(getProperty(SERVER_PORT));
+        return Integer.parseInt(properties.containsKey(SERVER_PORT) ? getProperty(SERVER_PORT) : "-1");
     }
 
     public int getRconPort()
     {
-        return Integer.parseInt(getProperty(RCON_PORT));
+        return Integer.parseInt(properties.containsKey(RCON_PORT) ? getProperty(RCON_PORT) : "-1");
     }
 
     public int getOnlinePlayers()
@@ -599,6 +604,11 @@ public class Server
         return data.extraJavaParameters;
     }
 
+    public void setExtraJavaParameters(String list) throws Exception
+    {
+        setExtraJavaParameters(Arrays.asList(list.split(",")));
+    }
+
     public void setExtraJavaParameters(List<String> list) throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
@@ -609,14 +619,14 @@ public class Server
         Settings.save();
     }
 
-    public void setExtraJavaParameters(String list) throws Exception
-    {
-        setExtraJavaParameters(Arrays.asList(list.split(",")));
-    }
-
     public List<String> getExtraMCParameters()
     {
         return data.extraMCParameters;
+    }
+
+    public void setExtraMCParameters(String list) throws Exception
+    {
+        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public void setExtraMCParameters(List<String> list) throws Exception
@@ -627,11 +637,6 @@ public class Server
                 if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraMCParameters = list;
         Settings.save();
-    }
-
-    public void setExtraMCParameters(String list) throws Exception
-    {
-        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public String getJarName()
@@ -663,6 +668,12 @@ public class Server
         return data.owner;
     }
 
+    public void setOwner(String username)
+    {
+        ownerObject = null;
+        data.owner = username;
+    }
+
     public User getOwnerObject()
     {
         if (ownerObject == null) ownerObject = Settings.getUserByName(getOwner());
@@ -680,26 +691,20 @@ public class Server
         return ownerObject;
     }
 
-    public void setOwner(String username)
-    {
-        ownerObject = null;
-        data.owner = username;
-    }
-
     public List<String> getAdmins()
     {
         return data.admins;
+    }
+
+    public void setAdmins(String list) throws Exception
+    {
+        setAdmins(Arrays.asList(list.split(",")));
     }
 
     public void setAdmins(List<String> strings)
     {
         data.admins = strings;
         Settings.save();
-    }
-
-    public void setAdmins(String list) throws Exception
-    {
-        setAdmins(Arrays.asList(list.split(",")));
     }
 
     public void setAdmins()
@@ -712,15 +717,15 @@ public class Server
         return data.coOwners;
     }
 
+    public void setCoOwners(String list) throws Exception
+    {
+        setCoOwners(Arrays.asList(list.split(",")));
+    }
+
     public void setCoOwners(List<String> strings)
     {
         data.coOwners = strings;
         Settings.save();
-    }
-
-    public void setCoOwners(String list) throws Exception
-    {
-        setCoOwners(Arrays.asList(list.split(",")));
     }
 
     public void setCoOwners()
@@ -990,20 +995,28 @@ public class Server
         return worldManager;
     }
 
-    /*
-     ---------------------------------------------------------------- GSON ----------------------------------------------------------------
-      */
+    public JsonElement toJson()
+    {
+        return GSON.toJsonTree(data);
+    }
+
+    public Map<Integer, Dimension> getDimensionMap()
+    {
+        return dimensionMap;
+    }
+
     public static class Deserializer implements JsonDeserializer<Server>
     {
         @Override
         public Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
         {
-            ServerData serverData = context.deserialize(json, ServerData.class);
-            Server server = new Server(serverData, false);
-            if (json.getAsJsonObject().has("dimentions"))
+            Server server = new Server((ServerData) context.deserialize(json, ServerData.class), false);
+            if (json.getAsJsonObject().has("dimensions"))
             {
-                Dimention[] dimentions = context.deserialize(json.getAsJsonObject().get("dimentions"), Dimention[].class);
-                for (Dimention dimention : dimentions) server.getWorldManager().getDimentionMap().put(dimention.dimid, dimention);
+                for (Dimension dimension : (Dimension[]) context.deserialize(json.getAsJsonObject().get("dimensions"), Dimension[].class))
+                {
+                    server.dimensionMap.put(dimension.dimid, dimension);
+                }
             }
             return server;
         }
@@ -1014,9 +1027,9 @@ public class Server
         @Override
         public JsonElement serialize(Server src, Type typeOfSrc, JsonSerializationContext context)
         {
-            JsonObject object = context.serialize(src.data).getAsJsonObject();
-            object.add("dimentions", context.serialize(src.getWorldManager().dimentionMap.values()));
-            return object;
+            JsonObject data = context.serialize(src.data).getAsJsonObject();
+            data.add("dimensions", context.serialize(src.dimensionMap.values()));
+            return data;
         }
     }
 }

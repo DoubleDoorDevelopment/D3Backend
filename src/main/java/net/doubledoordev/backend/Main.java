@@ -40,7 +40,6 @@
 
 package net.doubledoordev.backend;
 
-import com.google.gson.JsonObject;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Cache;
@@ -122,6 +121,7 @@ public class Main
 
     public static synchronized void shutdown()
     {
+        Settings.save();
         LOGGER.info("Attempting graceful shutdown of all servers...");
         for (final Server server : Settings.SETTINGS.servers.values())
         {

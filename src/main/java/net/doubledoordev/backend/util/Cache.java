@@ -50,7 +50,6 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -131,11 +130,7 @@ public class Cache extends TimerTask
                             urlConnection.setRequestMethod("GET");
                             urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
                             urlConnection.connect();
-                            if (urlConnection.getResponseCode() != 200)
-                            {
-                                buildsWithoutInstaller.add(build);
-                                Main.LOGGER.debug("[Cache] FORGE - Excluded " + version + ". Return was (" + urlConnection.getResponseCode() + ") " + urlConnection.getResponseMessage());
-                            }
+                            if (urlConnection.getResponseCode() != 200) buildsWithoutInstaller.add(build);
                         }
                         catch (IOException e)
                         {
@@ -143,6 +138,9 @@ public class Cache extends TimerTask
                         }
                     }
                 }
+
+                Main.LOGGER.debug("[Cache] Excluded FORGE versions: " + buildsWithoutInstaller.toString());
+
                 synchronized (FORGE_NAME_VERSION_MAP)
                 {
                     FORGE_NAME_VERSION_MAP.clear();

@@ -60,8 +60,8 @@ import java.util.ArrayList;
 @Plugin(name = "CustomLogAppender", category = "Core", elementType = "appender", printObject = true)
 public class CustomLogAppender extends AbstractAppender
 {
-    public static          int              LOG_LINES_KEPT                 = 1000;
-    private static final ArrayList<String> LOG = new ArrayList<>(LOG_LINES_KEPT + 10);
+    public static        int               LOG_LINES_KEPT = 1000;
+    private static final ArrayList<String> LOG            = new ArrayList<>(LOG_LINES_KEPT + 10);
 
     protected CustomLogAppender(String name, Filter filter, Layout<? extends Serializable> layout)
     {

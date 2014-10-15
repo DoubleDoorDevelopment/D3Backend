@@ -21,7 +21,10 @@
     <h2 class="form-signin-heading">You are logged in!</h2>
 
     <p>
-        Permission lvl: ${user.group}
+        Permission lvl: ${user.group}<br>
+        Diskspace left: ${(user.diskspaceLeft == -1)?string("&infin;", user.diskspaceLeft)} MB<br>
+        Servers left: ${(user.maxServers == -1)?string("&infin;", (user.maxServers - user.serverCount))}<br>
+        RAM left: ${(user.maxRamLeft == -1)?string("&infin;", user.maxRamLeft)} MB<br>
     </p>
 </div>
 <form class="form-signin" role="form" method="post">

@@ -64,7 +64,7 @@ public class ServerData
     public String       jarName             = "minecraft_server.jar";
     public String       rconPswd            = Helper.randomString(10);
     public boolean      autoStart           = false;
-    public String owner;
-    public List<String> admins   = new ArrayList<>();
-    public List<String> coOwners = new ArrayList<>();
+    public String       owner               = "";
+    public List<String> admins              = new ArrayList<>();
+    public List<String> coOwners            = new ArrayList<>();
 }

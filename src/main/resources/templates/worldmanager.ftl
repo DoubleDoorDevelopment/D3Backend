@@ -14,9 +14,10 @@ ${wm.update()}
         </p>
         <p class="text-primary">
             Diskspace in use:<br>
-            by server: ${server.diskspaceUse[0]}MB<br>
-            by backups: ${server.diskspaceUse[1]}MB<br>
-            total: ${server.diskspaceUse[2]}MB<br>
+            by server: ${server.diskspaceUse[0]} MB<br>
+            by backups: ${server.diskspaceUse[1]} MB<br>
+            total: ${server.diskspaceUse[2]} MB<br>
+            Diskspace left: ${(user.diskspaceLeft == -1)?string("&infin;", user.diskspaceLeft)} MB
         </p>
         <p>
             Make a backup now:
@@ -28,16 +29,16 @@ ${wm.update()}
     </div>
 </div>
 <div class="row">
-    <#list wm.dimentionMap?values as dim>
+    <#list server.getDimensionMap()?keys as dimid>
         <div class="col-sm-4">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title" style="text-align: center;">DIM${dim.dimid}</h3>
+                    <h3 class="panel-title" style="text-align: center;">DIM${dimid}</h3>
                     <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
                 </div>
                 <div class="panel-body" style="text-align: center;">
-                    <button type="button" <#if isCoOwner>onclick="call('worldmanager_dim', '${server.name}', '${dim.dimid}', 'makeBackup')" <#else>disabled</#if> class="btn btn-info">Backup</button>
-                    <button type="button" onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager_dim', '${server.name}', '${dim.dimid}', 'delete');" class="btn btn-danger">Delete</button>
+                    <button type="button" <#if isCoOwner>onclick="call('worldmanager', '${server.name}', 'makeBackup', '${dimid}')" <#else>disabled</#if> class="btn btn-info">Backup</button>
+                    <button type="button" <#if isCoOwner>onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager', '${server.name}', 'delete', '${dimid}');" <#else>disabled</#if> class="btn btn-danger">Delete</button>
                 </div>
             </div>
         </div>
