@@ -72,11 +72,10 @@ public class Put
     /**
      * Entry point
      */
-    public static Response handlePut(HashMap<String, Object> dataObject, NanoHTTPD.IHTTPSession session)
+    public static Response handlePut(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session)
     {
         try
         {
-            session.parseBody(new HashMap<String, String>());
             Map<String, String> map = session.getParms();
             String[] split = new String[Integer.parseInt(map.get("lengh"))];
             for (int i = 0; i < split.length; i++)
@@ -96,6 +95,7 @@ public class Put
                 case "worldmanager":
                     server = Settings.getServerByName(split[1]);
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
+                    if (dataObject.containsKey("admin") && (boolean) dataObject.get("admin")) server.getWorldManager().bypassLimits = true;
                     return invokeWithRefectionMagic(server.getWorldManager(), split, 2);
                 // ----------------------------------------------------------------------------------------------------------
                 case "users":

@@ -46,9 +46,11 @@ import net.doubledoordev.backend.util.Cache;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver.NanoHTTPD;
+import net.doubledoordev.backend.webserver.RedirectToSSLServer;
 import net.doubledoordev.backend.webserver.Webserver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -84,6 +86,27 @@ public class Main
         LOGGER.info("Making necessary folders...");
         mkdirs();
         LOGGER.info("Starting webserver...");
+        if (Strings.isBlank(SETTINGS.certificatePath) || SETTINGS.certificatePass.length == 0)
+        {
+            LOGGER.warn("YOU ARE PUTTING YOUR USERS AR RISK BY NOT USING HTTPS!");
+            LOGGER.warn("A banner will be displayed at the top of the home page to indicate this issue.");
+            LOGGER.warn("You can make a (self signed) certificate by using Java's built in KeyTools.");
+            LOGGER.warn("It must be a .jks certificate!");
+
+            LOGGER.info("HTTP Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTP);
+            Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTP);
+        }
+        else
+        {
+            if (SETTINGS.portHTTP != 0)
+            {
+                LOGGER.info("HTTP Redirect server started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTP);
+                new RedirectToSSLServer(SETTINGS.hostname, SETTINGS.portHTTP).start();
+            }
+            LOGGER.info("HTTPS Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTPS);
+            Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTPS);
+            Webserver.WEBSERVER.makeSecure(NanoHTTPD.makeSSLSocketFactory(SETTINGS.certificatePath, SETTINGS.certificatePass));
+        }
         Webserver.WEBSERVER.start();
         LOGGER.info("Setting up caching...");
         Cache.init();
@@ -98,7 +121,6 @@ public class Main
         }
 
         LOGGER.info("Loading done. Press any key to terminate the program.");
-        LOGGER.info("Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.port);
         // Wait for user input.
         try
         {
@@ -160,7 +182,7 @@ public class Main
      * @param session
      * @param dataObject
      */
-    public static void printdebug(NanoHTTPD.IHTTPSession session, HashMap<String, Object> dataObject)
+    public static void printdebug(NanoHTTPD.HTTPSession session, HashMap<String, Object> dataObject)
     {
         LOGGER.debug("getParms: " + session.getParms());
         LOGGER.debug("getHeaders: " + session.getHeaders());

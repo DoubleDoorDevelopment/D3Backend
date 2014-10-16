@@ -41,21 +41,20 @@
 <Configuration status="WARN" packages="net.doubledoordev.backend.util">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="[%p - %c] %m%n"/>
+            <PatternLayout pattern="%d [%p - %c] %m%n"/>
         </Console>
         <CustomLogAppender name="CustomLogAppender">
-            <PatternLayout pattern="[%p - %c] %m%n"/>
+            <PatternLayout pattern="%d [%p - %c] %m%n"/>
         </CustomLogAppender>
-        <RollingRandomAccessFile name="File" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="[%p - %c] %m%n"/>
+        <RollingRandomAccessFile name="FileAccess" fileName="logs/access/latest.log" filePattern="logs/access/%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
             </Policies>
         </RollingRandomAccessFile>
-        <RollingRandomAccessFile name="FileWithMethod" fileName="logs/latest.log"
-                                 filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="[%p - %c] %m%n"/>
+        <RollingRandomAccessFile name="FileMain" fileName="logs/main/latest.log" filePattern="logs/main/%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d [%p - %c] %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
@@ -65,8 +64,11 @@
     <Loggers>
         <Logger name="Main" level="trace" additivity="false">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="FileWithMethod"/>
+            <AppenderRef ref="FileMain"/>
             <AppenderRef ref="CustomLogAppender"/>
+        </Logger>
+        <Logger name="accessLog" level="trace" additivity="false">
+            <AppenderRef ref="FileAccess"/>
         </Logger>
         <Root level="trace" additivity="false">
             <AppenderRef ref="Console"/>

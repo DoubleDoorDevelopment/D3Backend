@@ -55,7 +55,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 
 import static net.doubledoordev.backend.util.Constants.*;
-import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * NanoHTTPD based server
@@ -64,12 +63,12 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class Webserver extends SimpleWebServer
 {
-    public static final Webserver WEBSERVER   = new Webserver();
-    public              long      lastRequest = System.currentTimeMillis();
+    public static Webserver WEBSERVER;
+    public static long lastRequest = System.currentTimeMillis();
 
-    private Webserver()
+    public Webserver(String hostname, int port)
     {
-        super(SETTINGS.hostname, SETTINGS.port, STATIC_PATH);
+        super(hostname, port, STATIC_PATH);
     }
 
     /**
@@ -79,7 +78,7 @@ public class Webserver extends SimpleWebServer
      * @return
      */
     @Override
-    public Response serve(IHTTPSession session)
+    public Response serve(HTTPSession session)
     {
         lastRequest = System.currentTimeMillis();
 
@@ -109,6 +108,19 @@ public class Webserver extends SimpleWebServer
             }
         }
         if (!dataObject.containsKey("admin")) dataObject.put("admin", false);
+
+        try
+        {
+            session.parseBody(new HashMap<String, String>());
+        }
+        catch (IOException ioe)
+        {
+            return new Response(Response.Status.INTERNAL_ERROR, MIME_PLAINTEXT, "SERVER INTERNAL ERROR: IOException: " + ioe.getMessage());
+        }
+        catch (ResponseException re)
+        {
+            return new Response(re.getStatus(), MIME_PLAINTEXT, re.getMessage());
+        }
 
         /**
          * Handle depending on HTTP method.

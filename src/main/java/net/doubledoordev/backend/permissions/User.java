@@ -116,15 +116,15 @@ public class User
         return group;
     }
 
+    public void setGroup(String group)
+    {
+        setGroup(Group.valueOf(group));
+    }
+
     public void setGroup(Group group)
     {
         this.group = group;
         Settings.save();
-    }
-
-    public void setGroup(String group)
-    {
-        setGroup(Group.valueOf(group));
     }
 
     public int getMaxServers()

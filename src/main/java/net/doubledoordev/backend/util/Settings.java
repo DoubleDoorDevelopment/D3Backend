@@ -75,12 +75,19 @@ public class Settings
                 fileReader = new FileReader(CONFIG_FILE);
                 JsonObject jsonElement = Constants.JSONPARSER.parse(fileReader).getAsJsonObject();
                 if (jsonElement.has("hostname")) SETTINGS.hostname = jsonElement.get("hostname").getAsString();
-                if (jsonElement.has("port")) SETTINGS.port = jsonElement.get("port").getAsInt();
+                if (jsonElement.has("portHTTP")) SETTINGS.portHTTP = jsonElement.get("portHTTP").getAsInt();
+                if (jsonElement.has("portHTTPS")) SETTINGS.portHTTPS = jsonElement.get("portHTTPS").getAsInt();
                 if (jsonElement.has("useJava8")) SETTINGS.useJava8 = jsonElement.get("useJava8").getAsBoolean();
                 if (jsonElement.has("fixedPorts")) SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
                 if (jsonElement.has("fixedIP")) SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
                 if (jsonElement.has("portRange")) SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
                 if (jsonElement.has("defaultDiskspace")) SETTINGS.defaultDiskspace = jsonElement.get("defaultDiskspace").getAsInt();
+
+                if (jsonElement.has("certificate"))
+                {
+                    SETTINGS.certificatePath = jsonElement.get("certificate").getAsJsonObject().get("path").getAsString();
+                    SETTINGS.certificatePass = jsonElement.get("certificate").getAsJsonObject().get("pass").getAsString().toCharArray();
+                }
 
                 if (jsonElement.has("anonPages"))
                 {
@@ -116,13 +123,16 @@ public class Settings
     public Map<String, User>   users   = new HashMap<>();
 
     public String hostname;
-    public int          port             = 80;
+    public int          portHTTP         = 80;
+    public int          portHTTPS        = 443;
     public boolean      useJava8         = false;
     public boolean      fixedPorts       = false;
     public boolean      fixedIP          = false;
     public PortRange    portRange        = new PortRange();
     public int          defaultDiskspace = -1;
     public List<String> anonPages        = Arrays.asList("index", "login", "register");
+    public String       certificatePath  = "";
+    public char[]       certificatePass  = new char[0];
 
     private Settings()
     {
@@ -145,7 +155,8 @@ public class Settings
             {
                 JsonObject jsonObject = new JsonObject();
                 jsonObject.addProperty("hostname", SETTINGS.hostname);
-                jsonObject.addProperty("port", SETTINGS.port);
+                jsonObject.addProperty("portHTTP", SETTINGS.portHTTP);
+                jsonObject.addProperty("portHTTPS", SETTINGS.portHTTPS);
                 jsonObject.addProperty("useJava8", SETTINGS.useJava8);
                 jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
                 jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
@@ -153,20 +164,14 @@ public class Settings
                 for (String s : SETTINGS.anonPages) anonPages.add(new JsonPrimitive(s));
                 jsonObject.add("anonPages", anonPages);
                 jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
+                JsonObject cert = new JsonObject();
+                cert.addProperty("path", SETTINGS.certificatePath);
+                cert.addProperty("pass", new String(SETTINGS.certificatePass));
+                jsonObject.add("certificate", cert);
                 FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
             }
-            // SERVERS
-            {
-                //JsonArray servers = new JsonArray();
-                //for (Server server : SETTINGS.servers.values()) servers.add(GSON.toJsonTree(server.toJson()));
-                FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
-            }
-            // USER
-            {
-                //JsonArray users = new JsonArray();
-                //for (User user : SETTINGS.users.values()) users.add(GSON.toJsonTree(user));
-                FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
-            }
+            FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
+            FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
 
             LOGGER.info("Saved settings.");
         }
@@ -206,11 +211,6 @@ public class Settings
     public String getHostname()
     {
         return hostname;
-    }
-
-    public int getPort()
-    {
-        return port;
     }
 
     public boolean isUseJava8()

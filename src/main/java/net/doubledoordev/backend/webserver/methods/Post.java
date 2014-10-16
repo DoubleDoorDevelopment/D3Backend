@@ -48,10 +48,10 @@ import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.webserver.NanoHTTPD;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
@@ -60,8 +60,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.IHTTPSession;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.ResponseException;
 
 /**
  * Processes POST requests
@@ -77,50 +75,42 @@ public class Post
     /**
      * Entry point
      */
-    public static void handlePost(HashMap<String, Object> dataObject, IHTTPSession session)
+    public static void handlePost(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session)
     {
-        try
-        {
-            session.parseBody(new HashMap<String, String>());
-            Map<String, String> map = session.getParms();
-            // TODO debug code
-            // Main.printdebug(session, dataObject);
+        Map<String, String> map = session.getParms();
+        // TODO debug code
+        // Main.printdebug(session, dataObject);
 
-            String split[] = session.getUri().substring(1).split("/");
-            switch (split[0]) // 0 => type id
-            {
-                case "login":
-                    handleLogin(dataObject, session, map);
-                    break;
-                case "register":
-                    handleRegister(dataObject, session, map);
-                    break;
-                case "newserver":
-                    try
-                    {
-                        handleNewServer(dataObject, session, map);
-                    }
-                    catch (Exception e)
-                    {
-                        e.printStackTrace();
-                        dataObject.put("message", e.toString());
-                    }
-                    break;
-                case "servers":
-                    Settings.getServerByName(split[1]).setPropertiesAsText(map.get("serverProperties"));
-                    break;
-            }
-        }
-        catch (IOException | ResponseException e)
+        String split[] = session.getUri().substring(1).split("/");
+        switch (split[0]) // 0 => type id
         {
-            e.printStackTrace();
+            case "login":
+                handleLogin(dataObject, session, map);
+                break;
+            case "register":
+                handleRegister(dataObject, session, map);
+                break;
+            case "newserver":
+                try
+                {
+                    handleNewServer(dataObject, session, map);
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                    dataObject.put("message", e.toString());
+                }
+                break;
+            case "servers":
+                Settings.getServerByName(split[1]).setPropertiesAsText(map.get("serverProperties"));
+                break;
         }
     }
 
     /**
      * Handle post requests from the newServer page
      */
-    private static void handleNewServer(HashMap<String, Object> dataObject, IHTTPSession session, Map<String, String> map) throws Exception
+    private static void handleNewServer(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session, Map<String, String> map) throws Exception
     {
         User user = (User) dataObject.get("user");
         if (user == null) throw new Exception("Not logged in.");
@@ -175,7 +165,7 @@ public class Post
     /**
      * Handle post requests from the register page
      */
-    private static void handleRegister(HashMap<String, Object> dataObject, IHTTPSession session, Map<String, String> map)
+    private static void handleRegister(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session, Map<String, String> map)
     {
         if (map.containsKey("username") && map.containsKey("password") && map.containsKey("areyouhuman"))
         {
@@ -221,7 +211,7 @@ public class Post
     /**
      * Handle post requests from the login page
      */
-    private static void handleLogin(HashMap<String, Object> dataObject, IHTTPSession session, Map<String, String> map)
+    private static void handleLogin(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session, Map<String, String> map)
     {
         if (map.containsKey("username") && map.containsKey("password"))
         {

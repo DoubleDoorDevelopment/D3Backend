@@ -62,6 +62,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class WorldManager
 {
     final Server server;
+    public boolean bypassLimits = false;
     File worldFolder;
 
     public WorldManager(Server server)
@@ -163,7 +164,8 @@ public class WorldManager
 
     private boolean checkSpace()
     {
-        return server.getOwnerObject().getMaxDiskspace() == -1 && server.getOwnerObject().getDiskspaceLeft() <= 0;
+        if (bypassLimits) return !(bypassLimits = false);
+        return server.getOwnerObject().getMaxDiskspace() == -1 || server.getOwnerObject().getDiskspaceLeft() <= 0;
     }
 
     private class BackupException extends Exception

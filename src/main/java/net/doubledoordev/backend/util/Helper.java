@@ -41,6 +41,7 @@
 package net.doubledoordev.backend.util;
 
 import net.doubledoordev.backend.server.Server;
+import org.apache.logging.log4j.util.Strings;
 import org.spout.nbt.Tag;
 import org.spout.nbt.stream.NBTInputStream;
 import org.spout.nbt.stream.NBTOutputStream;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * Public static helper methods
@@ -67,8 +69,8 @@ import static net.doubledoordev.backend.util.Constants.*;
 @SuppressWarnings("UnusedDeclaration")
 public class Helper
 {
-    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    public static final  Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
+    private static final SimpleDateFormat    dateFormat         = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     private Helper()
     {
@@ -234,5 +236,10 @@ public class Helper
             UUID_USERNMAME_MAP.put(uuid, name);
         }
         return UUID_USERNMAME_MAP.get(uuid);
+    }
+
+    public static boolean usingHttps()
+    {
+        return !(Strings.isBlank(SETTINGS.certificatePath) || SETTINGS.certificatePass == null || SETTINGS.certificatePass.length == 0);
     }
 }

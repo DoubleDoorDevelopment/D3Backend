@@ -264,7 +264,7 @@ public class Cache extends TimerTask
     {
         long now = System.currentTimeMillis();
 
-        if (now - Webserver.WEBSERVER.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
+        if (now - Webserver.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
 
         if (now - lastMCVersions > LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
         if (now - lastForgeVersions > LONG_CACHE_TIMEOUT) new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();

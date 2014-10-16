@@ -48,6 +48,7 @@ import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.webserver.NanoHTTPD;
 import net.doubledoordev.backend.webserver.Webserver;
 
 import java.io.FileNotFoundException;
@@ -69,7 +70,7 @@ import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
  */
 public class Get
 {
-    public static final  List<String>  ADMINPAGES     = Arrays.asList("console");
+    public static final  List<String>  ADMINPAGES     = Arrays.asList("console", "backendConsoleText");
     /**
      * Freemaker template engine config.
      * Used to resolve templates later on
@@ -106,7 +107,7 @@ public class Get
     /**
      * Entry point
      */
-    public static Response handleGet(HashMap<String, Object> dataObject, IHTTPSession session)
+    public static Response handleGet(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session)
     {
         String uri = session.getUri();
         try
@@ -119,12 +120,14 @@ public class Get
             if (!dataObject.containsKey("user") && !SETTINGS.anonPages.contains(args[0].toLowerCase()))
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
+                if (args[0].equals("serverConsoleText") || args[0].equals("backendConsoleText")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Not authorized.");
                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
             }
 
             if (ADMINPAGES.contains(args[0].toLowerCase()) && !((User) dataObject.get("user")).isAdmin())
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
+                if (args[0].equals("backendConsoleText")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Not authorized.");
                 return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
             }
 
@@ -178,7 +181,7 @@ public class Get
     /**
      * Get a template and process it with the dataObject
      */
-    public static String resolveTemplate(HashMap<String, Object> dataObject, String[] args, IHTTPSession session)
+    public static String resolveTemplate(HashMap<String, Object> dataObject, String[] args, NanoHTTPD.HTTPSession session)
     {
         StringWriter stringWriter = new StringWriter();
         try
@@ -218,7 +221,7 @@ public class Get
     /**
      * Find the right template file for a given URL
      */
-    private static String getTemplateFor(String[] args, IHTTPSession session)
+    private static String getTemplateFor(String[] args, NanoHTTPD.HTTPSession session)
     {
         switch (args[0])
         {
