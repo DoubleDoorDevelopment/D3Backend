@@ -40,6 +40,9 @@
 
 package net.doubledoordev.backend;
 
+import com.sk89q.intake.dispatcher.Dispatcher;
+import com.sk89q.intake.fluent.CommandGraph;
+import net.doubledoordev.backend.commands.CommandHandler;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Cache;
@@ -67,6 +70,7 @@ public class Main
 {
     public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
     public static String adminKey;
+    public static boolean running = true;
 
     private Main()
     {
@@ -120,19 +124,9 @@ public class Main
             LOGGER.warn("Admin token: " + adminKey);
         }
 
-        LOGGER.info("Loading done. Press any key to terminate the program.");
-        // Wait for user input.
-        try
-        {
-            //noinspection ResultOfMethodCallIgnored
-            System.in.read();
-        }
-        catch (Throwable ignored)
-        {
-            // Noop
-        }
+        LOGGER.info("Use the help command for help.");
 
-        shutdown();
+        CommandHandler.init();
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -143,6 +137,7 @@ public class Main
 
     public static synchronized void shutdown()
     {
+        running = false;
         Settings.save();
         LOGGER.info("Attempting graceful shutdown of all servers...");
         for (final Server server : Settings.SETTINGS.servers.values())

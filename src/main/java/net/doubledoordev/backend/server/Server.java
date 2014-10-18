@@ -859,9 +859,8 @@ public class Server
      * Stop the server gracefully
      *
      * @return true if successful via RCon
-     * @throws ServerOnlineException
      */
-    public boolean stopServer(String message) throws ServerOnlineException
+    public boolean stopServer(String message)
     {
         if (!getOnline()) return false;
         try
@@ -1031,5 +1030,11 @@ public class Server
             data.add("dimensions", context.serialize(src.dimensionMap.values()));
             return data;
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return getName();
     }
 }
