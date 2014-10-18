@@ -69,7 +69,7 @@ public class Commands
     }
 
     @Command(aliases = {"help", "?"}, desc = "Get a list of commands", help = "Use this to get help",  usage = "[Command]", max = 1)
-    public void help(@Optional String command) throws CommandException
+    public void cmdHelp(@Optional String command) throws CommandException
     {
         // Command list
         if (command == null)
@@ -95,7 +95,7 @@ public class Commands
     }
 
     @Command(aliases = {"serverlist", "servers"}, desc = "List all servers", max = 0)
-    public void serverList()
+    public void cmdServerList()
     {
         LOGGER.info("All servers:");
         LOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getServers()));
@@ -103,14 +103,24 @@ public class Commands
         LOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getOnlineServers()));
     }
 
-    @Command(aliases = "stop", desc = "Stop one or more servers", min = 1)
-    public void stop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Switch('m') @Text String msg) throws CommandException
+    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server name (regex)> [-f (force the stop)] [Message ...]", min = 1)
+    public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
     {
-        LOGGER.info("F: " + force + " Servers: " + Arrays.toString(servers) + " Msg: " + msg);
         for (Server server : servers)
         {
+            if (!server.getOnline()) continue;
             if (server.stopServer(msg)) LOGGER.info(String.format("Shutdown command send to %s", server.getName()));
             else LOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getName()));
+        }
+    }
+
+    @Command(aliases = "message", desc = "Send message to servers (with /say)", min = 2)
+    public void cmdMessage(Server[] servers, @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (!server.getOnline()) continue;
+            server.send(String.format("/say %s", msg));
         }
     }
 }
