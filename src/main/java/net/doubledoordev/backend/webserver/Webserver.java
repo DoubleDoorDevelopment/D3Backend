@@ -71,6 +71,11 @@ public class Webserver extends SimpleWebServer
         super(hostname, port, STATIC_PATH);
     }
 
+    public Webserver(int port)
+    {
+        super(port, STATIC_PATH);
+    }
+
     /**
      * The entry point for all HTTP requests
      *

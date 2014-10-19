@@ -105,10 +105,12 @@ public class Main
             if (SETTINGS.portHTTP != 0)
             {
                 LOGGER.info("HTTP Redirect server started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTP);
-                new RedirectToSSLServer(SETTINGS.hostname, SETTINGS.portHTTP).start();
+                if (Strings.isNotBlank(SETTINGS.hostname)) new RedirectToSSLServer(SETTINGS.hostname, SETTINGS.portHTTP).start();
+                else new RedirectToSSLServer(SETTINGS.portHTTP).start();
             }
             LOGGER.info("HTTPS Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTPS);
-            Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTPS);
+            if (Strings.isNotBlank(SETTINGS.hostname)) Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTPS);
+            else Webserver.WEBSERVER = new Webserver(SETTINGS.portHTTPS);
             Webserver.WEBSERVER.makeSecure(NanoHTTPD.makeSSLSocketFactory(SETTINGS.certificatePath, SETTINGS.certificatePass));
         }
         Webserver.WEBSERVER.start();

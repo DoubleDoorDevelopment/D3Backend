@@ -102,6 +102,15 @@ public abstract class SimpleWebServer extends NanoHTTPD
         this.init();
     }
 
+    public SimpleWebServer(int port, String wwwroot)
+    {
+        super(port);
+        if (!wwwroot.endsWith("/")) wwwroot += "/";
+        this.rootDir = wwwroot;
+
+        this.init();
+    }
+
     /**
      * Used to initialize and customize the server.
      */
