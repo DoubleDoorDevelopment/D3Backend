@@ -972,7 +972,7 @@ public abstract class NanoHTTPD
             }
         }
 
-        protected void parseBody(Map<String, String> files) throws IOException, ResponseException
+        public void parseBody(Map<String, String> files) throws IOException, ResponseException
         {
             RandomAccessFile randomAccessFile = null;
             BufferedReader in = null;
@@ -1017,7 +1017,7 @@ public abstract class NanoHTTPD
 
                 // If the method is POST, there may be parameters
                 // in data section, too, read it:
-                if (Method.POST.equals(method))
+                if (Method.POST.equals(method) || Method.PUT.equals(method))
                 {
                     String contentType = "";
                     String contentTypeHeader = headers.get("content-type");
@@ -1358,7 +1358,7 @@ public abstract class NanoHTTPD
          * Decodes parameters in percent-encoded URI-format ( e.g. "name=Jack%20Daniels&pass=Single%20Malt" ) and
          * adds them to given Map. NOTE: this doesn't support multiple identical keys due to the simplicity of Map.
          */
-        private void decodeParms(String parms, Map<String, String> p)
+        public void decodeParms(String parms, Map<String, String> p)
         {
             if (parms == null)
             {

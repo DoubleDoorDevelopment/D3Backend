@@ -78,9 +78,6 @@ public class Post
     public static void handlePost(HashMap<String, Object> dataObject, NanoHTTPD.HTTPSession session)
     {
         Map<String, String> map = session.getParms();
-        // TODO debug code
-        // Main.printdebug(session, dataObject);
-
         String split[] = session.getUri().substring(1).split("/");
         switch (split[0]) // 0 => type id
         {
