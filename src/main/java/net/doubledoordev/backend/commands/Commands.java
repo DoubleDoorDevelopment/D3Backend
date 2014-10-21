@@ -49,10 +49,9 @@ import com.sk89q.intake.parametric.annotation.Optional;
 import com.sk89q.intake.parametric.annotation.Switch;
 import com.sk89q.intake.parametric.annotation.Text;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.server.WorldManager;
 
-import java.util.Arrays;
-
-import static net.doubledoordev.backend.Main.LOGGER;
+import static net.doubledoordev.backend.commands.CommandHandler.CMDLOGGER;
 import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
@@ -68,16 +67,16 @@ public class Commands
         this.dispatcher = commandHandler.dispatcher;
     }
 
-    @Command(aliases = {"help", "?"}, desc = "Get a list of commands", help = "Use this to get help",  usage = "[Command]", max = 1)
+    @Command(aliases = {"help", "?"}, desc = "Get a list of commands", help = "Use this to get help", usage = "[Command]", max = 1)
     public void cmdHelp(@Optional String command) throws CommandException
     {
         // Command list
         if (command == null)
         {
-            LOGGER.info("--==## Command list ##==--");
+            CMDLOGGER.info("--==## Command list ##==--");
             for (CommandMapping cmd : dispatcher.getCommands())
             {
-                LOGGER.info(cmd.getPrimaryAlias() + ' ' + cmd.getDescription().getUsage() + " => " + cmd.getDescription().getShortDescription()); // Looks like this: Name ListOfParameters => Description
+                CMDLOGGER.info(cmd.getPrimaryAlias() + ' ' + cmd.getDescription().getUsage() + " => " + cmd.getDescription().getShortDescription()); // Looks like this: Name ListOfParameters => Description
             }
         }
         else
@@ -86,41 +85,77 @@ public class Commands
 
             if (cmd == null) throw new CommandNotFoundException(command);
 
-            LOGGER.info(String.format("--==## Help for %s ##==--", command));
-            LOGGER.info(String.format("Name: %s \t Aliases: %s", cmd.getPrimaryAlias(), JOINER_COMMA_SPACE.join(cmd.getAllAliases())));
-            LOGGER.info(String.format("Usage: %s %s", cmd.getPrimaryAlias(), cmd.getDescription().getUsage()));
-            LOGGER.info(String.format("Short description: %s", cmd.getDescription().getShortDescription()));
-            LOGGER.info(String.format("Help text: %s", cmd.getDescription().getHelp()));
+            CMDLOGGER.info(String.format("--==## Help for %s ##==--", command));
+            CMDLOGGER.info(String.format("Name: %s \t Aliases: %s", cmd.getPrimaryAlias(), JOINER_COMMA_SPACE.join(cmd.getAllAliases())));
+            CMDLOGGER.info(String.format("Usage: %s %s", cmd.getPrimaryAlias(), cmd.getDescription().getUsage()));
+            CMDLOGGER.info(String.format("Short description: %s", cmd.getDescription().getShortDescription()));
+            CMDLOGGER.info(String.format("Help text: %s", cmd.getDescription().getHelp()));
         }
     }
 
     @Command(aliases = {"serverlist", "servers"}, desc = "List all servers", max = 0)
     public void cmdServerList()
     {
-        LOGGER.info("All servers:");
-        LOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getServers()));
-        LOGGER.info("Online servers:");
-        LOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getOnlineServers()));
+        CMDLOGGER.info("All servers:");
+        CMDLOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getServers()));
+        CMDLOGGER.info("Online servers:");
+        CMDLOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getOnlineServers()));
     }
 
-    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server name (regex)> [-f (force the stop)] [Message ...]", min = 1)
-    public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
-    {
-        for (Server server : servers)
-        {
-            if (!server.getOnline()) continue;
-            if (server.stopServer(msg)) LOGGER.info(String.format("Shutdown command send to %s", server.getName()));
-            else LOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getName()));
-        }
-    }
-
-    @Command(aliases = "message", desc = "Send message to servers (with /say)", min = 2)
+    @Command(aliases = "message", desc = "Send message to servers (with /say)", usage = "<server name (regex)> <message ...>", min = 2)
     public void cmdMessage(Server[] servers, @Text String msg) throws CommandException
     {
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
             server.send(String.format("/say %s", msg));
+        }
+    }
+
+    @Command(aliases = "backup", desc = "Make full backup of one or more servers", usage = "<server name (regex)>", min = 1, max = 1)
+    public void cmdBackup(Server[] servers) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            try
+            {
+                server.getWorldManager().bypassLimits = true;
+                server.getWorldManager().makeAllOfTheBackup();
+            }
+            catch (WorldManager.BackupException e)
+            {
+                CMDLOGGER.warn("Error when making a backup of " + server.getName());
+                CMDLOGGER.warn(e);
+            }
+        }
+    }
+
+    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server name (regex)> [-f (force the stop)] [message ...]", min = 1)
+    public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (!server.getOnline()) continue;
+            if (server.stopServer(msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getName()));
+            else CMDLOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getName()));
+        }
+    }
+
+    @Command(aliases = "start", desc = "Start one or more servers", usage = "<server name (regex)>", min = 1)
+    public void cmdStart(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (server.getOnline()) continue;
+            try
+            {
+                server.startServer();
+            }
+            catch (Exception e)
+            {
+                CMDLOGGER.warn("Not able to start server " + server.getName());
+                CMDLOGGER.warn(e);
+            }
         }
     }
 }

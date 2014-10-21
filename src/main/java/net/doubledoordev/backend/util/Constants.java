@@ -146,9 +146,9 @@ public class Constants
     };
     public static final    TemplateModel    HELPER_TEMPLATE_MODEL          = getStaticHelper();
     public static final    Timer            TIMER                          = new Timer();
-    public static final Joiner              JOINER_COMMA_SPACE = Joiner.on(", ");
-    public static final Joiner              JOINER_COMMA = Joiner.on(',');
-    public static final Joiner              JOINER_SPACE = Joiner.on(' ');
+    public static final    Joiner           JOINER_COMMA_SPACE             = Joiner.on(", ");
+    public static final    Joiner           JOINER_COMMA                   = Joiner.on(',');
+    public static final    Joiner           JOINER_SPACE                   = Joiner.on(' ');
     protected static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     /**

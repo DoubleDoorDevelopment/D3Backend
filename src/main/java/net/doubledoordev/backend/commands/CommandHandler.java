@@ -41,23 +41,19 @@
 
 package net.doubledoordev.backend.commands;
 
-import com.sk89q.intake.Command;
 import com.sk89q.intake.CommandException;
-import com.sk89q.intake.CommandMapping;
 import com.sk89q.intake.context.CommandLocals;
 import com.sk89q.intake.dispatcher.Dispatcher;
 import com.sk89q.intake.fluent.CommandGraph;
 import com.sk89q.intake.parametric.ParametricBuilder;
-import com.sk89q.intake.parametric.annotation.Optional;
 import com.sk89q.intake.util.auth.AuthorizationException;
 import net.doubledoordev.backend.Main;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import static net.doubledoordev.backend.Main.LOGGER;
-import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
 
 /**
  * Using sk89q's Intake lib
@@ -66,7 +62,9 @@ import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
  */
 public class CommandHandler implements Runnable
 {
+    public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
     public final Dispatcher dispatcher;
+
     private CommandHandler()
     {
         ParametricBuilder parametricBuilder = new ParametricBuilder();
@@ -98,7 +96,7 @@ public class CommandHandler implements Runnable
             }
             catch (CommandException | IOException | AuthorizationException e)
             {
-                LOGGER.warn(e);
+                CMDLOGGER.warn(e);
             }
         }
     }

@@ -168,7 +168,7 @@ public class WorldManager
         return server.getOwnerObject().getMaxDiskspace() == -1 || server.getOwnerObject().getDiskspaceLeft() <= 0;
     }
 
-    private class BackupException extends Exception
+    public class BackupException extends Exception
     {
         public BackupException(String s)
         {

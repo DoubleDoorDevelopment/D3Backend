@@ -76,11 +76,11 @@ public abstract class NanoHTTPD
     /**
      * Pluggable strategy for asynchronously executing requests.
      */
-    private AsyncRunner asyncRunner;
+    private       AsyncRunner            asyncRunner;
     /**
      * Pluggable strategy for creating and cleaning up temporary files.
      */
-    private TempFileManagerFactory tempFileManagerFactory;
+    private       TempFileManagerFactory tempFileManagerFactory;
 
     /**
      * Constructs an HTTP server on given port.
@@ -861,8 +861,8 @@ public abstract class NanoHTTPD
         private final TempFileManager tempFileManager;
         private final OutputStream    outputStream;
         private       InputStream     inputStream;
-        private int splitbyte;
-        private int rlen;
+        private       int             splitbyte;
+        private       int             rlen;
 
         private String              uri;
         private Method              method;
