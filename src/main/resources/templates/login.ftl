@@ -22,7 +22,7 @@
 
     <p>
         Permission lvl: ${user.group}<br>
-        Diskspace left: ${(user.diskspaceLeft == -1)?string("&infin;", user.diskspaceLeft)} MB<br>
+        Diskspace left: ${(user.diskspaceLeft[2] == -1)?string("&infin;", user.diskspaceLeft)} MB<br>
         Servers left: ${(user.maxServers == -1)?string("&infin;", (user.maxServers - user.serverCount))}<br>
         RAM left: ${(user.maxRamLeft == -1)?string("&infin;", user.maxRamLeft)} MB<br>
     </p>
