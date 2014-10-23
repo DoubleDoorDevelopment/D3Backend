@@ -53,9 +53,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.UUID;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
@@ -70,8 +72,26 @@ public class Main
     public static String adminKey;
     public static boolean running = true;
 
+    public static final String build, version;
+
+    static
+    {
+        Properties properties = new Properties();
+        try
+        {
+            properties.load(Main.class.getResourceAsStream("/properties.properties"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        build = properties.getProperty("build");
+        version = properties.getProperty("version");
+    }
+
     private Main()
     {
+
     }
 
     public static void main(String[] args) throws Exception

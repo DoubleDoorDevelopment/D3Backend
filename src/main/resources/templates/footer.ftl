@@ -1,3 +1,9 @@
+<footer>
+    <p class="text-center">
+        <#if Helper.hasUpdate()><span class="text-danger"><b>Backend is out of date!</b> Latest version: ${Helper.getUpdateVersion()}</span><br></#if>
+        <span class="text-muted">Build with D3 Backend.</span>
+    </p>
+</footer>
 </div>
 <script>
     function navTab($args) {

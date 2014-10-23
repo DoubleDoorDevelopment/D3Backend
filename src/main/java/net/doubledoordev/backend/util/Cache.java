@@ -40,21 +40,26 @@
 
 package net.doubledoordev.backend.util;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.webserver.Webserver;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.regex.Matcher;
 
-import static net.doubledoordev.backend.util.Constants.FORGE_VERIONS_URL;
-import static net.doubledoordev.backend.util.Constants.TIMER;
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * Contains static Runnables that are used often
@@ -132,9 +137,9 @@ public class Cache extends TimerTask
                             urlConnection.connect();
                             if (urlConnection.getResponseCode() != 200) buildsWithoutInstaller.add(build);
                         }
-                        catch (IOException e)
+                        catch (IOException ignored)
                         {
-                            e.printStackTrace();
+                            // timeout or something like that
                         }
                     }
                 }
@@ -209,12 +214,45 @@ public class Cache extends TimerTask
             }
         }
     };
+    private static final Runnable                      UPDATE_CHECKER            = new Runnable()
+    {
+        @Override
+        public void run()
+        {
+            try
+            {
+                InputStream inputStream = new URL(VERSION_CHECKER_URL).openStream();
+                JsonObject object = JSONPARSER.parse(new InputStreamReader(inputStream)).getAsJsonObject().getAsJsonObject("lastStableBuild");
+
+                if (!object.get("number").getAsString().equalsIgnoreCase(Main.build))
+                {
+                    hasUpdate = true;
+                    JsonArray artifacts = object.getAsJsonArray("artifacts");
+                    for (int i = 0; i < artifacts.size(); i++)
+                    {
+                        Matcher matcher = Constants.VERSION_PATTERN.matcher(artifacts.get(i).getAsJsonObject().get("fileName").getAsString());
+                        if (!matcher.find()) continue;
+                        updatedVersion = matcher.group();
+                        Main.LOGGER.warn("Version out of date! New version: " + updatedVersion);
+                        break;
+                    }
+                }
+
+                inputStream.close();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
     /**
      * Time vars
      */
-    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;   // 1 hour
-    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;       // 1 minute
-    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;       // 20 seconds
+    public static        long                          REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
+    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;          // 1 hour
+    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;               // 1 minute
+    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;               // 20 seconds
     /**
      * Forge version related things
      */
@@ -227,6 +265,11 @@ public class Cache extends TimerTask
      * Size counter related things
      */
     private static       long                          lastSize                  = 0L;
+    /**
+     *
+     */
+    private static       boolean                       hasUpdate                 = false;
+    private static       String                        updatedVersion            = "";
     /**
      * Timer related things
      */
@@ -252,6 +295,18 @@ public class Cache extends TimerTask
         return CASHED_MC_VERSIONS;
     }
 
+    public static boolean hasUpdate()
+    {
+        return hasUpdate;
+    }
+
+    public static String getUpdateVersion()
+    {
+        return updatedVersion;
+    }
+
+    // TODO: update checker
+
     public static void init()
     {
         if (instance != null) return;
@@ -266,7 +321,8 @@ public class Cache extends TimerTask
 
         if (now - Webserver.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
 
-        if (now - lastMCVersions > LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
+        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
+        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(UPDATE_CHECKER, "cache-updateChecking").start();
         if (now - lastForgeVersions > LONG_CACHE_TIMEOUT) new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();
         if (now - lastSize > MEDIUM_CACHE_TIMEOUT) new Thread(SIZE_COUNTER, "cache-sizeCounter").start();
 

@@ -242,4 +242,14 @@ public class Helper
     {
         return !(Strings.isBlank(SETTINGS.certificatePath) || SETTINGS.certificatePass == null || SETTINGS.certificatePass.length == 0);
     }
+
+    public static boolean hasUpdate()
+    {
+        return Cache.hasUpdate();
+    }
+
+    public static String getUpdateVersion()
+    {
+        return Cache.getUpdateVersion();
+    }
 }
