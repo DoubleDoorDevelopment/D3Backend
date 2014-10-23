@@ -46,10 +46,8 @@ import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.webserver.Webserver;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -214,6 +212,30 @@ public class Cache extends TimerTask
             }
         }
     };
+    /**
+     * Time vars
+     */
+    public static        long                          REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
+    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;          // 1 hour
+    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;               // 1 minute
+    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;               // 20 seconds
+    /**
+     * Forge version related things
+     */
+    private static       long                          lastForgeVersions         = 0L;
+    /**
+     * MC version related things
+     */
+    private static       long                          lastMCVersions            = 0L;
+    /**
+     * Size counter related things
+     */
+    private static       long                          lastSize                  = 0L;
+    /**
+     *
+     */
+    private static       boolean                       hasUpdate                 = false;
+    private static       String                        updatedVersion            = "";
     private static final Runnable                      UPDATE_CHECKER            = new Runnable()
     {
         @Override
@@ -246,30 +268,6 @@ public class Cache extends TimerTask
             }
         }
     };
-    /**
-     * Time vars
-     */
-    public static        long                          REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
-    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;          // 1 hour
-    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;               // 1 minute
-    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;               // 20 seconds
-    /**
-     * Forge version related things
-     */
-    private static       long                          lastForgeVersions         = 0L;
-    /**
-     * MC version related things
-     */
-    private static       long                          lastMCVersions            = 0L;
-    /**
-     * Size counter related things
-     */
-    private static       long                          lastSize                  = 0L;
-    /**
-     *
-     */
-    private static       boolean                       hasUpdate                 = false;
-    private static       String                        updatedVersion            = "";
     /**
      * Timer related things
      */

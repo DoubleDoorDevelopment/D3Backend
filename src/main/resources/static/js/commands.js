@@ -55,7 +55,7 @@ function execute($method, $url, $data, $func) {
     xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
             if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-            else if (typeof($func) ==  "function") $func();
+            else if (typeof($func) == "function") $func();
         }
     }
 }

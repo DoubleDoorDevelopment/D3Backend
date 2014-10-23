@@ -1,14 +1,16 @@
 <#include "header.ftl">
 <#assign allowModify = server.canUserControl(user) || admin>
 <#assign isCoOwner = server.isCoOwner(user) || admin >
-<h1>${server.name} <small> ${server.getDisplayAddress()}   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small></h1>
+<h1>${server.name}
+    <small> ${server.getDisplayAddress()}   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
+</h1>
 <p>
-    <div class="btn-group">
-        <button type="button" <#if allowModify && !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success">Start</button>
-        <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole/${server.name}')" <#else>disabled</#if>>Console</button>
-        <button type="button" <#if allowModify && server.online>onclick="call('server', '${server.name}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning">Stop</button>
-        <button type="button" <#if allowModify && server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.name}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger">Kill</button>
-    </div>
+<div class="btn-group">
+    <button type="button" <#if allowModify && !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success">Start</button>
+    <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole/${server.name}')" <#else>disabled</#if>>Console</button>
+    <button type="button" <#if allowModify && server.online>onclick="call('server', '${server.name}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning">Stop</button>
+    <button type="button" <#if allowModify && server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.name}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger">Kill</button>
+</div>
 </p>
 <div class="row">
     <div class="col-sm-6">
@@ -20,8 +22,10 @@
             <div class="panel-body" style="text-align: center;">
                 <p>
                     Server owner is ${server.owner}.<br>
-                    Server port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.serverPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.serverPort)> Free<#elseif server.online>In use by us<#else>In use by ?</#if></span><br>
-                    RCon port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.rconPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.rconPort)> Free<#elseif server.online>In use by us<#else>In use by ?</#if></span>
+                    Server port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.serverPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.serverPort)>
+                    Free<#elseif server.online>In use by us<#else>In use by ?</#if></span><br>
+                    RCon port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.rconPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.rconPort)>
+                    Free<#elseif server.online>In use by us<#else>In use by ?</#if></span>
                 </p>
                 <table class="table table-hover table-condensed">
                     <thead>
@@ -32,7 +36,7 @@
                     </thead>
                     <tbody>
                     <#list ["name", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
-                    <#assign value = server.get(key)>
+                        <#assign value = server.get(key)>
                     <tr>
                         <td style="text-align: right;">${key}</td>
                         <td style="text-align: left;"><#if value?is_number>${value?c}<#elseif value?is_boolean>${value?string}<#elseif value?is_sequence>${value?join(", ")}<#else>${value}</#if></td>
@@ -92,11 +96,13 @@
                         <label for="ExtraJavaParameters">Extra Java Parameters</label>
                         <textarea id="ExtraJavaParameters" class="form-control" rows="3" <#if isCoOwner && !server.online>onchange="call('server', '${server.name}', 'setExtraJavaParameters', this.value.split('\n'))" <#else>disabled</#if>>${server.extraJavaParameters?join("\n")}
                         </textarea>
+
                         <p class="help-block">One per line.</p>
                     </div>
                     <div class="form-group">
                         <label for="ExtraServerParameters">Extra Server Parameters</label>
                         <textarea id="ExtraServerParameters" class="form-control" rows="3" <#if isCoOwner && !server.online>onchange="call('server', '${server.name}', 'setExtraMCParameters', this.value.split('\n'))" <#else>disabled</#if>>${server.extraMCParameters?join("\n")}</textarea>
+
                         <p class="help-block">One per line.</p>
                     </div>
                 </form>
@@ -111,6 +117,7 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>No checks are preformed when submitting. Be careful!</p>
+
                 <form class="form-horizontal" role="form" style="padding-left: 10px; padding-right: 10px;" method="post">
                     <textarea id="serverProperties" name="serverProperties" class="form-control" rows="25" <#if isCoOwner && server.online>disabled</#if>>${server.propertiesAsText}</textarea>
                     <br>
@@ -132,40 +139,55 @@
                     <a type="button" href='/filemanager/${server.name}' class="btn btn-info">File Manager</a>
                 </div>
                 <div class="btn-group">
-                    <#if server.ownerObject == user || admin><button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.name}', 'setOwner', name);}" class="btn btn-danger">Change owner</button></#if>
-                    <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">Delete server</button>
+                <#if server.ownerObject == user || admin>
+                    <button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.name}', 'setOwner', name);}" class="btn btn-danger">Change
+                        owner
+                    </button></#if>
+                    <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.name}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">
+                        Delete server
+                    </button>
                 </div>
                 <hr>
                 <div class="form-group">
                     <label for="Admins">Co Owners</label>
                     <textarea id="Admins" class="form-control" rows="3" <#if server.owner == user.username>onchange="call('server', '${server.name}', 'setCoOwners', this.value.split('\n'))" <#else>disabled</#if>>${server.coOwners?join("\n")}</textarea>
+
                     <p class="help-block">Usernames on the backend. One per line. Can do everything except modify Co Owners</p>
                 </div>
                 <hr>
                 <div class="form-group">
                     <label for="Admins">Admins</label>
                     <textarea id="Admins" class="form-control" rows="3" <#if isCoOwner>onchange="call('server', '${server.name}', 'setAdmins', this.value.split('\n'))" <#else>disabled</#if>>${server.admins?join("\n")}</textarea>
+
                     <p class="help-block">Usernames on the backend. One per line. Can start, stop & use console.</p>
                 </div>
                 <hr>
                 <div class="form-group">
                     <label for="mcVersionSelector">MC jar version</label>
                     <select id="mcVersionSelector" class="form-control">
-                    <#list Helper.getAllMCVersions() as version><option>${version}</option></#list>
+                    <#list Helper.getAllMCVersions() as version>
+                        <option>${version}</option></#list>
                     </select>
+
                     <p class="help-block">To see any progress or errors, open the console.</p>
                 </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.name}', 'setVersion', document.getElementById('mcVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">Change MC jar</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.name}', 'setVersion', document.getElementById('mcVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">
+                    Change MC jar
+                </button>
                 <hr>
                 <hr>
                 <div class="form-group">
                     <label for="forgeVersionSelector">Install Forge</label>
                     <select id="forgeVersionSelector" class="form-control">
-                    <#list Helper.getForgeNames() as version><option>${version}</option></#list>
+                    <#list Helper.getForgeNames() as version>
+                        <option>${version}</option></#list>
                     </select>
+
                     <p class="help-block">To see any progress or errors, open the console.</p>
                 </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.name}', 'installForge', document.getElementById('forgeVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">Install forge</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.name}', 'installForge', document.getElementById('forgeVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">
+                    Install forge
+                </button>
                 <hr>
                 <div class="form-group">
                     <label for="modpackURL">Upload modpack zip</label>
@@ -176,7 +198,9 @@
                         <input id="modpackPurge" type="checkbox" checked> Purge the server
                     </label>
                 </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove and override all files related to this server!')) call('server', '${server.name}', 'downloadModpack', encodeURIComponent(document.getElementById('modpackURL').value), document.getElementById('modpackPurge').checked);" <#else>disabled</#if> class="btn btn-warning">Upload modpack</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove and override all files related to this server!')) call('server', '${server.name}', 'downloadModpack', encodeURIComponent(document.getElementById('modpackURL').value), document.getElementById('modpackPurge').checked);" <#else>disabled</#if> class="btn btn-warning">
+                    Upload modpack
+                </button>
             </div>
         </div>
     </div>
@@ -186,10 +210,12 @@
         margin-top: -20px;
         font-size: 15px;
     }
+
     .row {
         margin-top: 40px;
         padding: 0 10px;
     }
+
     .clickable {
         cursor: pointer;
     }

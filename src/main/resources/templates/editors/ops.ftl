@@ -21,10 +21,10 @@
     <tbody id="opList">
     </tbody>
 </table>
-<script type="text/javascript" >
+<script type="text/javascript">
     var json = ${fm.getFileContentsAsJson()};
     var opList = document.getElementById("opList");
-    json.forEach(function(object) {
+    json.forEach(function (object) {
         opList.innerHTML += "<tr id=\"" + object['name'] + "\"><td>" + object['name'] + "</td><td>" + object['uuid'] + "</td><td id=\"" + object['name'] + "lvl\">" + object['level'] + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Remove</button><button type=\"button\" onclick=\"changePermlvl(\'" + object['name'] + "\')\" class=\"btn btn-warning btn-xs\">Change perm lvl</button></div></td></#if></tr>";
     });
 
@@ -32,10 +32,9 @@
         return !isNaN(parseInt(n));
     }
 
-    function changePermlvl(username)
-    {
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["name"] === username) {
+    function changePermlvl(username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["name"] === username) {
                 var input = prompt("New perm lvl?", json[i]["level"]);
                 if (input != null && isNumber(input)) {
                     document.getElementById(username + "lvl").innerHTML = input;
@@ -45,12 +44,11 @@
         }
     }
 
-    function removeUser(username)
-    {
+    function removeUser(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["name"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["name"] === username) {
                 json.splice(i, 1);
             }
         }
@@ -61,13 +59,12 @@
         var username = document.getElementById("newUsername").value;
         var permlvl = document.getElementById("newlvl").value;
 
-        if (!isNumber(permlvl))
-        {
+        if (!isNumber(permlvl)) {
             alert("Input invalid.");
             return;
         }
 
-        xmlhttp.onreadystatechange = function() {
+        xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
                 if (xmlhttp.status == 200) {
                     var myArr = JSON.parse(xmlhttp.responseText);

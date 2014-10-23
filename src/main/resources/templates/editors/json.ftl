@@ -21,7 +21,7 @@
 <#else>
 <p>File is readonly.</p>
 </#if>
-<script type="text/javascript" >
+<script type="text/javascript">
     var container = document.getElementById('jsoneditor');
 
     var options = {
@@ -34,8 +34,7 @@
 
     var json = ${fm.getFileContentsAsJson()!"null"};
 
-    if (json == null)
-    {
+    if (json == null) {
         alert("Data file might be currupt. It can't be read by our parser.");
         document.getElementById("savebtn").disabled = true;
         document.getElementById("jsoneditor").innerHTML = "Error. File corrupt?";

@@ -14,21 +14,21 @@
     <tbody>
     <#list Settings.servers as server>
         <#if server.canUserControl(user)>
-            <tr class="<#if server.online>success<#else>danger</#if>" style="cursor:pointer;">
-                <td onclick="window.document.location='/servers/${server.name}'">${server.name}</td>
-                <td onclick="window.document.location='/servers/${server.name}'">${server.displayAddress}</td>
-                <td onclick="window.document.location='/servers/${server.name}'">${server.onlinePlayers}/${server.slots}</td>
-                <td onclick="window.document.location='/servers/${server.name}'">${server.diskspaceUse[2]} MB</td>
-                <td>
-                    <div class="btn-group">
-                        <button type="button" <#if !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success btn-xs">Start</button>
-                        <button type="button" class="btn btn-info btn-xs" onclick="openPopup('/console/${server.name}')">Console</button>
-                        <button type="button" <#if server.online>onclick="call('server', '${server.name}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning btn-xs">Stop</button>
-                        <button type="button" <#if server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.name}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger btn-xs">Kill</button>
-                    </div>
-                </td>
-                <td onclick="window.document.location='/servers/${server.name}'">${server.motd}</td>
-            </tr>
+        <tr class="<#if server.online>success<#else>danger</#if>" style="cursor:pointer;">
+            <td onclick="window.document.location='/servers/${server.name}'">${server.name}</td>
+            <td onclick="window.document.location='/servers/${server.name}'">${server.displayAddress}</td>
+            <td onclick="window.document.location='/servers/${server.name}'">${server.onlinePlayers}/${server.slots}</td>
+            <td onclick="window.document.location='/servers/${server.name}'">${server.diskspaceUse[2]} MB</td>
+            <td>
+                <div class="btn-group">
+                    <button type="button" <#if !server.online>onclick="call('server', '${server.name}', 'startServer')" <#else>disabled</#if> class="btn btn-success btn-xs">Start</button>
+                    <button type="button" class="btn btn-info btn-xs" onclick="openPopup('/console/${server.name}')">Console</button>
+                    <button type="button" <#if server.online>onclick="call('server', '${server.name}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning btn-xs">Stop</button>
+                    <button type="button" <#if server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.name}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger btn-xs">Kill</button>
+                </div>
+            </td>
+            <td onclick="window.document.location='/servers/${server.name}'">${server.motd}</td>
+        </tr>
         </#if>
     </#list>
     </tbody>

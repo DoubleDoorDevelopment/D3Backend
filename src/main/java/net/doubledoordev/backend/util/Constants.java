@@ -149,9 +149,9 @@ public class Constants
     public static final    Joiner           JOINER_COMMA_SPACE             = Joiner.on(", ");
     public static final    Joiner           JOINER_COMMA                   = Joiner.on(',');
     public static final    Joiner           JOINER_SPACE                   = Joiner.on(' ');
+    public static final    String           VERSION_CHECKER_URL            = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
+    public static final    Pattern          VERSION_PATTERN                = Pattern.compile("\\d+(?:\\.\\d+)+");
     protected static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    public static final     String          VERSION_CHECKER_URL            = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
-    public static final     Pattern         VERSION_PATTERN                = Pattern.compile("\\d+(?:\\.\\d+)+");
 
     /**
      * Methods that only get called to init the Constants

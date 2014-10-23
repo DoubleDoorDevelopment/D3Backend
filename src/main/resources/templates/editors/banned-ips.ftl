@@ -35,34 +35,33 @@
     <tbody id="opList">
     </tbody>
 </table>
-<script type="text/javascript" >
+<script type="text/javascript">
     var json = ${fm.getFileContentsAsJson()};
     var opList = document.getElementById("opList");
-    json.forEach(function(object) {
+    json.forEach(function (object) {
         opList.innerHTML +=
-            "<tr id=\"" + object['ip'] + "\">" +
+                "<tr id=\"" + object['ip'] + "\">" +
                 "<td>" + object['ip'] + "</td>" +
                 "<td>" + object['source'] + "</td>" +
                 "<td>" + object['reason'] + "</td>" +
                 "<td>" + object['created'] + "</td>" +
                 "<td>" + object['expires'] + "</td>" +
-                <#if !readonly>
+        <#if !readonly>
                 "<td>" +
-                    "<div class=\"btn-group\">" +
-                        "<button type=\"button\" onclick=\"removeUser(\'" + object['ip'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
-                        "<button type=\"button\" onclick=\"makeEditable(\'" + object['ip'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
-                    "</div>" +
+                "<div class=\"btn-group\">" +
+                "<button type=\"button\" onclick=\"removeUser(\'" + object['ip'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
+                "<button type=\"button\" onclick=\"makeEditable(\'" + object['ip'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
+                "</div>" +
                 "</td>"+
-                </#if>
-            "</tr>";
+        </#if>
+                "</tr>";
     });
 
-    function removeUser(username)
-    {
+    function removeUser(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["ip"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["ip"] === username) {
                 json.splice(i, 1);
             }
         }
@@ -78,21 +77,21 @@
 
         json.push({"ip": ip, "source": source, "reason": reason, "created": created, "expires": expires});
         opList.innerHTML +=
-            "<tr id=\"" + ip + "\">" +
+                "<tr id=\"" + ip + "\">" +
                 "<td>" + ip + "</td>" +
                 "<td>" + source + "</td>" +
                 "<td>" + reason + "</td>" +
                 "<td>" + created + "</td>" +
                 "<td>" + expires + "</td>" +
-                <#if !readonly>
+        <#if !readonly>
                 "<td>" +
-                    "<div class=\"btn-group\">" +
-                        "<button type=\"button\" onclick=\"removeUser(\'" + ip + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
-                        "<button type=\"button\" onclick=\"makeEditable(\'" + ip + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
-                    "</div>" +
+                "<div class=\"btn-group\">" +
+                "<button type=\"button\" onclick=\"removeUser(\'" + ip + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
+                "<button type=\"button\" onclick=\"makeEditable(\'" + ip + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
+                "</div>" +
                 "</td>" +
-                </#if>
-            "</tr>";
+        </#if>
+                "</tr>";
 
         document.getElementById("newip").value = "";
         document.getElementById("newSource").value = "Server";
@@ -103,12 +102,11 @@
         document.getElementById("addBtn").innerHTML = "Add";
     }
 
-    function makeEditable(username)
-    {
+    function makeEditable(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["ip"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["ip"] === username) {
                 document.getElementById("newip").value = json[i]["ip"];
                 document.getElementById("newSource").value = json[i]["source"];
                 document.getElementById("newReason").value = json[i]["reason"];

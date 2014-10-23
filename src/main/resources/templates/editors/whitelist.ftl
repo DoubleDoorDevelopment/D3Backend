@@ -16,19 +16,18 @@
     <tbody id="opList">
     </tbody>
 </table>
-<script type="text/javascript" >
+<script type="text/javascript">
     var json = ${fm.getFileContentsAsJson()};
     var opList = document.getElementById("opList");
-    json.forEach(function(object) {
+    json.forEach(function (object) {
         opList.innerHTML += "<tr id=\"" + object['name'] + "\"><td>" + object['name'] + "</td><td>" + object['uuid'] + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Remove</button></div></td></#if></tr>";
     });
 
-    function removeUser(username)
-    {
+    function removeUser(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["name"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["name"] === username) {
                 json.splice(i, 1);
             }
         }
@@ -38,7 +37,7 @@
         var xmlhttp = new XMLHttpRequest();
         var username = document.getElementById("newUsername").value;
 
-        xmlhttp.onreadystatechange = function() {
+        xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
                 if (xmlhttp.status == 200) {
                     var myArr = JSON.parse(xmlhttp.responseText);

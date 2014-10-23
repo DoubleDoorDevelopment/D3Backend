@@ -28,11 +28,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-define('ace/theme/jsoneditor', ['require', 'exports', 'module' , 'ace/lib/dom'], function(require, exports, module) {
+define('ace/theme/jsoneditor', ['require', 'exports', 'module' , 'ace/lib/dom'], function (require, exports, module) {
 
-exports.isDark = false;
-exports.cssClass = "ace-jsoneditor";
-exports.cssText = ".ace-jsoneditor .ace_gutter {\
+    exports.isDark = false;
+    exports.cssClass = "ace-jsoneditor";
+    exports.cssText = ".ace-jsoneditor .ace_gutter {\
 background: #ebebeb;\
 color: #333\
 }\
@@ -139,6 +139,6 @@ text-decoration: underline\
 background: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAACCAYAAACZgbYnAAAAE0lEQVQImWP4////f4bLly//BwAmVgd1/w11/gAAAABJRU5ErkJggg==\") right repeat-y\
 }";
 
-var dom = require("../lib/dom");
-dom.importCssString(exports.cssText, exports.cssClass);
+    var dom = require("../lib/dom");
+    dom.importCssString(exports.cssText, exports.cssClass);
 });

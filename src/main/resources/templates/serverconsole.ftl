@@ -55,7 +55,10 @@
 <script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
-        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {$input.value = ""; getConsoleText();})
+        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {
+            $input.value = "";
+            getConsoleText();
+        })
     }
 
     var callURL = window.location.origin + "/serverConsoleText/${server.name}";
@@ -63,18 +66,16 @@
     var textarea = document.getElementById('text');
     var autoScroll = true;
 
-    var getConsoleText = function()
-    {
+    var getConsoleText = function () {
         xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", callURL  + "/" + lines , true)
+        xmlhttp.open("GET", callURL + "/" + lines, true)
         xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
         xmlhttp.send(null);
 
         xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
                 if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                else
-                {
+                else {
                     autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
                     responce = JSON.parse(xmlhttp.responseText);
                     textarea.value += responce["text"];

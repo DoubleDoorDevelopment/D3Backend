@@ -1004,6 +1004,12 @@ public class Server
         return dimensionMap;
     }
 
+    @Override
+    public String toString()
+    {
+        return getName();
+    }
+
     public static class Deserializer implements JsonDeserializer<Server>
     {
         @Override
@@ -1030,11 +1036,5 @@ public class Server
             data.add("dimensions", context.serialize(src.dimensionMap.values()));
             return data;
         }
-    }
-
-    @Override
-    public String toString()
-    {
-        return getName();
     }
 }

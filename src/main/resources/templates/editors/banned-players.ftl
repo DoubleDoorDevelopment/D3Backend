@@ -36,35 +36,34 @@
     <tbody id="opList">
     </tbody>
 </table>
-<script type="text/javascript" >
+<script type="text/javascript">
     var json = ${fm.getFileContentsAsJson()};
     var opList = document.getElementById("opList");
-    json.forEach(function(object) {
+    json.forEach(function (object) {
         opList.innerHTML +=
-            "<tr id=\"" + object['name'] + "\">" +
+                "<tr id=\"" + object['name'] + "\">" +
                 "<td>" + object['name'] + "</td>" +
                 "<td>" + object['uuid'] + "</td>" +
                 "<td>" + object['source'] + "</td>" +
                 "<td>" + object['reason'] + "</td>" +
                 "<td>" + object['created'] + "</td>" +
                 "<td>" + object['expires'] + "</td>" +
-                <#if !readonly>
+        <#if !readonly>
                 "<td>" +
-                    "<div class=\"btn-group\">" +
-                        "<button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
-                        "<button type=\"button\" onclick=\"makeEditable(\'" + object['name'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
-                    "</div>" +
+                "<div class=\"btn-group\">" +
+                "<button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
+                "<button type=\"button\" onclick=\"makeEditable(\'" + object['name'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
+                "</div>" +
                 "</td>"+
-                </#if>
-            "</tr>";
+        </#if>
+                "</tr>";
     });
 
-    function removeUser(username)
-    {
+    function removeUser(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["name"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["name"] === username) {
                 json.splice(i, 1);
             }
         }
@@ -78,7 +77,7 @@
         var created = document.getElementById("newCreated").value;
         var expires = document.getElementById("newExpires").value;
 
-        xmlhttp.onreadystatechange = function() {
+        xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
                 if (xmlhttp.status == 200) {
                     var myArr = JSON.parse(xmlhttp.responseText);
@@ -92,20 +91,20 @@
                         json.push({"name": username, "uuid": uuid, "source": source, "reason": reason, "created": created, "expires": expires});
                         opList.innerHTML +=
                                 "<tr id=\"" + username + "\">" +
-                                    "<td>" + username + "</td>" +
-                                    "<td>" + uuid + "</td>" +
-                                    "<td>" + source + "</td>" +
-                                    "<td>" + reason + "</td>" +
-                                    "<td>" + created + "</td>" +
-                                    "<td>" + expires + "</td>" +
-                                    <#if !readonly>
-                                    "<td>" +
-                                        "<div class=\"btn-group\">" +
-                                            "<button type=\"button\" onclick=\"removeUser(\'" + username + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
-                                            "<button type=\"button\" onclick=\"makeEditable(\'" + username + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
-                                        "</div>" +
-                                    "</td>" +
-                                    </#if>
+                                "<td>" + username + "</td>" +
+                                "<td>" + uuid + "</td>" +
+                                "<td>" + source + "</td>" +
+                                "<td>" + reason + "</td>" +
+                                "<td>" + created + "</td>" +
+                                "<td>" + expires + "</td>" +
+                        <#if !readonly>
+                                "<td>" +
+                                "<div class=\"btn-group\">" +
+                                "<button type=\"button\" onclick=\"removeUser(\'" + username + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
+                                "<button type=\"button\" onclick=\"makeEditable(\'" + username + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
+                                "</div>" +
+                                "</td>" +
+                        </#if>
                                 "</tr>";
 
                         document.getElementById("newUsername").value = "";
@@ -125,12 +124,11 @@
         xmlhttp.send();
     }
 
-    function makeEditable(username)
-    {
+    function makeEditable(username) {
         var element = document.getElementById(username);
         if (element != null) opList.removeChild(element);
-        for(var i = json.length - 1; i >= 0; i--) {
-            if(json[i]["name"] === username) {
+        for (var i = json.length - 1; i >= 0; i--) {
+            if (json[i]["name"] === username) {
                 document.getElementById("newUsername").value = json[i]["name"];
                 document.getElementById("newSource").value = json[i]["source"];
                 document.getElementById("newReason").value = json[i]["reason"];
