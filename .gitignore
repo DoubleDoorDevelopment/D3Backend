@@ -7,7 +7,3 @@
 build
 out
 run
-
-*.jar
-*.war
-*.ear
