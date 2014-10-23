@@ -7,3 +7,7 @@
 build
 out
 run
+
+.classpath
+.project
+.settings

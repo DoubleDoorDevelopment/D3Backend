@@ -10,6 +10,7 @@ buildscript {
 apply plugin: "java"
 apply plugin: "maven"
 apply plugin: "idea"
+apply plugin: "eclipse"
 apply plugin: "idea-utils"
 
 archivesBaseName = "D3Backend"
