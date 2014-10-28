@@ -69,14 +69,12 @@ dependencies {
     compile group: "com.sk89q", name: "intake", version: "3.1.1-SNAPSHOT"
 }
 
-processResources
-        {
-            from(sourceSets.main.resources.srcDirs)
-                    {
-                        include 'mcmod.info'
-                        expand 'version': project.version, 'build': System.getenv().BUILD_NUMBER
-                    }
-        }
+processResources {
+    from(sourceSets.main.resources.srcDirs) {
+        include '*.properties'
+        expand 'version': project.version, 'build': System.getenv().BUILD_NUMBER
+    }
+}
 
 jar {
     from "LICENSE.txt"
