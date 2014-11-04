@@ -61,7 +61,9 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
+import static net.doubledoordev.backend.util.Constants.SERVERS;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
+import static net.doubledoordev.backend.util.Settings.getServerByName;
 
 /**
  * @author Dries007
@@ -146,6 +148,21 @@ public class Main
         LOGGER.info("Use the help command for help.");
 
         CommandHandler.init();
+
+        for (Server server : SETTINGS.servers.values())
+        {
+            if (server.getAutoStart())
+            {
+                try
+                {
+                    server.startServer();
+                }
+                catch (Exception ignored)
+                {
+                    ignored.printStackTrace();
+                }
+            }
+        }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -158,6 +175,7 @@ public class Main
     {
         running = false;
         Settings.save();
+        Cache.init();
         LOGGER.info("Attempting graceful shutdown of all servers...");
         for (final Server server : Settings.SETTINGS.servers.values())
         {

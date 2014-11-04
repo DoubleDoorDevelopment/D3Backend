@@ -162,18 +162,6 @@ public class Server
             }).start();
         }
 
-        // Handle autostart
-        if (!getOnline() && getAutoStart())
-        {
-            try
-            {
-                startServer();
-            }
-            catch (Exception ignored)
-            {
-            }
-        }
-
         if (isNewServer)
         {
             try

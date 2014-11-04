@@ -41,19 +41,30 @@
 
 package net.doubledoordev.backend.commands;
 
+import com.sk89q.intake.Command;
 import com.sk89q.intake.CommandException;
+import com.sk89q.intake.CommandMapping;
 import com.sk89q.intake.context.CommandLocals;
 import com.sk89q.intake.dispatcher.Dispatcher;
 import com.sk89q.intake.fluent.CommandGraph;
 import com.sk89q.intake.parametric.ParametricBuilder;
+import com.sk89q.intake.parametric.annotation.Optional;
+import com.sk89q.intake.parametric.annotation.Switch;
+import com.sk89q.intake.parametric.annotation.Text;
 import com.sk89q.intake.util.auth.AuthorizationException;
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.server.WorldManager;
+import net.doubledoordev.backend.util.Cache;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * Using sk89q's Intake lib
@@ -62,6 +73,7 @@ import java.io.InputStreamReader;
  */
 public class CommandHandler implements Runnable
 {
+    public static final CommandHandler INSTANCE = new CommandHandler();
     public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
     public final Dispatcher dispatcher;
 
@@ -73,7 +85,6 @@ public class CommandHandler implements Runnable
         dispatcher = new CommandGraph()
                 .builder(parametricBuilder)
                 .commands()
-                .registerMethods(new Commands(this))
                 .registerMethods(this)
                 .graph()
                 .getDispatcher();
@@ -81,7 +92,7 @@ public class CommandHandler implements Runnable
 
     public static void init()
     {
-        new Thread(new CommandHandler(), "CommandHandler").start();
+        new Thread(INSTANCE, "CommandHandler").start();
     }
 
     @Override
@@ -92,12 +103,121 @@ public class CommandHandler implements Runnable
         {
             try
             {
-                dispatcher.call(reader.readLine(), new CommandLocals(), new String[0]);
+                String command = reader.readLine();
+                if (dispatcher.get(command.split(" ")[0]) != null) dispatcher.call(command, new CommandLocals(), new String[0]);
+                else throw new CommandNotFoundException(command);
             }
             catch (CommandException | IOException | AuthorizationException e)
             {
                 CMDLOGGER.warn(e);
+                e.printStackTrace();
             }
         }
+    }
+
+    @Command(aliases = {"help", "?"}, desc = "Get a list of commands", help = "Use this to get help", usage = "[Command]", max = 1)
+    public void cmdHelp(@Optional String command) throws CommandException
+    {
+        // Command list
+        if (command == null)
+        {
+            CMDLOGGER.info("--==## Command list ##==--");
+            for (CommandMapping cmd : dispatcher.getCommands())
+            {
+                CMDLOGGER.info(cmd.getPrimaryAlias() + ' ' + cmd.getDescription().getUsage() + " => " + cmd.getDescription().getShortDescription()); // Looks like this: Name ListOfParameters => Description
+            }
+        }
+        else
+        {
+            CommandMapping cmd = dispatcher.get(command);
+
+            if (cmd == null) throw new CommandNotFoundException(command);
+
+            CMDLOGGER.info(String.format("--==## Help for %s ##==--", command));
+            CMDLOGGER.info(String.format("Name: %s \t Aliases: %s", cmd.getPrimaryAlias(), JOINER_COMMA_SPACE.join(cmd.getAllAliases())));
+            CMDLOGGER.info(String.format("Usage: %s %s", cmd.getPrimaryAlias(), cmd.getDescription().getUsage()));
+            CMDLOGGER.info(String.format("Short description: %s", cmd.getDescription().getShortDescription()));
+            CMDLOGGER.info(String.format("Help text: %s", cmd.getDescription().getHelp()));
+        }
+    }
+
+    @Command(aliases = {"serverlist", "servers"}, desc = "List all servers", max = 0)
+    public void cmdServerList()
+    {
+        CMDLOGGER.info("All servers:");
+        CMDLOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getServers()));
+        CMDLOGGER.info("Online servers:");
+        CMDLOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getOnlineServers()));
+    }
+
+    @Command(aliases = "message", desc = "Send message to servers (with /say)", usage = "<server name (regex)> <message ...>", min = 2)
+    public void cmdMessage(Server[] servers, @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (!server.getOnline()) continue;
+            server.send(String.format("/say %s", msg));
+        }
+    }
+
+    @Command(aliases = "backup", desc = "Make full backup of one or more servers", usage = "<server name (regex)>", min = 1, max = 1)
+    public void cmdBackup(Server[] servers) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            try
+            {
+                server.getWorldManager().bypassLimits = true;
+                server.getWorldManager().makeAllOfTheBackup();
+            }
+            catch (WorldManager.BackupException e)
+            {
+                CMDLOGGER.warn("Error when making a backup of " + server.getName());
+                CMDLOGGER.warn(e);
+            }
+        }
+    }
+
+    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server name (regex)> [-f (force the stop)] [message ...]", min = 1)
+    public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (!server.getOnline()) continue;
+            if (server.stopServer(msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getName()));
+            else CMDLOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getName()));
+        }
+    }
+
+    @Command(aliases = "start", desc = "Start one or more servers", usage = "<server name (regex)>", min = 1)
+    public void cmdStart(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (server.getOnline()) continue;
+            try
+            {
+                server.startServer();
+            }
+            catch (Exception e)
+            {
+                CMDLOGGER.warn("Not able to start server " + server.getName());
+                CMDLOGGER.warn(e);
+            }
+        }
+    }
+
+    @Command(aliases = "version", desc = "Get current version and latest version available.", usage = "", min = 0, max = 0)
+    public void cmdVersion() throws CommandException
+    {
+        CMDLOGGER.info("Current version: {}. Build: {}", Main.version, Main.build);
+        CMDLOGGER.info("Latest version available: {}", Cache.getUpdateVersion());
+    }
+
+    @Command(aliases = {"shutdown", "exit"}, usage = "", desc = "Stop the backend", max = 0, flags = "f")
+    public void cmdShutdown(@Optional @Switch('f') boolean force) throws CommandException
+    {
+        if (force) System.exit(0);
+        Main.shutdown();
     }
 }

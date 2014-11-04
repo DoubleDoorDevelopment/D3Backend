@@ -91,6 +91,8 @@ public class Cache extends TimerTask
                 JsonObject latest = versionList.getAsJsonObject("promos");
                 HashSet<Integer> buildsWithoutInstaller = new HashSet<>();
 
+                if (!Main.running) return;
+
                 {
                     LinkedList<String> list = new LinkedList<>();
                     for (Map.Entry<String, JsonElement> element : latest.entrySet())
@@ -140,6 +142,8 @@ public class Cache extends TimerTask
                             // timeout or something like that
                         }
                     }
+
+                    if (!Main.running) return;
                 }
 
                 Main.LOGGER.debug("[Cache] Excluded FORGE versions: " + buildsWithoutInstaller.toString());
@@ -302,8 +306,6 @@ public class Cache extends TimerTask
     {
         return updatedVersion;
     }
-
-    // TODO: update checker
 
     public static void init()
     {
