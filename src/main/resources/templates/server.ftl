@@ -35,7 +35,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <#list ["name", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
+                    <#list ["ID", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
                         <#assign value = server.get(key)>
                     <tr>
                         <td style="text-align: right;">${key}</td>
