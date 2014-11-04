@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.util;
 
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
 import org.apache.logging.log4j.util.Strings;
 import org.spout.nbt.Tag;
@@ -251,5 +252,46 @@ public class Helper
     public static String getUpdateVersion()
     {
         return Cache.getUpdateVersion();
+    }
+
+    public static int getGlobalPlayers()
+    {
+        int p = 0;
+        for (Server server : SETTINGS.getOnlineServers())
+        {
+            p += server.getOnlinePlayers();
+        }
+        return p;
+    }
+
+    /**
+     * Default arguments: "%2d days, ", "%2d hours, ", "%2d min and", "%2 sec"
+     *
+     * @return uptime in (xxh) (xxm)
+     */
+    public static String getOnlineTime(String dayString, String hoursString, String minuteString, String secondsString)
+    {
+        StringBuilder sb = new StringBuilder(30);
+        long time = System.currentTimeMillis() - Main.STARTTIME;
+        boolean alwaysShowNext = false;
+        if (Strings.isNotBlank(dayString) && time > 1000 * 60 * 60 * 24)
+        {
+            alwaysShowNext = true;
+            sb.append(String.format(dayString, time / (1000 * 60 * 60 * 24)));
+            time %= 1000 * 60 * 60 * 24;
+        }
+        if (alwaysShowNext && Strings.isNotBlank(hoursString) && time > 1000 * 60 * 60)
+        {
+            alwaysShowNext = true;
+            sb.append(String.format(hoursString, time / (1000 * 60 * 60)));
+            time %= 1000 * 60 * 60;
+        }
+        if (alwaysShowNext && Strings.isNotBlank(minuteString) && time > 1000 * 60)
+        {
+            sb.append(String.format(minuteString, time / (1000 * 60)));
+            time %= 1000 * 60;
+        }
+        sb.append(String.format(secondsString, time / (1000)));
+        return sb.toString();
     }
 }

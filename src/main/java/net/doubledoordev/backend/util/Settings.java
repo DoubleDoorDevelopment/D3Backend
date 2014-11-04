@@ -102,7 +102,7 @@ public class Settings
             if (SERVERS_FILE.exists())
             {
                 fileReader = new FileReader(SERVERS_FILE);
-                if (SERVERS_FILE.exists()) for (Server server : GSON.fromJson(fileReader, Server[].class)) SETTINGS.servers.put(server.getName(), server);
+                if (SERVERS_FILE.exists()) for (Server server : GSON.fromJson(fileReader, Server[].class)) SETTINGS.servers.put(server.getID(), server);
                 fileReader.close();
             }
 

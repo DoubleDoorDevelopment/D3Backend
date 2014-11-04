@@ -73,8 +73,8 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class CommandHandler implements Runnable
 {
-    public static final CommandHandler INSTANCE = new CommandHandler();
-    public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
+    public static final CommandHandler INSTANCE  = new CommandHandler();
+    public static final Logger         CMDLOGGER = LogManager.getLogger("cmd");
     public final Dispatcher dispatcher;
 
     private CommandHandler()
@@ -150,7 +150,7 @@ public class CommandHandler implements Runnable
         CMDLOGGER.info(JOINER_COMMA_SPACE.join(SETTINGS.getOnlineServers()));
     }
 
-    @Command(aliases = "message", desc = "Send message to servers (with /say)", usage = "<server name (regex)> <message ...>", min = 2)
+    @Command(aliases = "message", desc = "Send message to servers (with /say)", usage = "<server ID (regex)> <message ...>", min = 2)
     public void cmdMessage(Server[] servers, @Text String msg) throws CommandException
     {
         for (Server server : servers)
@@ -160,7 +160,7 @@ public class CommandHandler implements Runnable
         }
     }
 
-    @Command(aliases = "backup", desc = "Make full backup of one or more servers", usage = "<server name (regex)>", min = 1, max = 1)
+    @Command(aliases = "backup", desc = "Make full backup of one or more servers", usage = "<server ID (regex)>", min = 1, max = 1)
     public void cmdBackup(Server[] servers) throws CommandException
     {
         for (Server server : servers)
@@ -172,24 +172,24 @@ public class CommandHandler implements Runnable
             }
             catch (WorldManager.BackupException e)
             {
-                CMDLOGGER.warn("Error when making a backup of " + server.getName());
+                CMDLOGGER.warn("Error when making a backup of " + server.getID());
                 CMDLOGGER.warn(e);
             }
         }
     }
 
-    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server name (regex)> [-f (force the stop)] [message ...]", min = 1)
+    @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server ID (regex)> [-f (force the stop)] [message ...]", min = 1)
     public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
     {
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            if (server.stopServer(msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getName()));
-            else CMDLOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getName()));
+            if (server.stopServer(msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getID()));
+            else CMDLOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getID()));
         }
     }
 
-    @Command(aliases = "start", desc = "Start one or more servers", usage = "<server name (regex)>", min = 1)
+    @Command(aliases = "start", desc = "Start one or more servers", usage = "<server ID (regex)>", min = 1)
     public void cmdStart(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
     {
         for (Server server : servers)
@@ -201,7 +201,7 @@ public class CommandHandler implements Runnable
             }
             catch (Exception e)
             {
-                CMDLOGGER.warn("Not able to start server " + server.getName());
+                CMDLOGGER.warn("Not able to start server " + server.getID());
                 CMDLOGGER.warn(e);
             }
         }

@@ -40,7 +40,7 @@
     }
 </script>
 <#if !readonly>
-<button type="button" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.name}', '${fm.stripServer(fm.file)}', 'set', editor.getValue());">Save</button>
+<button type="button" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', editor.getValue());">Save</button>
 <#else>
 <p>File is readonly.</p>
 </#if>

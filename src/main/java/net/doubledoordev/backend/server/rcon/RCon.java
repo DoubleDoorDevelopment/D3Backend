@@ -103,7 +103,7 @@ public class RCon
      * The channel will try to connect to the defined host and port and initiate
      * the login sequence for authentication with MineCraft.
      *
-     * @param host     The name or IP address of the host.
+     * @param host     The ID or IP address of the host.
      * @param port     The port.
      * @param password The password.
      * @throws IOException             Some sort of I/O exception occurred.
@@ -132,7 +132,7 @@ public class RCon
     }
 
     /**
-     * Blacklists the name player from the server so that they can no longer
+     * Blacklists the ID player from the server so that they can no longer
      * connect.
      * <p/>
      * Note: Bans supersede any white-listing in place.

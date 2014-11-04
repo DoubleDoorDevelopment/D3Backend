@@ -48,6 +48,7 @@ import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.TemplateModel;
 import freemarker.template.TemplateModelException;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.winreg.JavaFinder;
 import net.doubledoordev.backend.util.winreg.JavaInfo;
 
@@ -66,37 +67,39 @@ import java.util.regex.Pattern;
  */
 public class Constants
 {
-    public static final    String           NAME                           = "D3 Backend";
-    public static final    String           LOCALHOST                      = "localhost";
-    public static final    Pattern          USERNAME_CHECK                 = Pattern.compile("^[\\w-]+$");
-    public static final    Gson             GSON                           = new GsonBuilder()
+    public static final String  NAME           = "D3 Backend";
+    public static final String  LOCALHOST      = "localhost";
+    public static final Pattern USERNAME_CHECK = Pattern.compile("^[\\w-]+$");
+    public static final Gson    GSON           = new GsonBuilder()
             .registerTypeAdapter(Server.class, new Server.Deserializer())
+            .registerTypeAdapter(ServerData.class, new ServerData.Deserializer())
             .registerTypeAdapter(Server.class, new Server.Serializer())
             .setPrettyPrinting()
             .create();
-    public static final    Random           RANDOM                         = new Random();
+    public static final Random  RANDOM         = new Random();
 
-    public static final    File             ROOT                           = getRootFile();
-    public static final    File             CONFIG_FILE                    = new File(ROOT, "config.json");
-    public static final    File             SERVERS_FILE                   = new File(ROOT, "servers.json");
-    public static final    File             USERS_FILE                     = new File(ROOT, "users.json");
-    public static final    File             SERVERS                        = new File(ROOT, "servers");
-    public static final    File             BACKUPS                        = new File(ROOT, "backups");
-    public static final    String           STATIC_PATH                    = "/static/";
-    public static final    String           P2S_PATH                       = "/pay2spawn/";
-    public static final    String           FAVOTICON                      = "favicon.ico";
-    public static final    String           COOKIE_KEY                     = "user";
-    public static final    JsonParser       JSONPARSER                     = new JsonParser();
-    public static final    String           MC_VERIONS_URL                 = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
-    public static final    String           FORGE_VERIONS_URL              = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
-    public static final    String           MC_SERVER_JAR_URL              = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
-    public static final    String           FORGE_INSTALLER_URL            = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
-    public static final    Pattern          ILLEGAL_OPTIONS[]              = {Pattern.compile("^-Xms.*$"), Pattern.compile("^-Xmx.*$"), Pattern.compile("^-XX:MaxPermSize=.*$")};
-    public static final    SimpleDateFormat BACKUP_SDF                     = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-    public static final    String           WORLD                          = "world";
-    public static final    String           SERVER                         = "server";
-    public static final    String           DIM                            = "DIM";
-    public final static    FilenameFilter   NOT_DIM_FILTER                 = new FilenameFilter()
+    public static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    public static final File             ROOT                           = getRootFile();
+    public static final File             CONFIG_FILE                    = new File(ROOT, "config.json");
+    public static final File             SERVERS_FILE                   = new File(ROOT, "servers.json");
+    public static final File             USERS_FILE                     = new File(ROOT, "users.json");
+    public static final File             SERVERS                        = new File(ROOT, "servers");
+    public static final File             BACKUPS                        = new File(ROOT, "backups");
+    public static final String           STATIC_PATH                    = "/static/";
+    public static final String           P2S_PATH                       = "/pay2spawn/";
+    public static final String           FAVOTICON                      = "favicon.ico";
+    public static final String           COOKIE_KEY                     = "user";
+    public static final JsonParser       JSONPARSER                     = new JsonParser();
+    public static final String           MC_VERIONS_URL                 = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
+    public static final String           FORGE_VERIONS_URL              = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
+    public static final String           MC_SERVER_JAR_URL              = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
+    public static final String           FORGE_INSTALLER_URL            = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
+    public static final Pattern          ILLEGAL_OPTIONS[]              = {Pattern.compile("^-Xms.*$"), Pattern.compile("^-Xmx.*$"), Pattern.compile("^-XX:MaxPermSize=.*$")};
+    public static final SimpleDateFormat BACKUP_SDF                     = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+    public static final String           WORLD                          = "world";
+    public static final String           SERVER                         = "server";
+    public static final String           DIM                            = "DIM";
+    public final static FilenameFilter   NOT_DIM_FILTER                 = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -104,7 +107,7 @@ public class Constants
             return !name.startsWith(DIM);
         }
     };
-    public final static    FilenameFilter   DIM_ONLY_FILTER                = new FilenameFilter()
+    public final static FilenameFilter   DIM_ONLY_FILTER                = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -112,15 +115,15 @@ public class Constants
             return name.startsWith(DIM);
         }
     };
-    public final static    FilenameFilter   ACCEPT_ALL_FILTER              = new FilenameFilter()
+    public final static FilenameFilter   ACCEPT_ALL_FILTER              = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
         {
-            return true;
+            return !name.equalsIgnoreCase("eula.txt");
         }
     };
-    public final static    FilenameFilter   ACCEPT_NONE_FILTER             = new FilenameFilter()
+    public final static FilenameFilter   ACCEPT_NONE_FILTER             = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -128,7 +131,7 @@ public class Constants
             return false;
         }
     };
-    public final static    FilenameFilter   ACCEPT_FORGE_FILTER            = new FilenameFilter()
+    public final static FilenameFilter   ACCEPT_FORGE_FILTER            = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -136,7 +139,7 @@ public class Constants
             return name.startsWith("forge");
         }
     };
-    public final static    FilenameFilter   ACCEPT_MINECRAFT_SERVER_FILTER = new FilenameFilter()
+    public final static FilenameFilter   ACCEPT_MINECRAFT_SERVER_FILTER = new FilenameFilter()
     {
         @Override
         public boolean accept(File dir, String name)
@@ -144,15 +147,14 @@ public class Constants
             return name.startsWith("minecraft_server");
         }
     };
-    public static final    TemplateModel    HELPER_TEMPLATE_MODEL          = getStaticHelper();
-    public static final    Timer            TIMER                          = new Timer();
-    public static final    Joiner           JOINER_COMMA_SPACE             = Joiner.on(", ");
-    public static final    Joiner           JOINER_COMMA                   = Joiner.on(',');
-    public static final    Joiner           JOINER_SPACE                   = Joiner.on(' ');
-    public static final    String           VERSION_CHECKER_URL            = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
-    public static final    Pattern          VERSION_PATTERN                = Pattern.compile("\\d+(?:\\.\\d+)+");
-    protected static final char[]           symbols                        = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    public static final    String           JAVAPATH                       = getJavaPath();
+    public static final TemplateModel    HELPER_TEMPLATE_MODEL          = getStaticHelper();
+    public static final Timer            TIMER                          = new Timer();
+    public static final Joiner           JOINER_COMMA_SPACE             = Joiner.on(", ");
+    public static final Joiner           JOINER_COMMA                   = Joiner.on(',');
+    public static final Joiner           JOINER_SPACE                   = Joiner.on(' ');
+    public static final String           VERSION_CHECKER_URL            = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
+    public static final Pattern          VERSION_PATTERN                = Pattern.compile("\\d+(?:\\.\\d+)+");
+    public static final String           JAVAPATH                       = getJavaPath();
 
     /**
      * Methods that only get called to init the Constants

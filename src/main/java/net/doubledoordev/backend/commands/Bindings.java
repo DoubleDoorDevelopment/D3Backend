@@ -70,7 +70,7 @@ public class Bindings extends BindingHelper
     {
         Pattern pattern = Pattern.compile(context.next());
         List<Server> servers = new ArrayList<>();
-        for (Server server : Settings.SETTINGS.servers.values()) if (pattern.matcher(server.getName()).matches()) servers.add(server);
+        for (Server server : Settings.SETTINGS.servers.values()) if (pattern.matcher(server.getID()).matches()) servers.add(server);
         return servers.toArray(new Server[servers.size()]);
     }
 

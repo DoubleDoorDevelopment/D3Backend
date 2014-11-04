@@ -117,8 +117,8 @@ public class Post
         if (user.getGroup() == Group.ADMIN && map.containsKey("owner")) data.owner = map.get("owner");
         else data.owner = user.getUsername();
 
-        data.name = data.owner + "_" + map.get("name");
-        if (Settings.getServerByName(data.name) != null) throw new Exception("Duplicate server name");
+        data.ID = data.owner + "_" + map.get("ID");
+        if (Settings.getServerByName(data.ID) != null) throw new Exception("Duplicate server ID");
 
         data.ramMin = Integer.parseInt(map.get("RAMmin"));
         data.ramMax = Integer.parseInt(map.get("RAMmax"));
@@ -147,7 +147,7 @@ public class Post
         data.autoStart = map.containsKey("autostart") && map.get("autostart").equals("on");
 
         Server server = new Server(data, true);
-        Settings.SETTINGS.servers.put(data.name, server);
+        Settings.SETTINGS.servers.put(data.ID, server);
         Settings.save();
         dataObject.put("step2", true);
         dataObject.put("server", server);

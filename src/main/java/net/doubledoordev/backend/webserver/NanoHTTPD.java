@@ -466,7 +466,7 @@ public abstract class NanoHTTPD
      * Default threading strategy for NanoHttpd.
      * <p/>
      * <p>By default, the server spawns a new Thread for every incoming request.  These are set
-     * to <i>daemon</i> status, and named according to the request number.  The name is
+     * to <i>daemon</i> status, and named according to the request number.  The ID is
      * useful when profiling the application.</p>
      */
     public static class DefaultAsyncRunner implements AsyncRunner
@@ -1190,7 +1190,7 @@ public abstract class NanoHTTPD
                                 disposition.put(token.substring(0, p).trim().toLowerCase(), token.substring(p + 1).trim());
                             }
                         }
-                        String pname = disposition.get("name");
+                        String pname = disposition.get("ID");
                         pname = pname.substring(1, pname.length() - 1);
 
                         String value = "";
@@ -1355,7 +1355,7 @@ public abstract class NanoHTTPD
         }
 
         /**
-         * Decodes parameters in percent-encoded URI-format ( e.g. "name=Jack%20Daniels&pass=Single%20Malt" ) and
+         * Decodes parameters in percent-encoded URI-format ( e.g. "ID=Jack%20Daniels&pass=Single%20Malt" ) and
          * adds them to given Map. NOTE: this doesn't support multiple identical keys due to the simplicity of Map.
          */
         public void decodeParms(String parms, Map<String, String> p)
@@ -1456,7 +1456,7 @@ public abstract class NanoHTTPD
         /**
          * Read a cookie from the HTTP Headers.
          *
-         * @param name The cookie's name.
+         * @param name The cookie's ID.
          * @return The cookie's value if it exists, null otherwise.
          */
         public String read(String name)
@@ -1467,7 +1467,7 @@ public abstract class NanoHTTPD
         /**
          * Sets a cookie.
          *
-         * @param name    The cookie's name.
+         * @param name    The cookie's ID.
          * @param value   The cookie's value.
          * @param expires How many days until the cookie expires.
          */
@@ -1484,7 +1484,7 @@ public abstract class NanoHTTPD
         /**
          * Set a cookie with an expiration date from a month ago, effectively deleting it on the client side.
          *
-         * @param name The cookie name.
+         * @param name The cookie ID.
          */
         public void delete(String name)
         {

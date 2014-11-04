@@ -123,7 +123,7 @@ public class WorldManager
     public void doBackup(File zip, File folder, FilenameFilter filter)
     {
         if (!folder.exists()) return; // Prevent derp
-        LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getName(), folder.getPath(), zip.getPath()));
+        LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getID(), folder.getPath(), zip.getPath()));
         if (server.getOnline())
         {
             server.send("say Making backup....");

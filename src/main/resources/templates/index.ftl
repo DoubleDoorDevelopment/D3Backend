@@ -8,6 +8,8 @@
     Servers online: ${Settings.onlineServers?size}<br>
     Total RAM usage: ${Helper.getTotalRamUsed() / 1024} GB<br>
     Users: ${Settings.users?size}<br>
-    Diskspace used: ${Helper.getTotalDiskspaceUsed() / 1024} GB
+    Diskspace used: ${Helper.getTotalDiskspaceUsed() / 1024} GB<br>
+    Players online on all servers: ${Helper.getGlobalPlayers()}<br>
+    Backend has been online for: ${Helper.getOnlineTime("%2d days, ", "%2d hours, ", "%2d min and ", "%2d sec")}<br>
 </p>
 <#include "footer.ftl">

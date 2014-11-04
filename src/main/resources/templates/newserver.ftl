@@ -4,7 +4,7 @@
 </#if>
 <#if step2??>
 <script type="text/javascript">
-    window.location = "../servers/${server.name}";
+    window.location = "../servers/${server.ID}";
 </script>
 <#else>
 <form class="form-horizontal" name="form" role="form" method="post" onsubmit="return validateForm()">
@@ -146,7 +146,7 @@
     function checkName() {
         var name = document.getElementById("name").value;
         while (!name.match(/^[\w]+$/)) {
-            name = prompt('Your server name contains non allowed characters.\nPlease remove all spaces and special characters.', name);
+            name = prompt('Your server ID contains non allowed characters.\nPlease remove all spaces and special characters.', name);
             if (name == null) break;
         }
 

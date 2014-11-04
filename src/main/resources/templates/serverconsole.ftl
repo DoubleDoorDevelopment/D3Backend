@@ -41,7 +41,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Console ${server.name}</title>
+    <title>Console ${server.ID}</title>
     <!-- Le meta -->
     <meta name="author" content="Dries007">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,13 +55,13 @@
 <script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
-        execute('PUT', window.location.origin, ["serverconsole", "${server.name}", $input.value], function () {
+        execute('PUT', window.location.origin, ["serverconsole", "${server.ID}", $input.value], function () {
             $input.value = "";
             getConsoleText();
         })
     }
 
-    var callURL = window.location.origin + "/serverConsoleText/${server.name}";
+    var callURL = window.location.origin + "/serverConsoleText/${server.ID}";
     var lines = 0;
     var textarea = document.getElementById('text');
     var autoScroll = true;

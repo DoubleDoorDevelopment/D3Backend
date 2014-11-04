@@ -61,15 +61,14 @@ import java.util.Properties;
 import java.util.UUID;
 
 import static net.doubledoordev.backend.util.Constants.NAME;
-import static net.doubledoordev.backend.util.Constants.SERVERS;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
-import static net.doubledoordev.backend.util.Settings.getServerByName;
 
 /**
  * @author Dries007
  */
 public class Main
 {
+    public static final long STARTTIME = System.currentTimeMillis();
     public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
     public static final String build, version;
     public static String adminKey;
@@ -181,7 +180,7 @@ public class Main
         {
             if (server.getOnline())
             {
-                LOGGER.info("Server " + server.getName() + " is still online.");
+                LOGGER.info("Server " + server.getID() + " is still online.");
                 try
                 {
                     RCon rCon = server.getRCon();
@@ -195,13 +194,13 @@ public class Main
                         server.getProcess().destroy();
                     }
 
-                    LOGGER.info("Waiting for server " + server.getName() + " to shutdown...");
+                    LOGGER.info("Waiting for server " + server.getID() + " to shutdown...");
                     server.getProcess().waitFor();
                 }
                 catch (Exception e)
                 {
                     e.printStackTrace();
-                    LOGGER.info("Something went wrong while waiting for server " + server.getName(), e);
+                    LOGGER.info("Something went wrong while waiting for server " + server.getID(), e);
                 }
             }
         }

@@ -40,8 +40,14 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import net.doubledoordev.backend.util.Helper;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,19 +58,41 @@ import java.util.List;
  */
 public class ServerData
 {
-    public String name;
-    public int          serverPort          = 25565;
-    public int          rconPort            = 25575;
-    public String       ip                  = "";
-    public int          ramMin              = 1024;
-    public int          ramMax              = 2048;
-    public int          permGen             = 128;
+    public String ID;
+    public Integer          serverPort          = 25565;
+    public Integer          rconPort            = 25575;
+    public String           ip                  = "";
+    public Integer          ramMin              = 1024;
+    public Integer          ramMax              = 2048;
+    public Integer          permGen             = 128;
     public List<String> extraJavaParameters = new ArrayList<>();
     public List<String> extraMCParameters   = new ArrayList<>();
     public String       jarName             = "minecraft_server.jar";
     public String       rconPswd            = Helper.randomString(10);
-    public boolean      autoStart           = false;
+    public Boolean      autoStart           = false;
     public String       owner               = "";
     public List<String> admins              = new ArrayList<>();
     public List<String> coOwners            = new ArrayList<>();
+
+    public static class Deserializer implements JsonDeserializer<ServerData>
+    {
+        @Override
+        public ServerData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+        {
+            ServerData data = new ServerData();
+            for (Field field : ServerData.class.getDeclaredFields())
+            {
+                try
+                {
+                    if (json.getAsJsonObject().has(field.getName())) field.set(data, context.deserialize(json.getAsJsonObject().get(field.getName()), field.getGenericType()));
+                }
+                catch (IllegalAccessException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if (json.getAsJsonObject().has("name")) data.ID = json.getAsJsonObject().get("name").getAsString();
+            return data;
+        }
+    }
 }

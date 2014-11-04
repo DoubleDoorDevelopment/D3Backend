@@ -149,7 +149,7 @@ public class Webserver extends SimpleWebServer
 
     private Response servePay2SpawnFile(String[] uri)
     {
-        if (uri.length != 4) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, "Error 400, Arguments accepted are only server and name.");
+        if (uri.length != 4) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, "Error 400, Arguments accepted are only server and ID.");
         Server server = Settings.getServerByName(uri[2]);
         if (server == null) return createResponse(Response.Status.BAD_REQUEST, MIME_PLAINTEXT, String.format("Error 400, Server '%s' doesn't exits.", uri[2]));
         File file = new File(server.getFolder(), String.format("pay2spawn/%s.html", uri[3]));

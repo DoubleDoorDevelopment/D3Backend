@@ -121,14 +121,14 @@ public class Get
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
                 if (args[0].equals("serverConsoleText") || args[0].equals("backendConsoleText")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Not authorized.");
-                return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
+                return new Response(FORBIDDEN, MIME_PLAINTEXT, FORBIDDEN.getDescription());
             }
 
             if (ADMINPAGES.contains(args[0].toLowerCase()) && !((User) dataObject.get("user")).isAdmin())
             {
                 args[0] = String.valueOf(FORBIDDEN.getRequestStatus());
                 if (args[0].equals("backendConsoleText")) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Not authorized.");
-                return new Response(FORBIDDEN, MIME_HTML, resolveTemplate(dataObject, args, session));
+                return new Response(FORBIDDEN, MIME_PLAINTEXT, FORBIDDEN.getDescription());
             }
 
             if (args.length > 0)

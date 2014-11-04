@@ -123,7 +123,7 @@ public class Put
         start++;
         for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
         {
-            // Check to see if name is same and if the amount of parameters fits.
+            // Check to see if ID is same and if the amount of parameters fits.
             if (method.getName().equals(split[start - 1]) && method.getParameterTypes().length == split.length - start)
             {
                 try

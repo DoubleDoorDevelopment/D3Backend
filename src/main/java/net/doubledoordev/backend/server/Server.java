@@ -45,14 +45,12 @@ import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
 import net.doubledoordev.backend.server.rcon.RCon;
-import net.doubledoordev.backend.util.Constants;
-import net.doubledoordev.backend.util.Helper;
-import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.SizeCounter;
+import net.doubledoordev.backend.util.*;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -125,13 +123,14 @@ public class Server
     private File backupFolder;
     private WorldManager worldManager = new WorldManager(this);
     private User ownerObject;
+    private boolean downloading = false;
 
     public Server(ServerData data, boolean isNewServer)
     {
         this.data = data;
-        this.logger = LogManager.getLogger(data.name);
-        this.folder = new File(SERVERS, data.name);
-        this.backupFolder = new File(BACKUPS, data.name);
+        this.logger = LogManager.getLogger(data.ID);
+        this.folder = new File(SERVERS, data.ID);
+        this.backupFolder = new File(BACKUPS, data.ID);
         this.propertiesFile = new File(folder, SERVER_PROPERTIES);
 
         if (!backupFolder.exists()) backupFolder.mkdirs();
@@ -400,7 +399,7 @@ public class Server
 
     public int getOnlinePlayers()
     {
-        return cachedResponse == null ? -1 : cachedResponse.getOnlinePlayers();
+        return cachedResponse == null ? 0 : cachedResponse.getOnlinePlayers();
     }
 
     public int getSlots()
@@ -444,28 +443,70 @@ public class Server
     public void setVersion(final String version) throws ServerOnlineException
     {
         if (getOnline()) throw new ServerOnlineException();
+        if (downloading) throw new IllegalStateException("Already downloading something.");
         new Thread(new Runnable()
         {
             @Override
             public void run()
             {
+                downloading = true;
                 try
                 {
+                    // delete old files
+                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
+                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
+
                     File jarfile = new File(folder, getJarName());
                     if (jarfile.exists()) jarfile.delete();
                     File tempFile = new File(folder, getJarName() + ".tmp");
-                    FileUtils.copyURLToFile(new URL(Constants.MC_SERVER_JAR_URL.replace("%ID%", version)), tempFile);
+
+                    // Downloading new file
+
+                    Download download = new Download(new URL(Constants.MC_SERVER_JAR_URL.replace("%ID%", version)), tempFile);
+
+                    long lastTime = System.currentTimeMillis();
+                    int lastInfo = 0;
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if (download.getSize() != -1)
+                        {
+                            logger.info(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            break;
+                        }
+                        Thread.sleep(10);
+                    }
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
+                        {
+                            lastInfo = (int) download.getProgress();
+                            lastTime = System.currentTimeMillis();
+
+                            logger.info(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                        }
+
+                        Thread.sleep(10);
+                    }
+
+                    if (download.getStatus() == Download.Status.Error)
+                    {
+                        throw new Exception(download.getMessage());
+                    }
+
                     tempFile.renameTo(jarfile);
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
                     printLine("##################################################################");
                     printLine("Error downloading a new minecraft jar (version " + version + ")");
                     printLine("##################################################################");
                     logger.error(e);
                 }
+                downloading = false;
             }
-        }, getName() + "-jar-downloader").start();
+        }, getID() + "-jar-downloader").start();
     }
 
     /**
@@ -475,12 +516,14 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         final String version = Helper.getForgeVersionForName(name);
-        if (version == null) throw new IllegalArgumentException("Forge with name " + name + " not found.");
+        if (version == null) throw new IllegalArgumentException("Forge with ID " + name + " not found.");
+        if (downloading) throw new IllegalStateException("Already downloading something.");
         new Thread(new Runnable()
         {
             @Override
             public void run()
             {
+                downloading = true;
                 try
                 {
                     // delete old files
@@ -537,8 +580,9 @@ public class Server
                     printLine("##################################################################");
                     e.printStackTrace();
                 }
+                downloading = false;
             }
-        }, getName() + "-forge-installer").start();
+        }, getID() + "-forge-installer").start();
     }
 
     public String getGameID()
@@ -546,9 +590,9 @@ public class Server
         return cachedResponse == null ? "?" : cachedResponse.getGameID();
     }
 
-    public String getName()
+    public String getID()
     {
-        return data.name;
+        return data.ID;
     }
 
     public int getRamMin()
@@ -753,6 +797,7 @@ public class Server
     public void startServer() throws Exception
     {
         if (getOnline() || starting) throw new ServerOnlineException();
+        if (downloading) throw new Exception("Still downloading something. You can see the progress in the server console.");
         if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
         if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
         User user = Settings.getUserByName(getOwner());
@@ -820,7 +865,7 @@ public class Server
                                 logger.error(e);
                             }
                         }
-                    }, data.name.concat("-streamEater")).start();
+                    }, data.ID.concat("-streamEater")).start();
 
                     /**
                      * Renews cashed vars so they are up to date when the page is refreshed.
@@ -833,7 +878,7 @@ public class Server
                 }
                 starting = false;
             }
-        }, "ServerStarter-" + getName()).start(); // <-- Very important call.
+        }, "ServerStarter-" + getID()).start(); // <-- Very important call.
     }
 
     public void printLine(String line)
@@ -925,21 +970,100 @@ public class Server
     public void delete() throws ServerOnlineException, IOException
     {
         if (getOnline()) throw new ServerOnlineException();
-        Settings.SETTINGS.servers.remove(getName()); // Needs to happen first because
+        Settings.SETTINGS.servers.remove(getID()); // Needs to happen first because
         FileUtils.deleteDirectory(folder);
         FileUtils.deleteDirectory(backupFolder);
     }
 
-    public void downloadModpack(String zipURL, boolean purge) throws IOException, ZipException
+    public void downloadModpack(final String zipURL, final boolean purge) throws IOException, ZipException
     {
-        if (purge) FileUtils.deleteDirectory(folder);
-        folder.mkdir();
+        if (downloading) throw new IllegalStateException("Already downloading something.");
+        new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    downloading = true;
+                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER)) if (file.isFile()) file.delete(); else FileUtils.deleteDirectory(file);
+                    if (!folder.exists()) folder.mkdirs();
 
-        File zip = new File(folder, "modpack.zip");
-        FileUtils.copyURLToFile(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+                    final File zip = new File(folder, "modpack.zip");
 
-        ZipFile zipFile = new ZipFile(zip);
-        zipFile.extractAll(folder.getCanonicalPath());
+                    if (zip.exists()) zip.delete();
+                    zip.createNewFile();
+
+                    logger.info("Downloading zip...");
+
+                    Download download = new Download(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+
+                    long lastTime = System.currentTimeMillis();
+                    int lastInfo = 0;
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if (download.getSize() != -1)
+                        {
+                            logger.info(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            break;
+                        }
+                        Thread.sleep(10);
+                    }
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
+                        {
+                            lastInfo = (int) download.getProgress();
+                            lastTime = System.currentTimeMillis();
+
+                            logger.info(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                        }
+
+                        Thread.sleep(10);
+                    }
+
+                    if (download.getStatus() == Download.Status.Error)
+                    {
+                        throw new Exception(download.getMessage());
+                    }
+
+                    logger.info("Downloading zip done, extracting...");
+
+                    ZipFile zipFile = new ZipFile(zip);
+                    zipFile.setRunInThread(true);
+                    zipFile.extractAll(folder.getCanonicalPath());
+                    lastTime = System.currentTimeMillis();
+                    lastInfo = 0;
+                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+                    {
+                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
+                        {
+                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
+                            lastTime = System.currentTimeMillis();
+
+                            logger.info(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                        }
+
+                        Thread.sleep(10);
+                    }
+
+                    zip.delete();
+
+                    logger.info("Done extracting zip.");
+                }
+                catch (Exception e)
+                {
+                    printLine("##################################################################");
+                    printLine("Error installing the modpack");
+                    printLine(e.toString());
+                    printLine("##################################################################");
+                    e.printStackTrace();
+                }
+                downloading = false;
+            }
+        }, getID() + "-modpack-installer").start();
     }
 
     public File getFolder()
@@ -995,7 +1119,7 @@ public class Server
     @Override
     public String toString()
     {
-        return getName();
+        return getID();
     }
 
     public static class Deserializer implements JsonDeserializer<Server>

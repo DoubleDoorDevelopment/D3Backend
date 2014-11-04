@@ -81,7 +81,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <#list Settings.servers as server>
                             <#if server.canUserControl(user)>
-                                <li id="${server.name}NavTab"><a href="/servers/${server.name}">${server.name}</a></li>
+                                <li id="${server.ID}NavTab"><a href="/servers/${server.ID}">${server.ID}</a></li>
                             </#if>
                         </#list>
                     </ul>
