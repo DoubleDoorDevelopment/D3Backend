@@ -471,7 +471,7 @@ public class Server
                     {
                         if (download.getSize() != -1)
                         {
-                            logger.info(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             break;
                         }
                         Thread.sleep(10);
@@ -484,7 +484,7 @@ public class Server
                             lastInfo = (int) download.getProgress();
                             lastTime = System.currentTimeMillis();
 
-                            logger.info(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
                         Thread.sleep(10);
@@ -994,7 +994,7 @@ public class Server
                     if (zip.exists()) zip.delete();
                     zip.createNewFile();
 
-                    logger.info("Downloading zip...");
+                    printLine("Downloading zip...");
 
                     Download download = new Download(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
 
@@ -1005,7 +1005,7 @@ public class Server
                     {
                         if (download.getSize() != -1)
                         {
-                            logger.info(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             break;
                         }
                         Thread.sleep(10);
@@ -1018,7 +1018,7 @@ public class Server
                             lastInfo = (int) download.getProgress();
                             lastTime = System.currentTimeMillis();
 
-                            logger.info(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
                         Thread.sleep(10);
@@ -1029,7 +1029,7 @@ public class Server
                         throw new Exception(download.getMessage());
                     }
 
-                    logger.info("Downloading zip done, extracting...");
+                    printLine("Downloading zip done, extracting...");
 
                     ZipFile zipFile = new ZipFile(zip);
                     zipFile.setRunInThread(true);
@@ -1043,7 +1043,7 @@ public class Server
                             lastInfo = zipFile.getProgressMonitor().getPercentDone();
                             lastTime = System.currentTimeMillis();
 
-                            logger.info(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
                         }
 
                         Thread.sleep(10);
@@ -1051,7 +1051,7 @@ public class Server
 
                     zip.delete();
 
-                    logger.info("Done extracting zip.");
+                    printLine("Done extracting zip.");
                 }
                 catch (Exception e)
                 {

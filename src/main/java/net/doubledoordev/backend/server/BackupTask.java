@@ -80,7 +80,7 @@ public class BackupTask extends TimerTask
             catch (ZipException e)
             {
                 server.send("say Error when making backup");
-                server.logger.warn(e);
+                server.printLine(e.toString());
             }
 
             server.send("save-on");
@@ -96,7 +96,7 @@ public class BackupTask extends TimerTask
             if (oldest == null) oldest = file;
             if (file.lastModified() < oldest.lastModified()) oldest = file;
         }
-        if (oldest == null || !oldest.delete()) server.logger.warn("Could not delete old backup file " + oldest);
-        else server.logger.warn("Deleted old backup " + oldest);
+        if (oldest == null || !oldest.delete()) server.printLine("Could not delete old backup file " + oldest);
+        else server.printLine("Deleted old backup " + oldest);
     }
 }
