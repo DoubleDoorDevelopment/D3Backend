@@ -121,7 +121,7 @@
     }
 </script>
 <#if !readonly>
-<button type="button" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(json))">Save</button>
+<button type="button" class="btn btn-primary btn-block" onclick="callNoRefresh('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(json))">Save</button>
 <#else>
 <p>File is readonly.</p>
 </#if>

@@ -49,22 +49,23 @@
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
 </head>
-<body>
-<textarea class="textarea form-control" id="text" style="height: 465px;"></textarea>
+<body onresize="document.getElementById('text').style.height = (window.innerHeight - 35) + 'px';">
+<textarea class="textarea form-control" id="text" style="height: 482px;"></textarea>
 <input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
 <script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
         execute('PUT', window.location.origin, ["serverconsole", "${server.ID}", $input.value], function () {
-            $input.value = "";
             getConsoleText();
         })
+        $input.value = "";
     }
 
     var callURL = window.location.origin + "/serverConsoleText/${server.ID}";
     var lines = 0;
     var textarea = document.getElementById('text');
     var autoScroll = true;
+    var
 
     var getConsoleText = function () {
         xmlhttp = new XMLHttpRequest();

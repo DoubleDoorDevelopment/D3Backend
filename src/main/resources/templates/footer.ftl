@@ -38,6 +38,11 @@
         }, 2500));
     }
 
+    function callNoRefresh() {
+        var args = Array.prototype.slice.apply(arguments);
+        execute('PUT', window.location.origin, args);
+    }
+
     jQuery(function ($) {
         $('.panel-heading span.clickable').on("click", function (e) {
             if ($(this).hasClass('panel-collapsed')) {

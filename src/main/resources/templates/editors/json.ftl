@@ -17,7 +17,7 @@
 </style>
 <div id="jsoneditor"></div>
 <#if !readonly>
-<button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="call('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(editor.get()));">Save</button>
+<button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="callNoRefresh('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(editor.get()));">Save</button>
 <#else>
 <p>File is readonly.</p>
 </#if>
