@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.webserver.methods;
+package net.doubledoordev.backend.webserver_old.methods;
 
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
@@ -48,7 +48,7 @@ import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
+import net.doubledoordev.backend.webserver_old.NanoHTTPD;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

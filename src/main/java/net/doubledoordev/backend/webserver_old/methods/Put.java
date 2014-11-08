@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.webserver.methods;
+package net.doubledoordev.backend.webserver_old.methods;
 
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
@@ -46,15 +46,15 @@ import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.TypeHellhole;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
+import net.doubledoordev.backend.webserver_old.NanoHTTPD;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.doubledoordev.backend.webserver.NanoHTTPD.MIME_PLAINTEXT;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.MIME_PLAINTEXT;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.Response;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.Response.Status.*;
 
 /**
  * Processes PUT requests

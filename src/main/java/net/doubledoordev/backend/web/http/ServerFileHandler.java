@@ -36,47 +36,64 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend;
+package net.doubledoordev.backend.web.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Field;
-import java.nio.charset.Charset;
+import com.google.common.base.Strings;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.Settings;
+import org.glassfish.grizzly.http.Method;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
+import org.glassfish.grizzly.http.server.StaticHttpHandlerBase;
+import org.glassfish.grizzly.http.util.Header;
+import org.glassfish.grizzly.http.util.HttpStatus;
+
+import java.io.File;
+
+import static net.doubledoordev.backend.util.Constants.SLASH_STR;
 
 /**
  * @author Dries007
  */
-public class CharSetTest
+public class ServerFileHandler extends StaticHttpHandlerBase
 {
+    private final String path;
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException
+    public ServerFileHandler(String path)
     {
-        System.out.println("---------------------------------");
-        System.out.println("Default Charset=" + Charset.defaultCharset());
-        System.out.println("file.encoding=" + System.getProperty("file.encoding"));
-        System.out.println("Default Charset=" + Charset.defaultCharset());
-        System.out.println("Default Charset in Use=" + getDefaultCharSet());
-
-        System.out.println("---------------------------------");
-        System.setProperty("file.encoding", "UTF-8");
-        Field charset = Charset.class.getDeclaredField("defaultCharset");
-        charset.setAccessible(true);
-        charset.set(null, null);
-        System.out.println("---------------------------------");
-
-        System.out.println("Default Charset=" + Charset.defaultCharset());
-        System.out.println("file.encoding=" + System.getProperty("file.encoding"));
-        System.out.println("Default Charset=" + Charset.defaultCharset());
-        System.out.println("Default Charset in Use=" + getDefaultCharSet());
-        System.out.println("---------------------------------");
+        this.path = path;
     }
 
-    private static String getDefaultCharSet()
+    @Override
+    protected boolean handle(String uri, Request request, Response response) throws Exception
     {
-        OutputStreamWriter writer = new OutputStreamWriter(new ByteArrayOutputStream());
-        String enc = writer.getEncoding();
-        return enc;
+        if (uri.startsWith(SLASH_STR)) uri = uri.substring(1);
+
+        String[] uris = uri.split("/", 2); // 0 = server, 1 = file
+        if (uris.length != 2) return false;
+
+        Server server = Settings.getServerByName(uris[0]);
+        if (server == null) return false;
+
+        File baseFolder = Strings.isNullOrEmpty(path) ? server.getFolder() : new File(server.getFolder(), path);
+
+        File file = new File(baseFolder, uris[1]);
+        if (!file.exists() || file.isDirectory()) return false;
+
+        if (!Method.GET.equals(request.getMethod()))
+        {
+            response.setHeader(Header.Allow, Method.GET.getMethodString());
+            response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
+        }
+
+        pickupContentType(response, file.getPath());
+
+        addToFileCache(request, response, file);
+        sendFile(response, file);
+
+        return true;
     }
 }

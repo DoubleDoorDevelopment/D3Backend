@@ -46,30 +46,37 @@ import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Cache;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
-import net.doubledoordev.backend.webserver.RedirectToSSLServer;
-import net.doubledoordev.backend.webserver.Webserver;
+import net.doubledoordev.backend.web.http.FreemarkerHandler;
+import net.doubledoordev.backend.web.http.ServerFileHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
+import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.ServerConfiguration;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
+import org.glassfish.grizzly.websockets.WebSocketAddOn;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.Properties;
 import java.util.UUID;
 
-import static net.doubledoordev.backend.util.Constants.NAME;
+import static net.doubledoordev.backend.util.Constants.*;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
+import static net.doubledoordev.backend.web.socket.ServerControlSocketApplication.SERVER_CONTROL_SOCKET_APPLICATION;
+import static net.doubledoordev.backend.web.socket.ServerListSocketApplication.SERVER_LIST_SOCKET_APPLICATION;
 
 /**
  * @author Dries007
  */
 public class Main
 {
-    public static final long STARTTIME = System.currentTimeMillis();
-    public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
+    public static final long   STARTTIME = System.currentTimeMillis();
+    public static final Logger LOGGER    = LogManager.getLogger(Main.class.getSimpleName());
     public static final String build, version;
     public static String adminKey;
     public static boolean running = true;
@@ -94,6 +101,24 @@ public class Main
 
     }
 
+    private static SSLEngineConfigurator createSslConfiguration()
+    {
+        // Initialize SSLContext configuration
+        SSLContextConfigurator sslContextConfig = new SSLContextConfigurator();
+
+        ClassLoader cl = Server.class.getClassLoader();
+        // Set key store
+        URL keystoreUrl = cl.getResource(SETTINGS.certificatePath);
+        if (keystoreUrl != null)
+        {
+            sslContextConfig.setKeyStoreFile(keystoreUrl.getFile());
+            sslContextConfig.setKeyStorePass(SETTINGS.certificatePass);
+        }
+
+        // Create SSLEngine configurator
+        return new SSLEngineConfigurator(sslContextConfig.createSSLContext(), false, false, false);
+    }
+
     public static void main(String[] args) throws Exception
     {
         System.setProperty("file.encoding", "UTF-8");
@@ -108,30 +133,28 @@ public class Main
         LOGGER.info("Making necessary folders...");
         mkdirs();
         LOGGER.info("Starting webserver...");
-        if (Strings.isBlank(SETTINGS.certificatePath) || SETTINGS.certificatePass.length == 0)
-        {
-            LOGGER.warn("YOU ARE PUTTING YOUR USERS AR RISK BY NOT USING HTTPS!");
-            LOGGER.warn("A banner will be displayed at the top of the home page to indicate this issue.");
-            LOGGER.warn("You can make a (self signed) certificate by using Java's built in KeyTools.");
-            LOGGER.warn("It must be a .jks certificate!");
 
-            LOGGER.info("HTTP Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTP);
-            Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTP);
-        }
-        else
-        {
-            if (SETTINGS.portHTTP != 0)
-            {
-                LOGGER.info("HTTP Redirect server started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTP);
-                if (Strings.isNotBlank(SETTINGS.hostname)) new RedirectToSSLServer(SETTINGS.hostname, SETTINGS.portHTTP).start();
-                else new RedirectToSSLServer(SETTINGS.portHTTP).start();
-            }
-            LOGGER.info("HTTPS Webserver started on " + SETTINGS.hostname + ':' + SETTINGS.portHTTPS);
-            if (Strings.isNotBlank(SETTINGS.hostname)) Webserver.WEBSERVER = new Webserver(SETTINGS.hostname, SETTINGS.portHTTPS);
-            else Webserver.WEBSERVER = new Webserver(SETTINGS.portHTTPS);
-            Webserver.WEBSERVER.makeSecure(NanoHTTPD.makeSSLSocketFactory(SETTINGS.certificatePath, SETTINGS.certificatePass));
-        }
-        Webserver.WEBSERVER.start();
+        final HttpServer webserver = new HttpServer();
+        final ServerConfiguration config = webserver.getServerConfiguration();
+
+        // Html stuff
+        FreemarkerHandler freemarkerHandler = new FreemarkerHandler(Main.class, TEMPLATES_PATH);
+        config.addHttpHandler(freemarkerHandler);
+        config.setDefaultErrorPageGenerator(freemarkerHandler);
+        config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), STATIC_PATH), STATIC_PATH);
+        config.addHttpHandler(new ServerFileHandler(P2S_PATH), P2S_PATH);
+
+        // Socket stuff
+        SERVER_CONTROL_SOCKET_APPLICATION.register();
+        SERVER_LIST_SOCKET_APPLICATION.register();
+
+        final NetworkListener networkListener = new NetworkListener("secured-listener");
+        //networkListener.setSecure(true);
+        //networkListener.setSSLEngineConfig(createSslConfiguration());
+        webserver.addListener(networkListener);
+        networkListener.registerAddOn(new WebSocketAddOn());
+        webserver.start();
+
         LOGGER.info("Setting up caching...");
         Cache.init();
 
@@ -205,23 +228,5 @@ public class Main
             }
         }
         LOGGER.info("Bye!");
-    }
-
-    /**
-     * Useful when debugging requests
-     *
-     * @param session
-     * @param dataObject
-     */
-    public static void printdebug(NanoHTTPD.HTTPSession session, HashMap<String, Object> dataObject)
-    {
-        LOGGER.debug("getParms: " + session.getParms());
-        LOGGER.debug("getHeaders: " + session.getHeaders());
-        LOGGER.debug("getUri: " + session.getUri());
-        LOGGER.debug("getQueryParameterString: " + session.getQueryParameterString());
-        LOGGER.debug("getMethod: " + session.getMethod());
-        LOGGER.debug("getCookies: " + session.getCookies());
-        LOGGER.debug("dataObject: " + dataObject);
-        LOGGER.debug("-----================================-----");
     }
 }

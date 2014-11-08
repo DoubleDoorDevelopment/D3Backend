@@ -1,13 +1,13 @@
 <#include "header.ftl">
-<#assign allowModify = server.canUserControl(user) || admin>
-<#assign isCoOwner = server.isCoOwner(user) || admin >
+<#assign allowModify = server.canUserControl(user) || user.isAdmin()>
+<#assign isCoOwner = server.isCoOwner(user) || user.isAdmin() >
 <h1>${server.ID}
     <small> ${server.getDisplayAddress()}   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
 </h1>
 <p>
 <div class="btn-group">
     <button type="button" <#if allowModify && !server.online>onclick="call('server', '${server.ID}', 'startServer')" <#else>disabled</#if> class="btn btn-success">Start</button>
-    <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole/${server.ID}')" <#else>disabled</#if>>Console</button>
+    <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole?server=${server.ID}')" <#else>disabled</#if>>Console</button>
     <button type="button" <#if allowModify && server.online>onclick="call('server', '${server.ID}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning">Stop</button>
     <button type="button" <#if allowModify && server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.ID}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger">Kill</button>
 </div>
@@ -135,11 +135,11 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <div class="btn-group">
-                    <a type="button" href='/worldmanager/${server.ID}' class="btn btn-info">World Manager</a>
-                    <a type="button" href='/filemanager/${server.ID}' class="btn btn-info">File Manager</a>
+                    <a type="button" href='/worldmanager?server=${server.ID}' class="btn btn-info">World Manager</a>
+                    <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
                 </div>
                 <div class="btn-group">
-                <#if server.ownerObject == user || admin>
+                <#if server.ownerObject == user || user.isAdmin()>
                     <button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.ID}', 'setOwner', name);}" class="btn btn-danger">Change
                         owner
                     </button></#if>

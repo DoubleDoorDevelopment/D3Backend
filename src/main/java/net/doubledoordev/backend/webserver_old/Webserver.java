@@ -38,15 +38,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.webserver;
+package net.doubledoordev.backend.webserver_old;
 
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.webserver.methods.Get;
-import net.doubledoordev.backend.webserver.methods.Post;
-import net.doubledoordev.backend.webserver.methods.Put;
+import net.doubledoordev.backend.webserver_old.methods.Get;
+import net.doubledoordev.backend.webserver_old.methods.Post;
+import net.doubledoordev.backend.webserver_old.methods.Put;
 
 import java.io.File;
 import java.io.FileInputStream;

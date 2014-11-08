@@ -48,6 +48,7 @@
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico" />
     <style>
         body {
             padding-top: 70px;
@@ -56,6 +57,35 @@
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/commands.js"></script>
+    <script>
+        function wsurl(s) {
+            var l = window.location;
+            return (l.protocol === "https:" ? "wss://" : "ws://") + l.hostname + ":" + l.port + "/socket/" + s;
+        }
+
+        function openPopup(url) {
+            window.open(window.location.origin + url, '_new', 'height=500,width=800');
+        }
+
+        function call(url, message, func) {
+            websocket = new WebSocket(wsurl(url));
+            websocket.onopen = function (evt) {
+                websocket.send(message);
+            }
+            websocket.onclose = function (evt) {
+                alert("The socket connction closed. Refresh the page.");
+            };
+            websocket.onmessage = function (evt) {
+                console.log(func);
+                console.log(typeof func);
+                if (typeof func !== 'undefined') func();
+            };
+            websocket.onerror = function (evt) {
+                alert("The socket connction errored. Refresh the page.");
+            };
+
+        }
+    </script>
 </head>
 <body>
 <!-- Fixed navbar -->
@@ -81,7 +111,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <#list Settings.servers as server>
                             <#if server.canUserControl(user)>
-                                <li id="${server.ID}NavTab"><a href="/servers/${server.ID}">${server.ID}</a></li>
+                                <li id="${server.ID}NavTab"><a href="/server?server=${server.ID}">${server.ID}</a></li>
                             </#if>
                         </#list>
                     </ul>

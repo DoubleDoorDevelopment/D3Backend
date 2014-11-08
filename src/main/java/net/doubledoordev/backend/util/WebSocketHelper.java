@@ -36,63 +36,61 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.server;
+package net.doubledoordev.backend.util;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import net.doubledoordev.backend.util.Helper;
+import com.google.gson.JsonObject;
+import net.doubledoordev.backend.server.Server;
+import org.glassfish.grizzly.websockets.WebSocket;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+import static net.doubledoordev.backend.web.socket.ServerControlSocketApplication.SERVER_CONTROL_SOCKET_APPLICATION;
+import static net.doubledoordev.backend.web.socket.ServerListSocketApplication.SERVER_LIST_SOCKET_APPLICATION;
 
 /**
- * Java bean for server data
- *
  * @author Dries007
  */
-public class ServerData
+public class WebSocketHelper
 {
-    public String ID;
-    public Integer      serverPort          = 25565;
-    public Integer      rconPort            = 25575;
-    public String       ip                  = "";
-    public Integer      ramMin              = 1024;
-    public Integer      ramMax              = 2048;
-    public Integer      permGen             = 128;
-    public List<String> extraJavaParameters = new ArrayList<>();
-    public List<String> extraMCParameters   = new ArrayList<>();
-    public String       jarName             = "minecraft_server.jar";
-    public String       rconPswd            = Helper.randomString(10);
-    public Boolean      autoStart           = false;
-    public String       owner               = "";
-    public List<String> admins              = new ArrayList<>();
-    public List<String> coOwners            = new ArrayList<>();
-
-    public static class Deserializer implements JsonDeserializer<ServerData>
+    private WebSocketHelper()
     {
-        @Override
-        public ServerData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-        {
-            ServerData data = new ServerData();
-            for (Field field : ServerData.class.getDeclaredFields())
-            {
-                try
-                {
-                    if (json.getAsJsonObject().has(field.getName())) field.set(data, context.deserialize(json.getAsJsonObject().get(field.getName()), field.getGenericType()));
-                }
-                catch (IllegalAccessException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-            if (json.getAsJsonObject().has("name")) data.ID = json.getAsJsonObject().get("name").getAsString();
-            return data;
-        }
+    }
+
+    public static void sendError(WebSocket socket, String message)
+    {
+        JsonObject root = new JsonObject();
+
+        root.addProperty("status", "error");
+        root.addProperty("message", "message");
+
+        socket.send(root.toString());
+    }
+
+    public static void sendData(WebSocket socket, String s)
+    {
+        JsonObject root = new JsonObject();
+
+        root.addProperty("status", "ok");
+        root.addProperty("data", s);
+
+        socket.send(root.toString());
+    }
+
+    public static void sendData(WebSocket socket, JsonElement s)
+    {
+        JsonObject root = new JsonObject();
+
+        root.addProperty("status", "ok");
+        root.add("data", s);
+
+        socket.send(root.toString());
+    }
+
+    public static void sendServerUpdate(Server instance)
+    {
+        SERVER_LIST_SOCKET_APPLICATION.sendUpdateToAll(instance);
+        SERVER_CONTROL_SOCKET_APPLICATION.sendStatusUpdateToAll(instance);
     }
 }

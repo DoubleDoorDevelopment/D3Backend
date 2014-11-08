@@ -636,6 +636,11 @@ public class Server
         return data.extraJavaParameters;
     }
 
+    public void setExtraJavaParameters(String list) throws Exception
+    {
+        setExtraJavaParameters(Arrays.asList(list.split(",")));
+    }
+
     public void setExtraJavaParameters(List<String> list) throws Exception
     {
         if (getOnline()) throw new ServerOnlineException();
@@ -646,14 +651,14 @@ public class Server
         Settings.save();
     }
 
-    public void setExtraJavaParameters(String list) throws Exception
-    {
-        setExtraJavaParameters(Arrays.asList(list.split(",")));
-    }
-
     public List<String> getExtraMCParameters()
     {
         return data.extraMCParameters;
+    }
+
+    public void setExtraMCParameters(String list) throws Exception
+    {
+        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public void setExtraMCParameters(List<String> list) throws Exception
@@ -664,11 +669,6 @@ public class Server
                 if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraMCParameters = list;
         Settings.save();
-    }
-
-    public void setExtraMCParameters(String list) throws Exception
-    {
-        setExtraMCParameters(Arrays.asList(list.split(",")));
     }
 
     public String getJarName()
@@ -728,15 +728,15 @@ public class Server
         return data.admins;
     }
 
+    public void setAdmins(String list) throws Exception
+    {
+        setAdmins(Arrays.asList(list.split(",")));
+    }
+
     public void setAdmins(List<String> strings)
     {
         data.admins = strings;
         Settings.save();
-    }
-
-    public void setAdmins(String list) throws Exception
-    {
-        setAdmins(Arrays.asList(list.split(",")));
     }
 
     public void setAdmins()
@@ -749,15 +749,15 @@ public class Server
         return data.coOwners;
     }
 
+    public void setCoOwners(String list) throws Exception
+    {
+        setCoOwners(Arrays.asList(list.split(",")));
+    }
+
     public void setCoOwners(List<String> strings)
     {
         data.coOwners = strings;
         Settings.save();
-    }
-
-    public void setCoOwners(String list) throws Exception
-    {
-        setCoOwners(Arrays.asList(list.split(",")));
     }
 
     public void setCoOwners()
@@ -805,6 +805,7 @@ public class Server
         if (user.getMaxRamLeft() != -1 && getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
         saveProperties();
         starting = true;
+        final Server instance = this;
 
         new Thread(new Runnable()
         {
@@ -859,6 +860,7 @@ public class Server
                                 {
                                     printLine(line);
                                 }
+                                WebSocketHelper.sendServerUpdate(instance);
                             }
                             catch (IOException e)
                             {
@@ -871,6 +873,8 @@ public class Server
                      * Renews cashed vars so they are up to date when the page is refreshed.
                      */
                     makeRcon();
+
+                    WebSocketHelper.sendServerUpdate(instance);
                 }
                 catch (IOException e)
                 {
@@ -986,7 +990,9 @@ public class Server
                 try
                 {
                     downloading = true;
-                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER)) if (file.isFile()) file.delete(); else FileUtils.deleteDirectory(file);
+                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
+                        if (file.isFile()) file.delete();
+                        else FileUtils.deleteDirectory(file);
                     if (!folder.exists()) folder.mkdirs();
 
                     final File zip = new File(folder, "modpack.zip");

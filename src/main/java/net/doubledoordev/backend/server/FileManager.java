@@ -43,8 +43,8 @@ package net.doubledoordev.backend.server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
-import net.doubledoordev.backend.webserver.SimpleWebServer;
+import net.doubledoordev.backend.webserver_old.NanoHTTPD;
+import net.doubledoordev.backend.webserver_old.SimpleWebServer;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -58,8 +58,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 
-import static net.doubledoordev.backend.webserver.NanoHTTPD.MIME_PLAINTEXT;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.MIME_PLAINTEXT;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.Response.Status.*;
 
 /**
  * Current limitations:

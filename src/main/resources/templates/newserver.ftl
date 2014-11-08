@@ -4,11 +4,11 @@
 </#if>
 <#if step2??>
 <script type="text/javascript">
-    window.location = "../servers/${server.ID}";
+    window.location = "../servers?server=${server.ID}";
 </script>
 <#else>
 <form class="form-horizontal" name="form" role="form" method="post" onsubmit="return validateForm()">
-    <#if admin>
+    <#if user.isAdmin()>
         <div class="form-group">
             <label for="owner" class="col-sm-2 control-label">Owner</label>
 

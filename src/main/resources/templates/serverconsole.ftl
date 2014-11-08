@@ -48,6 +48,7 @@
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico" />
 </head>
 <body onresize="document.getElementById('text').style.height = (window.innerHeight - 35) + 'px';">
 <textarea class="textarea form-control" id="text" style="height: 482px;"></textarea>
@@ -61,7 +62,7 @@
         $input.value = "";
     }
 
-    var callURL = window.location.origin + "/serverConsoleText/${server.ID}";
+    var callURL = window.location.origin + "/serverConsoleText?server=${server.ID}";
     var lines = 0;
     var textarea = document.getElementById('text');
     var autoScroll = true;

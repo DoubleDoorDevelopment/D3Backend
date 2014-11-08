@@ -38,7 +38,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.backend.webserver.methods;
+package net.doubledoordev.backend.webserver_old.methods;
 
 import freemarker.template.*;
 import net.doubledoordev.backend.Main;
@@ -48,8 +48,8 @@ import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
-import net.doubledoordev.backend.webserver.Webserver;
+import net.doubledoordev.backend.webserver_old.NanoHTTPD;
+import net.doubledoordev.backend.webserver_old.Webserver;
 
 import java.io.FileNotFoundException;
 import java.io.StringWriter;
@@ -60,8 +60,8 @@ import java.util.Map;
 
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 import static net.doubledoordev.backend.util.Settings.getServerByName;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.*;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.*;
+import static net.doubledoordev.backend.webserver_old.NanoHTTPD.Response.Status.*;
 
 /**
  * Processes GET requests

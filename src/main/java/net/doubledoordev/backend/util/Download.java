@@ -49,7 +49,7 @@ import java.net.URL;
 /**
  * Helper class for file downloading
  * Make sure you don't thread this twice. It happens once internally already!
- *
+ * <p/>
  * http://stackoverflow.com/questions/14069848/download-a-file-while-also-updating-a-jprogressbar
  *
  * @author Kevin Esche, Stackoverflow user.

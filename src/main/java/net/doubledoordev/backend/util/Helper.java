@@ -266,8 +266,6 @@ public class Helper
 
     /**
      * Default arguments: "%2d days, ", "%2d hours, ", "%2d min and", "%2 sec"
-     *
-     * @return uptime in (xxh) (xxm)
      */
     public static String getOnlineTime(String dayString, String hoursString, String minuteString, String secondsString)
     {
@@ -280,13 +278,13 @@ public class Helper
             sb.append(String.format(dayString, time / (1000 * 60 * 60 * 24)));
             time %= 1000 * 60 * 60 * 24;
         }
-        if (alwaysShowNext && Strings.isNotBlank(hoursString) && time > 1000 * 60 * 60)
+        if (Strings.isNotBlank(hoursString) && (alwaysShowNext || time > 1000 * 60 * 60))
         {
             alwaysShowNext = true;
             sb.append(String.format(hoursString, time / (1000 * 60 * 60)));
             time %= 1000 * 60 * 60;
         }
-        if (alwaysShowNext && Strings.isNotBlank(minuteString) && time > 1000 * 60)
+        if (Strings.isNotBlank(minuteString) && (alwaysShowNext || time > 1000 * 60))
         {
             sb.append(String.format(minuteString, time / (1000 * 60)));
             time %= 1000 * 60;

@@ -1,17 +1,17 @@
 <#include "header.ftl">
 <h1>File Manager
-    <small> <a href="/servers/${fm.server.ID}">${fm.server.ID}</a>   <span class="label label-<#if fm.server.online>success<#else>danger</#if>"><#if fm.server.online>Online<#else>Offline</#if></span></small>
+    <small> <a href="/server?server=${server.ID}">${server.ID}</a>   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
 </h1>
 <#if !fm.file.exists()>
 <div class="panel panel-danger">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?file=${fm.stripServer(file)}">${file.getName()}</a></#list></div>
+    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID}&file=${fm.stripServer(file)}">${file.getName()}</a></#list></div>
     <div class="panel-body">
         <h4>File not found.</h4>
     </div>
 </div>
 <#elseif fm.file.isDirectory() >
 <div class="panel panel-info">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?file=${fm.stripServer(file)}">${file.getName()}</a></#list></div>
+    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID}&file=${fm.stripServer(file)}">${file.getName()}</a></#list></div>
     <div class="panel-body">
         <div class="btn-group">
             <button type="button" onclick="{var n = prompt('New file ID?', ''); if (n != null) call('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'newFile', n);}" class="btn btn-default btn-xs">New file</button>
@@ -26,13 +26,13 @@
                     <td><i class="fa fa-${fm.getIcon(file)}"></i></td>
                     <#if fm.canEdit(file)>
                         <td class="col-sm-4">
-                            <a href="?file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a>
+                            <a href="?server=${server.ID}&file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a>
                         </td>
                     <#else>
                         <td class="col-sm-4">${file.getName()}</td>
                     </#if>
                     <td>
-                        <#if !file.isDirectory()><a type="button" class="btn btn-default btn-xs" href="?file=${fm.stripServer(file)}&raw">Raw file</a></#if>
+                        <#if !file.isDirectory()><a type="button" class="btn btn-default btn-xs" href="?server=${server.ID}&file=${fm.stripServer(file)}&raw">Raw file</a></#if>
                     </td>
                     <td class="col-sm-8">
                         <div class="btn-group">
@@ -63,7 +63,7 @@
     <#assign readonly = !fm.file.canWrite()>
 <div class="panel panel-<#if readonly>warning<#elseif fm.getEditor()??>success<#else>danger</#if>">
     <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> /
-        <a href="?file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list>
+        <a href="?server=${server.ID}&file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list>
     </div>
     <div class="panel-body">
         <#if fm.getEditor()??>
