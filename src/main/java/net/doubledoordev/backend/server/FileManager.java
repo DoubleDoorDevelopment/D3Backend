@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 import static net.doubledoordev.backend.webserver_old.NanoHTTPD.MIME_PLAINTEXT;

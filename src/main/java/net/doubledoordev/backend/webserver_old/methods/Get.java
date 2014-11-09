@@ -91,7 +91,7 @@ public class Get
              */
             Map<String, Object> dataObject = new HashMap<>();
             dataObject.put("Settings", Settings.SETTINGS);
-            dataObject.put("Helper", Constants.HELPER_TEMPLATE_MODEL);
+            //dataObject.put("Helper", Constants.HELPER_TEMPLATE_MODEL);
             FREEMARKER_CFG.setAllSharedVariables(new SimpleHash(dataObject));
         }
         catch (TemplateModelException e)

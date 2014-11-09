@@ -40,10 +40,10 @@
     function createBtnGroup(row, type, set1, meta)
     {
         return '<div class="btn-group">' +
-            '<button type="button" ' + (!row.online ? 'onclick="call(\'server\', \'' + row.id + '\'|startServer\')")' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
+            '<button type="button" ' + (!row.online ? 'onclick="call(\'server\', \'' + row.id + '|startServer\')"' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
             '<button type="button" class="btn btn-info btn-xs" onclick="openPopup(\'/console?server=' + row.id + '\')">Console</button>' +
-            '<button type="button" ' + (!row.online ? 'onclick="call(\'server\', \'' + row.id + '\'|stopServer|\' + prompt(\'Message?\', \'Server is stopping.\')\')")' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
-            '<button type="button" ' + (!row.online ? 'onclick="if (confirm(\'Are you sure?\')) call(\'server\', \'' + row.id +'\'|forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="call(\'server\', \'' + row.id + '|stopServer|\' + prompt(\'Message?\', \'Server is stopping.\'))"' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="if (confirm(\'Are you sure?\')) call(\'server\', \'' + row.id +'|forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
         '</div>'
     }
 
@@ -52,7 +52,7 @@
         $(td).click(function() {window.document.location = "/server?server=" + rowData.id});
     }
 
-    table = $('#servers').DataTable({
+    var table = $('#servers').DataTable({
         paging: false,
         searching: false,
         data: [],
@@ -71,19 +71,14 @@
             { data: 'motd', createdCell:makeClickable }
         ]
     });
-    websocket = new WebSocket(wsurl("serverlist"));
+    var websocket = new WebSocket(wsurl("serverlist"));
     websocket.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
         if (temp.status === "ok")
         {
-
-            table.rows(function (idx, data, node)
-            {
-                return data.id === temp.data.id;
-            }).remove();
+            table.rows(function (idx, data, node) { return data.id === temp.data.id; }).remove();
             table.row.add(temp.data);
-
             table.draw();
         }
         else alert(temp.message);

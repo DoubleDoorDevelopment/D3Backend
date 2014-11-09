@@ -175,7 +175,7 @@ public class Post
             }
 
             User user = Settings.getUserByName(map.get("username"));
-            if (!Constants.USERNAME_CHECK.matcher(map.get("username")).matches())
+            if (!Constants.USERNAME_PATTERN.matcher(map.get("username")).matches())
             {
                 dataObject.put("message", "Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
             }

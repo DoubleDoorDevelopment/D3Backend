@@ -1,12 +1,7 @@
 <#include "header.ftl">
 <#if message??>
-<div class="alert alert-danger" role="alert">${message}</div>
+    <div class="alert alert-danger" role="alert">${message}</div>
 </#if>
-<#if step2??>
-<script type="text/javascript">
-    window.location = "../servers?server=${server.ID}";
-</script>
-<#else>
 <form class="form-horizontal" name="form" role="form" method="post" onsubmit="return validateForm()">
     <#if user.isAdmin()>
         <div class="form-group">
@@ -162,5 +157,4 @@
         }
     }
 </script>
-</#if>
 <#include "footer.ftl">

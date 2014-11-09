@@ -100,6 +100,7 @@ public class Helper
         }
     }
 
+    private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     public static String randomString(int length)
     {
         return new String(randomCharArray(length));

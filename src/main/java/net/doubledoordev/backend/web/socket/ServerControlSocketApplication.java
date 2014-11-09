@@ -61,13 +61,13 @@ import java.util.TimerTask;
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
+ * TODO: change to /server/id
+ *
  * @author Dries007
- *         <p/>
- *         TODO: change to /server/id
  */
 public class ServerControlSocketApplication extends WebSocketApplication
 {
-    public static final String URL_PATTERN = "/server/*";
+    private static final String URL_PATTERN = "/server/*";
 
     public static final ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
 
@@ -150,7 +150,6 @@ public class ServerControlSocketApplication extends WebSocketApplication
             jsonObject.addProperty("status", "error");
             jsonObject.addProperty("message", "");
         }
-        Main.LOGGER.info(jsonObject.toString());
         socket.send(jsonObject.toString());
         socket.close();
     }

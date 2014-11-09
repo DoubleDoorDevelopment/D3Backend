@@ -44,33 +44,36 @@ package net.doubledoordev.backend.web.http;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
+import net.doubledoordev.backend.util.PortRange;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
+import net.doubledoordev.backend.util.exceptions.PostException;
+import org.apache.commons.io.FileUtils;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.util.Parameters;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 
+import static net.doubledoordev.backend.util.Constants.*;
+
 /**
  * @author Dries007
- *         <p/>
- *         todo: New server!!
  */
 public class PostHandler
 {
     public static final PostHandler POST_HANDLER = new PostHandler();
-    private static final String LOGIN         = "/login";
-    private static final String REGISTER      = "/register";
-    private static final String USERNAME      = "username";
-    private static final String PASSWORD      = "password";
-    private static final String OLD_PASSWORD  = "oldPassword";
-    private static final String NEW_PASSWORD  = "newPassword";
-    private static final String ARE_YOU_HUMAN = "areyouhuman";
 
     private PostHandler()
     {
@@ -82,10 +85,12 @@ public class PostHandler
         {
             switch (uri)
             {
-                case LOGIN:
+                case LOGIN_URL:
                     return doLogin(uri, request, response);
-                case REGISTER:
+                case REGISTER_URL:
                     return doRegister(uri, request, response);
+                case NEWSERVER_URL:
+                    return doNewserver(data, uri, request, response);
             }
         }
         catch (PostException e)
@@ -95,22 +100,100 @@ public class PostHandler
         return uri;
     }
 
+    private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response) throws PostException
+    {
+        Parameters parameters = request.getParameters();
+        Set<String> names = request.getParameterNames();
+
+        User user = (User) data.get("user");
+        if (user == null) throw new PostException("Not logged in.");
+        if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new PostException("Max server count reached.");
+        ServerData serverData = new ServerData();
+        if (user.getGroup() == Group.ADMIN && names.contains("owner")) serverData.owner = parameters.getParameter("owner");
+        else serverData.owner = user.getUsername();
+
+        serverData.ID = serverData.owner + "_" + parameters.getParameter("name");
+        if (Settings.getServerByName(serverData.ID) != null) throw new PostException("Duplicate server ID");
+
+        serverData.ramMin = Integer.parseInt(parameters.getParameter("RAMmin"));
+        serverData.ramMax = Integer.parseInt(parameters.getParameter("RAMmax"));
+        if (serverData.ramMax < serverData.ramMin)
+        {
+            int temp = serverData.ramMax;
+            serverData.ramMax = serverData.ramMin;
+            serverData.ramMin = temp;
+        }
+        if (user.getMaxRam() != -1 && user.getMaxRamLeft() < serverData.ramMax) throw new PostException("You are over your max RAM.");
+        if (serverData.ramMax < 2 || serverData.ramMin < 2) throw new PostException("RAM settings invalid.");
+
+        serverData.permGen = Integer.parseInt(parameters.getParameter("PermGen"));
+        if (serverData.permGen < 2) throw new PostException("PermGen settings invalid.");
+
+        if (parameters.getParameter("extraJavaParameters").trim().length() != 0) serverData.extraJavaParameters = Arrays.asList(parameters.getParameter("extraJavaParameters").trim().split("\n"));
+        if (parameters.getParameter("extraMCParameters").trim().length() != 0) serverData.extraMCParameters = Arrays.asList(parameters.getParameter("extraMCParameters").trim().split("\n"));
+        if (parameters.getParameter("admins").trim().length() != 0) serverData.admins = Arrays.asList(parameters.getParameter("admins").trim().split("\n"));
+        if (parameters.getParameter("coOwners").trim().length() != 0) serverData.coOwners = Arrays.asList(parameters.getParameter("coOwners").trim().split("\n"));
+
+        serverData.jarName = parameters.getParameter("jarname");
+        serverData.rconPswd = parameters.getParameter("rconpass");
+        try
+        {
+            serverData.serverPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter("serverport"));
+            serverData.rconPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(serverData.serverPort) : Integer.parseInt(parameters.getParameter("rconport"));
+        }
+        catch (OutOfPortsException e)
+        {
+            throw new PostException("The backend ran out of ports to assign.");
+        }
+        serverData.ip = parameters.getParameter("ip");
+        serverData.autoStart = names.contains("autostart") && parameters.getParameter("autostart").equals("on");
+
+        Server server = new Server(serverData, true);
+        Settings.SETTINGS.servers.put(serverData.ID, server);
+        Settings.save();
+        data.put("server", server);
+
+        try
+        {
+            FileUtils.writeStringToFile(new File(server.getFolder(), "eula.txt"),
+                    "#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.\n" +
+                            "#That means that there is no need for extra halting of the server startup sequence with this stupid file.\n" +
+                            "#" + new Date().toString() + "\n" +
+                            "eula=true\n");
+        }
+        catch (IOException e)
+        {
+            server.printLine("Error making the eula file....");
+            e.printStackTrace();
+        }
+        try
+        {
+            response.sendRedirect(Constants.SERVER_URL + serverData.ID);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        return uri;
+    }
+
     private String doRegister(String uri, Request request, Response response) throws PostException
     {
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        if (names.contains(USERNAME) && names.contains(PASSWORD) && names.contains(ARE_YOU_HUMAN))
+        if (names.contains(Constants.USERNAME) && names.contains(Constants.PASSWORD) && names.contains(Constants.ARE_YOU_HUMAN))
         {
-            String username = parameters.getParameter(USERNAME);
-            boolean admin = Main.adminKey != null && parameters.getParameter(ARE_YOU_HUMAN).equals(Main.adminKey);
-            if (!admin && !parameters.getParameter(ARE_YOU_HUMAN).trim().equals("4")) throw new PostException("You failed the human test...");
+            String username = parameters.getParameter(Constants.USERNAME);
+            boolean admin = Main.adminKey != null && parameters.getParameter(Constants.ARE_YOU_HUMAN).equals(Main.adminKey);
+            if (!admin && !parameters.getParameter(Constants.ARE_YOU_HUMAN).trim().equals("4")) throw new PostException("You failed the human test...");
             User user = Settings.getUserByName(username);
             if (user != null) throw new PostException("Username taken.");
-            if (!Constants.USERNAME_CHECK.matcher(username).matches()) throw new PostException("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
+            if (!Constants.USERNAME_PATTERN.matcher(username).matches()) throw new PostException("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
             try
             {
-                user = new User(username, PasswordHash.createHash(parameters.getParameter(PASSWORD)));
+                user = new User(username, PasswordHash.createHash(parameters.getParameter(Constants.PASSWORD)));
                 if (admin)
                 {
                     user.setGroup(Group.ADMIN);
@@ -121,7 +204,7 @@ public class PostHandler
                 request.getSession().setAttribute("user", user);
                 Settings.save();
 
-                return LOGIN;
+                return LOGIN_URL;
             }
             catch (NoSuchAlgorithmException | InvalidKeySpecException e)
             {
@@ -137,11 +220,11 @@ public class PostHandler
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        if (names.contains(USERNAME) && names.contains(PASSWORD))
+        if (names.contains(Constants.USERNAME) && names.contains(Constants.PASSWORD))
         {
-            User user = Settings.getUserByName(parameters.getParameter(USERNAME));
-            if (user == null) throw new PostException(String.format("User %s can't be found.", parameters.getParameter(USERNAME)));
-            if (!user.verify(parameters.getParameter(PASSWORD))) throw new PostException("Password wrong.");
+            User user = Settings.getUserByName(parameters.getParameter(Constants.USERNAME));
+            if (user == null) throw new PostException(String.format("User %s can't be found.", parameters.getParameter(Constants.USERNAME)));
+            if (!user.verify(parameters.getParameter(Constants.PASSWORD))) throw new PostException("Password wrong.");
             request.getSession().setAttribute("user", user);
         }
         else if (names.contains("logout"))
@@ -149,40 +232,13 @@ public class PostHandler
             request.getSession().attributes().clear();
             request.changeSessionId();
         }
-        else if (names.contains(OLD_PASSWORD) && names.contains(NEW_PASSWORD))
+        else if (names.contains(Constants.OLD_PASSWORD) && names.contains(Constants.NEW_PASSWORD))
         {
             User user = (User) request.getSession().getAttribute("user");
-            if (!user.updatePassword(parameters.getParameter(OLD_PASSWORD), parameters.getParameter(NEW_PASSWORD))) throw new PostException("Password wrong.");
+            if (!user.updatePassword(parameters.getParameter(Constants.OLD_PASSWORD), parameters.getParameter(Constants.NEW_PASSWORD))) throw new PostException("Password wrong.");
         }
         else throw new PostException("Form not of known format.");
 
         return uri;
-    }
-
-    public static class PostException extends Exception
-    {
-        public PostException()
-        {
-        }
-
-        public PostException(String message)
-        {
-            super(message);
-        }
-
-        public PostException(String message, Throwable cause)
-        {
-            super(message, cause);
-        }
-
-        public PostException(Throwable cause)
-        {
-            super(cause);
-        }
-
-        public PostException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
-        {
-            super(message, cause, enableSuppression, writableStackTrace);
-        }
     }
 }

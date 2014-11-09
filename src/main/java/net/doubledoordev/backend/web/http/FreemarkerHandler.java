@@ -41,11 +41,14 @@
 
 package net.doubledoordev.backend.web.http;
 
+import com.google.common.collect.ImmutableList;
+import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.*;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.glassfish.grizzly.http.Method;
@@ -61,8 +64,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.doubledoordev.backend.util.Constants.ERROR_TEMPLATE;
-import static net.doubledoordev.backend.util.Constants.SLASH_STR;
+import static net.doubledoordev.backend.util.Constants.*;
 import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
 
 /**
@@ -72,7 +74,8 @@ import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
  */
 public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPageGenerator
 {
-    private final Configuration freemarker = new Configuration();
+    private static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
+    private final       Configuration         freemarker = new Configuration();
 
     public FreemarkerHandler(Class clazz, String path) throws TemplateModelException
     {
@@ -83,7 +86,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         freemarker.setIncompatibleImprovements(new Version(2, 3, 20));  // FreeMarker 2.3.20
         Map<String, Object> dataObject = new HashMap<>();
         dataObject.put("Settings", Settings.SETTINGS);
-        dataObject.put("Helper", Constants.HELPER_TEMPLATE_MODEL);
+        dataObject.put("Helper", BeansWrapper.getDefaultInstance().getStaticModels().get(Helper.class.getName()));
         freemarker.setAllSharedVariables(new SimpleHash(dataObject));
     }
 
@@ -93,14 +96,16 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         if (request.getSession(false) != null) request.getSession();
 
         HashMap<String, Object> data = new HashMap<>(request.getSession().attributes().size() + 10);
+        // Put all session data in map, take 1
+        data.putAll(request.getSession().attributes());
 
         /**
          * Data processing
          */
         if (request.getMethod() == Method.GET)
         {
-            data.put("server", Settings.getServerByName(request.getParameter("server")));
-            if (uri.equals("/filemanager")) data.put("fm", new FileManager((Server) data.get("server"), request.getParameter("file")));
+            data.put(SERVER, Settings.getServerByName(request.getParameter(SERVER)));
+            if (uri.equals("/filemanager")) data.put("fm", new FileManager((Server) data.get(SERVER), request.getParameter(FILE)));
         }
         else if (request.getMethod() == Method.POST)
         {
@@ -114,25 +119,22 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         /**
          * fix up the url to match template
          */
-        if (uri.endsWith(SLASH_STR)) uri += "index";
+        if (uri.endsWith(SLASH_STR)) uri += INDEX;
         if (uri.startsWith(SLASH_STR)) uri = uri.substring(1);
 
-        if (request.getSession().getAttribute("user") == null && !Settings.SETTINGS.anonPages.contains(uri))
+        if (request.getSession().getAttribute(USER) == null && !Settings.SETTINGS.anonPages.contains(uri))
         {
             response.sendError(HttpStatus.UNAUTHORIZED_401.getStatusCode());
             return true;
         }
-        else if (Constants.ADMINPAGES.contains(uri) && !((User) request.getSession().getAttribute("user")).isAdmin())
+        else if (ADMINPAGES.contains(uri) && !((User) request.getSession().getAttribute(USER)).isAdmin())
         {
             response.sendError(HttpStatus.UNAUTHORIZED_401.getStatusCode());
             return true;
         }
         if (!uri.endsWith(Constants.TEMPLATE_EXTENSION)) uri += Constants.TEMPLATE_EXTENSION;
 
-        /**
-         * Put all session data in map
-         */
-
+        // Put all session data in map, take 2
         data.putAll(request.getSession().attributes());
 
         try

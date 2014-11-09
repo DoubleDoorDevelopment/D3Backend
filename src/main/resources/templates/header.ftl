@@ -68,20 +68,20 @@
         }
 
         function call(url, message, func) {
-            websocket = new WebSocket(wsurl(url));
+            var websocket = new WebSocket(wsurl(url));
             websocket.onopen = function (evt) {
                 websocket.send(message);
             }
-            websocket.onclose = function (evt) {
-                alert("The socket connction closed. Refresh the page.");
-            };
             websocket.onmessage = function (evt) {
-                console.log(func);
-                console.log(typeof func);
-                if (typeof func !== 'undefined') func();
+                if (typeof func === 'undefined')
+                {
+                    var temp = JSON.parse(evt.data);
+                    if (temp.status !== "ok") alert(temp.message);
+                }
+                else func(evt.data);
             };
             websocket.onerror = function (evt) {
-                alert("The socket connction errored. Refresh the page.");
+                alert("The call socket connction errored. Try again.");
             };
 
         }

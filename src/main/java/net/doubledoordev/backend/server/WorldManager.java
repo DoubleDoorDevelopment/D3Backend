@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.server;
 
+import net.doubledoordev.backend.util.exceptions.BackupException;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
@@ -166,13 +167,5 @@ public class WorldManager
     {
         if (bypassLimits) return !(bypassLimits = false);
         return server.getOwnerObject().getMaxDiskspace() == -1 || server.getOwnerObject().getDiskspaceLeft() <= 0;
-    }
-
-    public class BackupException extends Exception
-    {
-        public BackupException(String s)
-        {
-            super(s);
-        }
     }
 }

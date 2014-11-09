@@ -36,42 +36,18 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.util;
-
-import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
-
-import java.util.HashSet;
+package net.doubledoordev.backend.util.exceptions;
 
 /**
- * Used to make sure all port assigned are within a range
- *
  * @author Dries007
  */
-public class PortRange
+public class BackupException extends Exception
 {
-    public int min = 25500;
-    public int max = 25600;
-
-    public int getNextAvailablePort(int ignored) throws OutOfPortsException
+    public BackupException(String s)
     {
-        HashSet<Integer> usedPorts = new HashSet<>();
-        for (Server server : Settings.SETTINGS.servers.values())
-        {
-            usedPorts.add(server.getServerPort());
-            usedPorts.add(server.getRconPort());
-        }
-        for (int port = min; port < max; port++)
-        {
-            if (!usedPorts.contains(port) && port != ignored) return port;
-        }
-        throw new OutOfPortsException();
-    }
-
-    public int getNextAvailablePort() throws OutOfPortsException
-    {
-        return getNextAvailablePort(-1);
+        super(s);
     }
 }

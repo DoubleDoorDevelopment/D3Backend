@@ -217,13 +217,6 @@ public class Cache extends TimerTask
         }
     };
     /**
-     * Time vars
-     */
-    public static        long                          REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
-    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;          // 1 hour
-    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;               // 1 minute
-    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;               // 20 seconds
-    /**
      * Forge version related things
      */
     private static       long                          lastForgeVersions         = 0L;

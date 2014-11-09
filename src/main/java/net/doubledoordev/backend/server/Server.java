@@ -645,7 +645,7 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         for (String s : list)
-            for (Pattern pattern : Constants.ILLEGAL_OPTIONS)
+            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
                 if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraJavaParameters = list;
         Settings.save();
@@ -665,7 +665,7 @@ public class Server
     {
         if (getOnline()) throw new ServerOnlineException();
         for (String s : list)
-            for (Pattern pattern : Constants.ILLEGAL_OPTIONS)
+            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
                 if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
         data.extraMCParameters = list;
         Settings.save();
