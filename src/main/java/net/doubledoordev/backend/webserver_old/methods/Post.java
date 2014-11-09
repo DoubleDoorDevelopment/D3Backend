@@ -59,8 +59,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
-
 /**
  * Processes POST requests
  *
@@ -68,6 +66,8 @@ import static net.doubledoordev.backend.util.Constants.COOKIE_KEY;
  */
 public class Post
 {
+    private static final String COOKIE_KEY = "";
+
     private Post()
     {
     }

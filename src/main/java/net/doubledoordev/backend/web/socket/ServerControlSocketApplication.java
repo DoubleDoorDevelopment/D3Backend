@@ -67,9 +67,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ServerControlSocketApplication extends WebSocketApplication
 {
-    private static final String URL_PATTERN = "/server/*";
-
-    public static final ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
+    public static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
+    private static final String                         URL_PATTERN                       = "/server/*";
 
     private ServerControlSocketApplication()
     {
@@ -98,14 +97,14 @@ public class ServerControlSocketApplication extends WebSocketApplication
                 {
                     Main.LOGGER.warn("ERROR invoking method via reflection: " + method.toString());
                     e.printStackTrace();
-                    jsonObject.addProperty("status", "error");
-                    jsonObject.addProperty("message", e.getCause().toString());
+                    jsonObject.addProperty(STATUS, "error");
+                    jsonObject.addProperty(MESSAGE, e.getCause().toString());
                     return;
                 }
             }
         }
-        jsonObject.addProperty("status", "error");
-        jsonObject.addProperty("message", "method not found");
+        jsonObject.addProperty(STATUS, "error");
+        jsonObject.addProperty(MESSAGE, "method not found");
     }
 
     @Override
@@ -140,15 +139,15 @@ public class ServerControlSocketApplication extends WebSocketApplication
             return;
         }
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("status", "ok");
+        jsonObject.addProperty(STATUS, OK);
         try
         {
             invokeWithRefectionMagic(jsonObject, server, args, 1);
         }
         catch (IllegalAccessException e)
         {
-            jsonObject.addProperty("status", "error");
-            jsonObject.addProperty("message", "");
+            jsonObject.addProperty(STATUS, ERROR);
+            jsonObject.addProperty(MESSAGE, e.getMessage());
         }
         socket.send(jsonObject.toString());
         socket.close();

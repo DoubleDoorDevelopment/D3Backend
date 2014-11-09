@@ -46,6 +46,8 @@ import com.google.gson.JsonObject;
 import net.doubledoordev.backend.server.Server;
 import org.glassfish.grizzly.websockets.WebSocket;
 
+import static net.doubledoordev.backend.util.Constants.MESSAGE;
+import static net.doubledoordev.backend.util.Constants.STATUS;
 import static net.doubledoordev.backend.web.socket.ServerControlSocketApplication.SERVER_CONTROL_SOCKET_APPLICATION;
 import static net.doubledoordev.backend.web.socket.ServerListSocketApplication.SERVER_LIST_SOCKET_APPLICATION;
 
@@ -62,8 +64,8 @@ public class WebSocketHelper
     {
         JsonObject root = new JsonObject();
 
-        root.addProperty("status", "error");
-        root.addProperty("message", "message");
+        root.addProperty(STATUS, "error");
+        root.addProperty(MESSAGE, message);
 
         socket.send(root.toString());
     }
@@ -72,7 +74,7 @@ public class WebSocketHelper
     {
         JsonObject root = new JsonObject();
 
-        root.addProperty("status", "ok");
+        root.addProperty(STATUS, "ok");
         root.addProperty("data", s);
 
         socket.send(root.toString());
@@ -82,7 +84,7 @@ public class WebSocketHelper
     {
         JsonObject root = new JsonObject();
 
-        root.addProperty("status", "ok");
+        root.addProperty(STATUS, "ok");
         root.add("data", s);
 
         socket.send(root.toString());

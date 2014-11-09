@@ -41,8 +41,6 @@
 
 package net.doubledoordev.backend.util.exceptions;
 
-import net.doubledoordev.backend.web.http.PostHandler;
-
 /**
  * @author Dries007
  */

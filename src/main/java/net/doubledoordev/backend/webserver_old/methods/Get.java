@@ -45,7 +45,6 @@ import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.CustomLogAppender;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.webserver_old.NanoHTTPD;

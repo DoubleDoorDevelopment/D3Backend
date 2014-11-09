@@ -48,7 +48,6 @@ import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
-import net.doubledoordev.backend.util.PortRange;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
@@ -73,7 +72,31 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class PostHandler
 {
-    public static final PostHandler POST_HANDLER = new PostHandler();
+    public static final  PostHandler POST_HANDLER    = new PostHandler();
+    /*
+     * FORM field names
+     */
+    private static final String      OWNER           = "owner";
+    private static final String      NAME            = "name";
+    private static final String      USERNAME        = "username";
+    private static final String      PASSWORD        = "password";
+    private static final String      OLD_PASSWORD    = "oldPassword";
+    private static final String      NEW_PASSWORD    = "newPassword";
+    private static final String      ARE_YOU_HUMAN   = "areyouhuman";
+    private static final String      RAM_MIN         = "RAMmin";
+    private static final String      RAM_MAX         = "RAMmax";
+    private static final String      PERMGEN         = "PermGen";
+    private static final String      EXTRA_JAVA_PARM = "extraJavaParameters";
+    private static final String      EXTRA_MC_PARM   = "extraMCParameters";
+    private static final String      ADMINS          = "admins";
+    private static final String      COOWNERS        = "coOwners";
+    private static final String      JARNAME         = "jarname";
+    private static final String      RCON_PASS       = "rconpass";
+    private static final String      RCON_PORT       = "rconport";
+    private static final String      SERVER_PORT     = "serverport";
+    private static final String      IP              = "ip";
+    private static final String      AUTOSTART       = "autostart";
+    private static final String      LOGOUT          = "logout";
 
     private PostHandler()
     {
@@ -95,7 +118,7 @@ public class PostHandler
         }
         catch (PostException e)
         {
-            data.put("message", e.getLocalizedMessage());
+            data.put(MESSAGE, e.getLocalizedMessage());
         }
         return uri;
     }
@@ -105,18 +128,18 @@ public class PostHandler
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        User user = (User) data.get("user");
+        User user = (User) data.get(USER);
         if (user == null) throw new PostException("Not logged in.");
         if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new PostException("Max server count reached.");
         ServerData serverData = new ServerData();
-        if (user.getGroup() == Group.ADMIN && names.contains("owner")) serverData.owner = parameters.getParameter("owner");
+        if (user.getGroup() == Group.ADMIN && names.contains(OWNER)) serverData.owner = parameters.getParameter(OWNER);
         else serverData.owner = user.getUsername();
 
-        serverData.ID = serverData.owner + "_" + parameters.getParameter("name");
+        serverData.ID = serverData.owner + "_" + parameters.getParameter(NAME);
         if (Settings.getServerByName(serverData.ID) != null) throw new PostException("Duplicate server ID");
 
-        serverData.ramMin = Integer.parseInt(parameters.getParameter("RAMmin"));
-        serverData.ramMax = Integer.parseInt(parameters.getParameter("RAMmax"));
+        serverData.ramMin = Integer.parseInt(parameters.getParameter(RAM_MIN));
+        serverData.ramMax = Integer.parseInt(parameters.getParameter(RAM_MAX));
         if (serverData.ramMax < serverData.ramMin)
         {
             int temp = serverData.ramMax;
@@ -126,32 +149,32 @@ public class PostHandler
         if (user.getMaxRam() != -1 && user.getMaxRamLeft() < serverData.ramMax) throw new PostException("You are over your max RAM.");
         if (serverData.ramMax < 2 || serverData.ramMin < 2) throw new PostException("RAM settings invalid.");
 
-        serverData.permGen = Integer.parseInt(parameters.getParameter("PermGen"));
+        serverData.permGen = Integer.parseInt(parameters.getParameter(PERMGEN));
         if (serverData.permGen < 2) throw new PostException("PermGen settings invalid.");
 
-        if (parameters.getParameter("extraJavaParameters").trim().length() != 0) serverData.extraJavaParameters = Arrays.asList(parameters.getParameter("extraJavaParameters").trim().split("\n"));
-        if (parameters.getParameter("extraMCParameters").trim().length() != 0) serverData.extraMCParameters = Arrays.asList(parameters.getParameter("extraMCParameters").trim().split("\n"));
-        if (parameters.getParameter("admins").trim().length() != 0) serverData.admins = Arrays.asList(parameters.getParameter("admins").trim().split("\n"));
-        if (parameters.getParameter("coOwners").trim().length() != 0) serverData.coOwners = Arrays.asList(parameters.getParameter("coOwners").trim().split("\n"));
+        if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) serverData.extraJavaParameters = Arrays.asList(parameters.getParameter(EXTRA_JAVA_PARM).trim().split("\n"));
+        if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) serverData.extraMCParameters = Arrays.asList(parameters.getParameter(EXTRA_MC_PARM).trim().split("\n"));
+        if (parameters.getParameter(ADMINS).trim().length() != 0) serverData.admins = Arrays.asList(parameters.getParameter(ADMINS).trim().split("\n"));
+        if (parameters.getParameter(COOWNERS).trim().length() != 0) serverData.coOwners = Arrays.asList(parameters.getParameter(COOWNERS).trim().split("\n"));
 
-        serverData.jarName = parameters.getParameter("jarname");
-        serverData.rconPswd = parameters.getParameter("rconpass");
+        serverData.jarName = parameters.getParameter(JARNAME);
+        serverData.rconPswd = parameters.getParameter(RCON_PASS);
         try
         {
-            serverData.serverPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter("serverport"));
-            serverData.rconPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(serverData.serverPort) : Integer.parseInt(parameters.getParameter("rconport"));
+            serverData.serverPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter(SERVER_PORT));
+            serverData.rconPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(serverData.serverPort) : Integer.parseInt(parameters.getParameter(RCON_PORT));
         }
         catch (OutOfPortsException e)
         {
             throw new PostException("The backend ran out of ports to assign.");
         }
-        serverData.ip = parameters.getParameter("ip");
-        serverData.autoStart = names.contains("autostart") && parameters.getParameter("autostart").equals("on");
+        serverData.ip = parameters.getParameter(IP);
+        serverData.autoStart = names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on");
 
         Server server = new Server(serverData, true);
         Settings.SETTINGS.servers.put(serverData.ID, server);
         Settings.save();
-        data.put("server", server);
+        data.put(SERVER, server);
 
         try
         {
@@ -183,17 +206,17 @@ public class PostHandler
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        if (names.contains(Constants.USERNAME) && names.contains(Constants.PASSWORD) && names.contains(Constants.ARE_YOU_HUMAN))
+        if (names.contains(USERNAME) && names.contains(PASSWORD) && names.contains(ARE_YOU_HUMAN))
         {
-            String username = parameters.getParameter(Constants.USERNAME);
-            boolean admin = Main.adminKey != null && parameters.getParameter(Constants.ARE_YOU_HUMAN).equals(Main.adminKey);
-            if (!admin && !parameters.getParameter(Constants.ARE_YOU_HUMAN).trim().equals("4")) throw new PostException("You failed the human test...");
+            String username = parameters.getParameter(USERNAME);
+            boolean admin = Main.adminKey != null && parameters.getParameter(ARE_YOU_HUMAN).equals(Main.adminKey);
+            if (!admin && !parameters.getParameter(ARE_YOU_HUMAN).trim().equals("4")) throw new PostException("You failed the human test...");
             User user = Settings.getUserByName(username);
             if (user != null) throw new PostException("Username taken.");
-            if (!Constants.USERNAME_PATTERN.matcher(username).matches()) throw new PostException("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
+            if (!USERNAME_PATTERN.matcher(username).matches()) throw new PostException("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
             try
             {
-                user = new User(username, PasswordHash.createHash(parameters.getParameter(Constants.PASSWORD)));
+                user = new User(username, PasswordHash.createHash(parameters.getParameter(PASSWORD)));
                 if (admin)
                 {
                     user.setGroup(Group.ADMIN);
@@ -201,7 +224,7 @@ public class PostHandler
                     Main.LOGGER.warn("Admin key claimed. You cannot use it anymore!");
                 }
                 Settings.SETTINGS.users.put(user.getUsername().toLowerCase(), user);
-                request.getSession().setAttribute("user", user);
+                request.getSession().setAttribute(USER, user);
                 Settings.save();
 
                 return LOGIN_URL;
@@ -220,22 +243,22 @@ public class PostHandler
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        if (names.contains(Constants.USERNAME) && names.contains(Constants.PASSWORD))
+        if (names.contains(USERNAME) && names.contains(PASSWORD))
         {
-            User user = Settings.getUserByName(parameters.getParameter(Constants.USERNAME));
-            if (user == null) throw new PostException(String.format("User %s can't be found.", parameters.getParameter(Constants.USERNAME)));
-            if (!user.verify(parameters.getParameter(Constants.PASSWORD))) throw new PostException("Password wrong.");
-            request.getSession().setAttribute("user", user);
+            User user = Settings.getUserByName(parameters.getParameter(USERNAME));
+            if (user == null) throw new PostException(String.format("User %s can't be found.", parameters.getParameter(USERNAME)));
+            if (!user.verify(parameters.getParameter(PASSWORD))) throw new PostException("Password wrong.");
+            request.getSession().setAttribute(USER, user);
         }
-        else if (names.contains("logout"))
+        else if (names.contains(LOGOUT))
         {
             request.getSession().attributes().clear();
             request.changeSessionId();
         }
-        else if (names.contains(Constants.OLD_PASSWORD) && names.contains(Constants.NEW_PASSWORD))
+        else if (names.contains(OLD_PASSWORD) && names.contains(NEW_PASSWORD))
         {
-            User user = (User) request.getSession().getAttribute("user");
-            if (!user.updatePassword(parameters.getParameter(Constants.OLD_PASSWORD), parameters.getParameter(Constants.NEW_PASSWORD))) throw new PostException("Password wrong.");
+            User user = (User) request.getSession().getAttribute(USER);
+            if (!user.updatePassword(parameters.getParameter(OLD_PASSWORD), parameters.getParameter(NEW_PASSWORD))) throw new PostException("Password wrong.");
         }
         else throw new PostException("Form not of known format.");
 

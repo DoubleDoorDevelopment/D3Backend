@@ -64,9 +64,8 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class ServerListSocketApplication extends WebSocketApplication
 {
-    private static final String URL_PATTERN = "/serverlist";
-
-    public static final ServerListSocketApplication SERVER_LIST_SOCKET_APPLICATION = new ServerListSocketApplication();
+    public static final  ServerListSocketApplication SERVER_LIST_SOCKET_APPLICATION = new ServerListSocketApplication();
+    private static final String                      URL_PATTERN                    = "/serverlist";
 
     private ServerListSocketApplication()
     {

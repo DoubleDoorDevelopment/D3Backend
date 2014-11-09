@@ -63,6 +63,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class Webserver extends SimpleWebServer
 {
+    private static final String COOKIE_KEY = "";
+
     public static Webserver WEBSERVER;
     public static long lastRequest = System.currentTimeMillis();
 

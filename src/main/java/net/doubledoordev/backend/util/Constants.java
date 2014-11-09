@@ -67,44 +67,57 @@ public class Constants
     /*
      * String constants
      */
-    public static final String NAME               = "D3 Backend";
-    public static final String LOCALHOST          = "localhost";
-    public static final String COOKIE_KEY         = "user";
-    public static final String WORLD              = "world";
-    public static final String SERVER             = "server";
-    public static final String FILE               = "file";
-    public static final String INDEX              = "index";
-    public static final String USER               = "user";
-    public static final String DIM                = "DIM";
-    public static final String TEMPLATE_EXTENSION = ".ftl";
-    public static final String ERROR_TEMPLATE     = "error.ftl";
+    public static final String           NAME                                   = "D3 Backend";
+    public static final String           LOCALHOST                              = "localhost";
+    public static final String           WORLD                                  = "world";
+    public static final String           SERVER                                 = "server";
+    public static final String           FILE                                   = "file";
+    public static final String           INDEX                                  = "index";
+    public static final String           USER                                   = "user";
+    public static final String           MESSAGE                                = "message";
+    public static final String           STATUS                                 = "status";
+    public static final String           OK                                     = "ok";
+    public static final String           ERROR                                  = "error";
+    public static final String           DIM                                    = "DIM";
+    /*
+     * FilenameFilter constants
+     */
+    public final static FilenameFilter   NOT_DIM_FILTER                         = new FilenameFilter()
+    {
+        @Override
+        public boolean accept(File dir, String name)
+        {
+            return !name.startsWith(DIM);
+        }
+    };
+    public final static FilenameFilter   DIM_ONLY_FILTER                        = new FilenameFilter()
+    {
+        @Override
+        public boolean accept(File dir, String name)
+        {
+            return name.startsWith(DIM);
+        }
+    };
+    public static final String           TEMPLATE_EXTENSION                     = ".ftl";
+    public static final String           ERROR_TEMPLATE                         = "error.ftl";
     /*
      * URL and PATH constants
      */
-    public static final String SLASH_STR          = "/";
-    public static final String STATIC_PATH        = "/static/";
-    public static final String TEMPLATES_PATH     = "/templates/";
-    public static final String P2S_PATH           = "/pay2spawn/";
-    public static final String SOCKET_CONTEXT     = "/socket";
-    public static final String LOGIN_URL          = "/login";
-    public static final String REGISTER_URL       = "/register";
-    public static final String NEWSERVER_URL      = "/newserver";
-    public static final String SERVER_URL         = "/server?server=";
-    public static final String FAVOTICON          = "favicon.ico";
-
+    public static final String           SLASH_STR                              = "/";
+    public static final String           STATIC_PATH                            = "/static/";
+    public static final String           TEMPLATES_PATH                         = "/templates/";
+    public static final String           P2S_PATH                               = "/pay2spawn/";
+    public static final String           SOCKET_CONTEXT                         = "/socket";
+    public static final String           LOGIN_URL                              = "/login";
+    public static final String           REGISTER_URL                           = "/register";
+    public static final String           NEWSERVER_URL                          = "/newserver";
+    public static final String           SERVER_URL                             = "/server?server=";
+    public static final String           FAVOTICON                              = "favicon.ico";
     public static final String           MC_VERIONS_URL                         = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
     public static final String           FORGE_VERIONS_URL                      = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
     public static final String           MC_SERVER_JAR_URL                      = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
     public static final String           FORGE_INSTALLER_URL                    = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
     public static final String           VERSION_CHECKER_URL                    = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
-    /*
-     * FORM field names
-     */
-    public static final String           USERNAME                               = "username";
-    public static final String           PASSWORD                               = "password";
-    public static final String           OLD_PASSWORD                           = "oldPassword";
-    public static final String           NEW_PASSWORD                           = "newPassword";
-    public static final String           ARE_YOU_HUMAN                          = "areyouhuman";
     /*
      * File constants
      */
@@ -128,25 +141,6 @@ public class Constants
     public static final Pattern          USERNAME_PATTERN                       = Pattern.compile("^[\\w-]+$");
     public static final Pattern          VERSION_PATTERN                        = Pattern.compile("\\d+(?:\\.\\d+)+");
     public static final Pattern          SERVER_START_ARGS_BLACKLIST_PATTERNS[] = {Pattern.compile("^-Xms.*$"), Pattern.compile("^-Xmx.*$"), Pattern.compile("^-XX:MaxPermSize=.*$")};
-    /*
-     * FilenameFilter constants
-     */
-    public final static FilenameFilter   NOT_DIM_FILTER                         = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return !name.startsWith(DIM);
-        }
-    };
-    public final static FilenameFilter   DIM_ONLY_FILTER                        = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return name.startsWith(DIM);
-        }
-    };
     public final static FilenameFilter   ACCEPT_ALL_FILTER                      = new FilenameFilter()
     {
         @Override

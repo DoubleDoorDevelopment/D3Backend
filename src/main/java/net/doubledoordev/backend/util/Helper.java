@@ -58,7 +58,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Constants.JSONPARSER;
+import static net.doubledoordev.backend.util.Constants.RANDOM;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
@@ -72,6 +73,7 @@ public class Helper
 {
     public static final  Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
     private static final SimpleDateFormat    dateFormat         = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private static final char[]              symbols            = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private Helper()
     {
@@ -100,7 +102,6 @@ public class Helper
         }
     }
 
-    private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     public static String randomString(int length)
     {
         return new String(randomCharArray(length));
