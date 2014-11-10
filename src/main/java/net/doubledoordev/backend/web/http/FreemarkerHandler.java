@@ -104,8 +104,12 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
          */
         if (request.getMethod() == Method.GET)
         {
-            data.put(SERVER, Settings.getServerByName(request.getParameter(SERVER)));
-            if (uri.equals("/filemanager")) data.put("fm", new FileManager((Server) data.get(SERVER), request.getParameter(FILE)));
+            Server server = Settings.getServerByName(request.getParameter(SERVER));
+            if (server != null && server.canUserControl((User) data.get(USER)))
+            {
+                data.put(SERVER, server);
+                if (uri.equals("/filemanager")) data.put("fm", new FileManager((Server) data.get(SERVER), request.getParameter(FILE)));
+            }
         }
         else if (request.getMethod() == Method.POST)
         {

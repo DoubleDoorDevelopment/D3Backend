@@ -41,79 +41,23 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import com.google.gson.JsonObject;
-import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.WebSocketHelper;
-import org.glassfish.grizzly.http.server.DefaultSessionManager;
-import org.glassfish.grizzly.http.server.Session;
-import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import net.doubledoordev.backend.Main;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
-import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.util.TimerTask;
 
-import static net.doubledoordev.backend.util.Constants.*;
-import static net.doubledoordev.backend.util.Settings.SETTINGS;
+import static net.doubledoordev.backend.util.Constants.SOCKET_PING_TIME;
+import static net.doubledoordev.backend.util.Constants.TIMER;
 
 /**
- * Used by the serverlist to keep up to date.
+ * Used for keep-alive sockets, they get pinged regularly
  *
  * @author Dries007
  */
-public class ServerListSocketApplication extends WebSocketApplication
+public abstract class KeepAliveWebSocketApplication extends WebSocketApplication
 {
-    public static final  ServerListSocketApplication SERVER_LIST_SOCKET_APPLICATION = new ServerListSocketApplication();
-    private static final String                      URL_PATTERN                    = "/serverlist";
-
-    private ServerListSocketApplication()
     {
-    }
-
-    @Override
-    public void onConnect(WebSocket socket)
-    {
-        Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
-        if (session == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid session.");
-            socket.close();
-            return;
-        }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute("user", session.getAttribute("user"));
-
-        for (Server server : SETTINGS.getServers())
-        {
-            if (server.canUserControl((User) session.getAttribute("user"))) WebSocketHelper.sendData(socket, getData(server));
-        }
-
-        // Add socket to the list of sockets
-        super.onConnect(socket);
-    }
-
-    public void sendUpdateToAll(Server server)
-    {
-        for (WebSocket socket : getWebSockets()) WebSocketHelper.sendData(socket, getData(server));
-    }
-
-    public JsonObject getData(Server server)
-    {
-        JsonObject root = new JsonObject();
-
-        root.addProperty("id", server.getID());
-        root.addProperty("displayAddress", server.getDisplayAddress());
-        root.addProperty("onlinePlayers", server.getOnlinePlayers());
-        root.addProperty("size", server.getDiskspaceUse()[2] + " MB");
-        root.addProperty("motd", server.getMotd());
-        root.addProperty("online", server.getOnline());
-
-        return root;
-    }
-
-    public void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, this);
         TIMER.scheduleAtFixedRate(new TimerTask()
         {
             @Override

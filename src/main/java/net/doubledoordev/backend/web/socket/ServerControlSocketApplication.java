@@ -41,6 +41,7 @@
 
 package net.doubledoordev.backend.web.socket;
 
+import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
@@ -50,10 +51,7 @@ import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;
-import org.glassfish.grizzly.websockets.DefaultWebSocket;
-import org.glassfish.grizzly.websockets.WebSocket;
-import org.glassfish.grizzly.websockets.WebSocketApplication;
-import org.glassfish.grizzly.websockets.WebSocketEngine;
+import org.glassfish.grizzly.websockets.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.TimerTask;
@@ -61,20 +59,21 @@ import java.util.TimerTask;
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
- * TODO: change to /server/id
+ * Short term sockets
+ * Get 1 command, and send 1 response back.
  *
  * @author Dries007
  */
 public class ServerControlSocketApplication extends WebSocketApplication
 {
-    public static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
-    private static final String                         URL_PATTERN                       = "/server/*";
+    private static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
+    private static final String                         URL_PATTERN                       = "/servercmd/*";
 
     private ServerControlSocketApplication()
     {
     }
 
-    private static void invokeWithRefectionMagic(JsonObject jsonObject, Object instance, String[] split, int start) throws IllegalAccessException
+    private static void invokeWithRefectionMagic(Object instance, String[] split, int start) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
     {
         start++;
         for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
@@ -93,18 +92,9 @@ public class ServerControlSocketApplication extends WebSocketApplication
                 {
                     // Ignored because we don't care.
                 }
-                catch (InvocationTargetException e)
-                {
-                    Main.LOGGER.warn("ERROR invoking method via reflection: " + method.toString());
-                    e.printStackTrace();
-                    jsonObject.addProperty(STATUS, "error");
-                    jsonObject.addProperty(MESSAGE, e.getCause().toString());
-                    return;
-                }
             }
         }
-        jsonObject.addProperty(STATUS, "error");
-        jsonObject.addProperty(MESSAGE, "method not found");
+        throw new NoSuchMethodException(split[start - 1]);
     }
 
     @Override
@@ -113,63 +103,60 @@ public class ServerControlSocketApplication extends WebSocketApplication
         Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
         if (session == null)
         {
-            socket.send("No valid session.");
+            WebSocketHelper.sendError(socket, "No valid session.");
             socket.close();
             return;
         }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute("user", session.getAttribute("user"));
+        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, session.getAttribute(USER));
+        String serverName = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo();
+        if (Strings.isNullOrEmpty(serverName) || Strings.isNullOrEmpty(serverName.substring(1)))
+        {
+            WebSocketHelper.sendError(socket, "No valid server.");
+            socket.close();
+            return;
+        }
+        Server server = Settings.getServerByName(serverName.substring(1));
+        if (server == null)
+        {
+            WebSocketHelper.sendError(socket, "No valid server.");
+            socket.close();
+            return;
+        }
+        else if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        {
+            WebSocketHelper.sendError(socket, "You have no rights to this server.");
+            socket.close();
+            return;
+        }
+        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(SERVER, server);
         super.onConnect(socket);
     }
 
     @Override
     public void onMessage(WebSocket socket, String text)
     {
+        Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
         String[] args = text.split("\\|");
-        Server server = Settings.getServerByName(args[0]);
-        if (server == null)
+        if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
         {
-            socket.send("No valid server.");
+            WebSocketHelper.sendError(socket, "You have no rights to this server.");
             socket.close();
             return;
         }
-        else if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute("user")))
-        {
-            socket.send("You have no rights to this server.");
-            socket.close();
-            return;
-        }
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty(STATUS, OK);
         try
         {
-            invokeWithRefectionMagic(jsonObject, server, args, 1);
+            invokeWithRefectionMagic(server, args, 0);
+            WebSocketHelper.sendOk(socket);
         }
-        catch (IllegalAccessException e)
+        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
         {
-            jsonObject.addProperty(STATUS, ERROR);
-            jsonObject.addProperty(MESSAGE, e.getMessage());
+            WebSocketHelper.sendError(socket, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
-        socket.send(jsonObject.toString());
         socket.close();
     }
 
-    public void register()
+    public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, this);
-        TIMER.scheduleAtFixedRate(new TimerTask()
-        {
-            @Override
-            public void run()
-            {
-                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
-            }
-        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
-    }
-
-    public void sendStatusUpdateToAll(Server server)
-    {
-        JsonObject data = new JsonObject();
-        data.addProperty("online", server.getOnline());
-        for (WebSocket socket : getWebSockets()) WebSocketHelper.sendData(socket, data);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, SERVER_CONTROL_SOCKET_APPLICATION);
     }
 }

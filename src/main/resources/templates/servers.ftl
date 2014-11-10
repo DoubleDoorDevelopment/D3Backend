@@ -11,39 +11,16 @@
         <th class="col-sm-4">MOTD</th>
     </tr>
     </thead>
-    <#if false>
-        <tbody>
-        <#list Settings.servers as server>
-            <#if server.canUserControl(user)>
-            <tr class="<#if server.online>success<#else>danger</#if>" style="cursor:pointer;">
-                <td onclick="link('${server.ID}')">${server.ID}</td>
-                <td onclick="link('${server.ID}')">${server.displayAddress}</td>
-                <td onclick="link('${server.ID}')">${server.onlinePlayers}/${server.slots}</td>
-                <td onclick="link('${server.ID}')">${server.diskspaceUse[2]} MB</td>
-                <td>
-                    <div class="btn-group">
-                        <button type="button" <#if !server.online>onclick="call('server', '${server.ID}|startServer', location.reload())" <#else>disabled</#if> class="btn btn-success btn-xs">Start</button>
-                        <button type="button" class="btn btn-info btn-xs" onclick="openPopup('/console?server=${server.ID}')">Console</button>
-                        <button type="button" <#if server.online>onclick="call('server', '${server.ID}|stopServer|' + prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning btn-xs">Stop</button>
-                        <button type="button" <#if server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.ID}|forceStopServer');" <#else>disabled</#if> class="btn btn-danger btn-xs">Kill</button>
-                    </div>
-                </td>
-                <td onclick="link('${server.ID}')">${server.motd}</td>
-            </tr>
-            </#if>
-        </#list>
-        </tbody>
-    </#if>
 </table>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script>
     function createBtnGroup(row, type, set1, meta)
     {
         return '<div class="btn-group">' +
-            '<button type="button" ' + (!row.online ? 'onclick="call(\'server\', \'' + row.id + '|startServer\')"' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
+            '<button type="button" ' + (!row.online ? 'onclick="callOnServer(\'' + row.id + '\', \'startServer\')"' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
             '<button type="button" class="btn btn-info btn-xs" onclick="openPopup(\'/console?server=' + row.id + '\')">Console</button>' +
-            '<button type="button" ' + (row.online ? 'onclick="call(\'server\', \'' + row.id + '|stopServer|\' + prompt(\'Message?\', \'Server is stopping.\'))"' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
-            '<button type="button" ' + (row.online ? 'onclick="if (confirm(\'Are you sure?\')) call(\'server\', \'' + row.id +'|forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="callOnServer(\'' + row.id + '\', \'stopServer|\' + prompt(\'Message?\', \'Server is stopping.\'))"' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="if (confirm(\'Are you sure?\')) callOnServer(\'' + row.id + '\', \'forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
         '</div>'
     }
 
@@ -56,7 +33,7 @@
         paging: false,
         searching: false,
         data: [],
-        createdRow: function( row, data, dataIndex )
+        createdRow: function(row, data, dataIndex)
         {
             var jcrow = $(row);
             jcrow.addClass( data.online ? 'success' : 'danger');

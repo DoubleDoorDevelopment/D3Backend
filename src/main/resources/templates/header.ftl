@@ -83,7 +83,11 @@
             websocket.onerror = function (evt) {
                 alert("The call socket connction errored. Try again.");
             };
+        }
 
+        function callOnServer(server, message, func)
+        {
+            call("servercmd/" +  server, message, func);
         }
     </script>
 </head>

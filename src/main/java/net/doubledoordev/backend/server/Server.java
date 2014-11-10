@@ -317,6 +317,11 @@ public class Server
         return properties.keys();
     }
 
+    public String getIP()
+    {
+        return data.ip;
+    }
+
     public String getPropertiesAsText()
     {
         getProperties();
@@ -728,20 +733,18 @@ public class Server
         return data.admins;
     }
 
-    public void setAdmins(String list) throws Exception
+    public void removeAdmin(String name)
     {
-        setAdmins(Arrays.asList(list.split(",")));
+        Iterator<String> i = data.admins.iterator();
+        while (i.hasNext())
+        {
+            if (i.next().equalsIgnoreCase(name)) i.remove();
+        }
     }
 
-    public void setAdmins(List<String> strings)
+    public void addAdmin(String name)
     {
-        data.admins = strings;
-        Settings.save();
-    }
-
-    public void setAdmins()
-    {
-        setAdmins(Arrays.asList(new String[0]));
+        data.admins.add(name);
     }
 
     public List<String> getCoOwners()
@@ -749,20 +752,18 @@ public class Server
         return data.coOwners;
     }
 
-    public void setCoOwners(String list) throws Exception
+    public void addCoowner(String name)
     {
-        setCoOwners(Arrays.asList(list.split(",")));
+        data.coOwners.add(name);
     }
 
-    public void setCoOwners(List<String> strings)
+    public void removeCoowner(String name)
     {
-        data.coOwners = strings;
-        Settings.save();
-    }
-
-    public void setCoOwners()
-    {
-        setCoOwners(Arrays.asList(new String[0]));
+        Iterator<String> i = data.coOwners.iterator();
+        while (i.hasNext())
+        {
+            if (i.next().equalsIgnoreCase(name)) i.remove();
+        }
     }
 
     /**
