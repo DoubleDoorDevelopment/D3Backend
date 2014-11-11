@@ -44,7 +44,7 @@ import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.server.ServerData;
+
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;

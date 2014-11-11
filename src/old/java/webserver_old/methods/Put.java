@@ -107,7 +107,7 @@ public class Put
                     if (!server.canUserControl((User) dataObject.get("user"))) return new Response(FORBIDDEN, MIME_PLAINTEXT, "Forbidden");
                     if (!server.getOnline())
                         return new Response(INTERNAL_ERROR, MIME_PLAINTEXT, "Server Offline.");
-                    server.send(split[2]);
+                    server.sendCmd(split[2]);
                     return new Response(OK, MIME_PLAINTEXT, "");
             }
         }

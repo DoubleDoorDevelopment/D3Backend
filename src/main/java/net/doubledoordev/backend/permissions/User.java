@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.permissions;
 
+import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
@@ -54,8 +55,11 @@ import java.security.spec.InvalidKeySpecException;
  */
 public class User
 {
+    @Expose
     private String username, passhash;
+    @Expose
     private int maxServers, maxRam, maxDiskspace = Settings.SETTINGS.defaultDiskspace;
+    @Expose
     private Group group = Group.NORMAL;
 
     public User(String username, String passhash)

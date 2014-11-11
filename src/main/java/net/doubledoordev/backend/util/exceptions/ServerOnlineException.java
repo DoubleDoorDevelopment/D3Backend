@@ -45,10 +45,11 @@ package net.doubledoordev.backend.util.exceptions;
  *
  * @author Dries007
  */
-public class ServerOnlineException extends Exception
+public class ServerOnlineException extends RuntimeException
 {
     public ServerOnlineException()
     {
+
     }
 
     public ServerOnlineException(String message)

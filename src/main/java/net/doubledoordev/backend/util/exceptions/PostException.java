@@ -44,7 +44,7 @@ package net.doubledoordev.backend.util.exceptions;
 /**
  * @author Dries007
  */
-public class PostException extends Exception
+public class PostException extends RuntimeException
 {
     public PostException()
     {

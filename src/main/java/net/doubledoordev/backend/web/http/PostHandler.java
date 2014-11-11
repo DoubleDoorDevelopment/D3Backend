@@ -45,12 +45,14 @@ import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.util.methodCaller.UserMethodCaller;
+import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.apache.commons.io.FileUtils;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
@@ -116,63 +118,69 @@ public class PostHandler
                     return doNewserver(data, uri, request, response);
             }
         }
-        catch (PostException e)
+        catch (RuntimeException e)
         {
             data.put(MESSAGE, e.getLocalizedMessage());
         }
         return uri;
     }
 
-    private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response) throws PostException
+    private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response)
     {
+        User user = (User) data.get(USER);
+        UserMethodCaller caller = new UserMethodCaller(user);
+
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
 
-        User user = (User) data.get(USER);
         if (user == null) throw new PostException("Not logged in.");
         if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new PostException("Max server count reached.");
-        ServerData serverData = new ServerData();
-        if (user.getGroup() == Group.ADMIN && names.contains(OWNER)) serverData.owner = parameters.getParameter(OWNER);
-        else serverData.owner = user.getUsername();
 
-        serverData.ID = serverData.owner + "_" + parameters.getParameter(NAME);
-        if (Settings.getServerByName(serverData.ID) != null) throw new PostException("Duplicate server ID");
+        String owner = user.getGroup() == Group.ADMIN && names.contains(OWNER) ? parameters.getParameter(OWNER) : user.getUsername();
+        String ID = owner + "_" + parameters.getParameter(NAME);
+        if (Settings.getServerByName(ID) != null) throw new PostException("Duplicate server ID");
 
-        serverData.ramMin = Integer.parseInt(parameters.getParameter(RAM_MIN));
-        serverData.ramMax = Integer.parseInt(parameters.getParameter(RAM_MAX));
-        if (serverData.ramMax < serverData.ramMin)
+        Server server = new Server(ID, owner);
+
+        int ramMin = Integer.parseInt(parameters.getParameter(RAM_MIN));
+        int ramMax = Integer.parseInt(parameters.getParameter(RAM_MAX));
+        if (ramMax < ramMin)
         {
-            int temp = serverData.ramMax;
-            serverData.ramMax = serverData.ramMin;
-            serverData.ramMin = temp;
+            int temp = ramMax;
+            ramMax = ramMin;
+            ramMin = temp;
         }
-        if (user.getMaxRam() != -1 && user.getMaxRamLeft() < serverData.ramMax) throw new PostException("You are over your max RAM.");
-        if (serverData.ramMax < 2 || serverData.ramMin < 2) throw new PostException("RAM settings invalid.");
+        if (user.getMaxRam() != -1 && user.getMaxRamLeft() < ramMax) throw new PostException("You are over your max RAM.");
+        if (ramMax < 2 || ramMin < 2) throw new PostException("RAM settings invalid.");
+        server.setRamMin(caller, ramMin);
+        server.setRamMax(caller, ramMax);
 
-        serverData.permGen = Integer.parseInt(parameters.getParameter(PERMGEN));
-        if (serverData.permGen < 2) throw new PostException("PermGen settings invalid.");
+        int permGen = Integer.parseInt(parameters.getParameter(PERMGEN));
+        if (permGen < 2) throw new PostException("PermGen settings invalid.");
+        server.setPermGen(caller, permGen);
 
-        if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) serverData.extraJavaParameters = Arrays.asList(parameters.getParameter(EXTRA_JAVA_PARM).trim().split("\n"));
-        if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) serverData.extraMCParameters = Arrays.asList(parameters.getParameter(EXTRA_MC_PARM).trim().split("\n"));
-        if (parameters.getParameter(ADMINS).trim().length() != 0) serverData.admins = Arrays.asList(parameters.getParameter(ADMINS).trim().split("\n"));
-        if (parameters.getParameter(COOWNERS).trim().length() != 0) serverData.coOwners = Arrays.asList(parameters.getParameter(COOWNERS).trim().split("\n"));
+        if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) server.setExtraJavaParameters(caller, Arrays.asList(parameters.getParameter(EXTRA_JAVA_PARM).trim().split("\n")));
+        if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) server.setExtraMCParameters(caller, Arrays.asList(parameters.getParameter(EXTRA_MC_PARM).trim().split("\n")));
+        if (parameters.getParameter(ADMINS).trim().length() != 0) for (String name : Arrays.asList(parameters.getParameter(ADMINS).trim().split("\n"))) server.addAdmin(caller, name);
+        if (parameters.getParameter(COOWNERS).trim().length() != 0) for (String name : Arrays.asList(parameters.getParameter(COOWNERS).trim().split("\n"))) server.addCoowner(caller, name);
 
-        serverData.jarName = parameters.getParameter(JARNAME);
-        serverData.rconPswd = parameters.getParameter(RCON_PASS);
+        server.setJarName(caller, parameters.getParameter(JARNAME));
+        server.setRconPswd(caller, parameters.getParameter(RCON_PASS));
         try
         {
-            serverData.serverPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter(SERVER_PORT));
-            serverData.rconPort = Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(serverData.serverPort) : Integer.parseInt(parameters.getParameter(RCON_PORT));
+            server.setServerPort(caller, Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter(SERVER_PORT)));
+            server.setRconPort(caller, Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(server.getServerPort()) : Integer.parseInt(parameters.getParameter(RCON_PORT)));
         }
         catch (OutOfPortsException e)
         {
             throw new PostException("The backend ran out of ports to assign.");
         }
-        serverData.ip = parameters.getParameter(IP);
-        serverData.autoStart = names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on");
+        server.setIP(caller, parameters.getParameter(IP));
+        server.setAutoStart(caller, names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on"));
 
-        Server server = new Server(serverData, true);
-        Settings.SETTINGS.servers.put(serverData.ID, server);
+        server.init();
+
+        Settings.SETTINGS.servers.put(ID, server);
         Settings.save();
         data.put(SERVER, server);
 
@@ -191,7 +199,7 @@ public class PostHandler
         }
         try
         {
-            response.sendRedirect(Constants.SERVER_URL + serverData.ID);
+            response.sendRedirect(Constants.SERVER_URL + ID);
         }
         catch (IOException e)
         {
@@ -201,7 +209,7 @@ public class PostHandler
         return uri;
     }
 
-    private String doRegister(String uri, Request request, Response response) throws PostException
+    private String doRegister(String uri, Request request, Response response)
     {
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();
@@ -238,7 +246,7 @@ public class PostHandler
         else throw new PostException("Form not of known format.");
     }
 
-    private String doLogin(String uri, Request request, Response response) throws PostException
+    private String doLogin(String uri, Request request, Response response)
     {
         Parameters parameters = request.getParameters();
         Set<String> names = request.getParameterNames();

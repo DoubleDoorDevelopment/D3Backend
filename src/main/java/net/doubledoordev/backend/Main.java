@@ -126,10 +126,6 @@ public class Main
         charset.setAccessible(true);
         charset.set(null, null);
 
-        LOGGER.info("Finding Java versions...");
-        //noinspection ResultOfMethodCallIgnored
-        Constants.JAVAPATH.length();
-        Settings.save();
         LOGGER.info("Making necessary folders...");
         mkdirs();
         LOGGER.info("Starting webserver...");
@@ -170,7 +166,6 @@ public class Main
         LOGGER.info("Use the help command for help.");
 
         CommandHandler.init();
-
         for (Server server : SETTINGS.servers.values())
         {
             if (server.getAutoStart())

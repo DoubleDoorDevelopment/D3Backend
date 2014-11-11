@@ -40,14 +40,17 @@
 
 package net.doubledoordev.backend.server;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
 import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.*;
+import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -56,9 +59,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -86,11 +86,44 @@ public class Server
     private static final String RCON_PORT         = "rcon.port";
     private static final String SERVER_IP         = "server-ip";
 
-    /**
-     * Java bean holding all the config data
+    /*
+     * START exposed Json data
      */
-    private final ServerData data;
-    private final Map<Integer, Dimension> dimensionMap = new HashMap<>();
+    @Expose
+    private String ID;
+    @Expose
+    private       Integer                 serverPort          = 25565;
+    @Expose
+    private       Integer                 rconPort            = 25575;
+    @Expose
+    private       String                  ip                  = "";
+    @Expose
+    private       Integer                 ramMin              = 1024;
+    @Expose
+    private       Integer                 ramMax              = 2048;
+    @Expose
+    private       Integer                 permGen             = 128;
+    @Expose
+    private       List<String>            extraJavaParameters = new ArrayList<>();
+    @Expose
+    private       List<String>            extraMCParameters   = new ArrayList<>();
+    @Expose
+    private       String                  jarName             = "minecraft_server.jar";
+    @Expose
+    private       String                  rconPswd            = Helper.randomString(10);
+    @Expose
+    private       Boolean                 autoStart           = false;
+    @Expose
+    private       String                  owner               = "";
+    @Expose
+    private       List<String>            admins              = new ArrayList<>();
+    @Expose
+    private       List<String>            coOwners            = new ArrayList<>();
+    @Expose
+    private final Map<Integer, Dimension> dimensionMap        = new HashMap<>();
+    /*
+     * END exposed Json data
+     */
 
     private final ArrayList<String> log  = new ArrayList<>(LOG_LINES_KEPT + 10);
     /**
@@ -125,17 +158,32 @@ public class Server
     private User ownerObject;
     private boolean downloading = false;
 
-    public Server(ServerData data, boolean isNewServer)
+    public Server(String ID, String owner)
     {
-        this.data = data;
-        this.logger = LogManager.getLogger(data.ID);
-        this.folder = new File(SERVERS, data.ID);
-        this.backupFolder = new File(BACKUPS, data.ID);
+        this.ID = ID;
+        this.owner = owner;
+    }
+
+    private Server()
+    {
+    }
+
+    /*
+     * ========================================================================================
+     * ========================================================================================
+     * PUBLIC METHODS
+     */
+
+    public void init()
+    {
+        if (this.logger != null) return; // don't do this twice.
+        this.logger = LogManager.getLogger(ID);
+        this.folder = new File(SERVERS, ID);
+        this.backupFolder = new File(BACKUPS, ID);
         this.propertiesFile = new File(folder, SERVER_PROPERTIES);
 
         if (!backupFolder.exists()) backupFolder.mkdirs();
         if (!folder.exists()) folder.mkdir();
-        normalizeProperties();
 
         // Check to see if the server is running outside the backend, if so reboot please!
         if (getRCon() != null)
@@ -152,6 +200,7 @@ public class Server
                         for (String user : getPlayerList())
                             rCon.send("kick", user, NAME + " is taking over! Server Reboot!");
                         rCon.stop();
+                        Thread.sleep(1000 * 10); // wait for 10 seconds to give the server time to respond.
                         startServer();
                     }
                     catch (Exception ignored)
@@ -161,66 +210,70 @@ public class Server
             }).start();
         }
 
-        if (isNewServer)
+        try
         {
-            try
-            {
-                SizeCounter sizeCounter = new SizeCounter();
-                Files.walkFileTree(getFolder().toPath(), sizeCounter);
-                size[0] = sizeCounter.getSizeInMB();
-                sizeCounter = new SizeCounter();
-                if (getBackupFolder().exists()) Files.walkFileTree(getBackupFolder().toPath(), sizeCounter);
-                size[1] = sizeCounter.getSizeInMB();
-                size[2] = size[0] + size[1];
-            }
-            catch (IOException ignored)
-            {
-            }
+            SizeCounter sizeCounter = new SizeCounter();
+            Files.walkFileTree(getFolder().toPath(), sizeCounter);
+            size[0] = sizeCounter.getSizeInMB();
+            sizeCounter = new SizeCounter();
+            if (getBackupFolder().exists()) Files.walkFileTree(getBackupFolder().toPath(), sizeCounter);
+            size[1] = sizeCounter.getSizeInMB();
+            size[2] = size[0] + size[1];
         }
-        else
+        catch (IOException ignored)
         {
-            getProperties();
         }
+        getProperties();
     }
 
-    /**
-     * Proper way of obtaining a RCon instance
-     *
-     * @return null if offine!
+    /*
+     * ========================================================================================
+     * GETTERS
      */
+
+    public String getIp()
+    {
+        return ip;
+    }
+
+    public String getRconPswd()
+    {
+        return rconPswd;
+    }
+
+    public Logger getLogger()
+    {
+        return logger;
+    }
+
+    public boolean isDownloading()
+    {
+        return downloading;
+    }
+
+    public boolean isStarting()
+    {
+        return starting;
+    }
+
     public RCon getRCon()
     {
         return rCon;
     }
 
-    public void makeRcon()
-    {
-        try
-        {
-            rCon = new RCon(LOCALHOST, data.rconPort, data.rconPswd.toCharArray());
-        }
-        catch (Exception ignored) // Server offline.
-        {
-        }
-    }
-
-    /**
-     * Proper way of obtaining a MCQuery instance
-     */
     public MCQuery getQuery()
     {
-        if (query == null) query = new MCQuery(LOCALHOST, data.serverPort);
+        if (query == null) query = new MCQuery(LOCALHOST, serverPort);
         return query;
     }
 
-    public void renewQuery()
+    public Process getProcess()
     {
-        cachedResponse = getQuery().fullStat();
+        return process;
     }
 
     /**
-     * The properties from the server.properties file
-     * Reloads form file!
+     * @return server.properties file
      */
     public Properties getProperties()
     {
@@ -240,74 +293,6 @@ public class Server
     }
 
     /**
-     * Saves the server.properties
-     */
-    public void saveProperties()
-    {
-        getProperties();
-        try
-        {
-            if (!propertiesFile.exists()) //noinspection ResultOfMethodCallIgnored
-                propertiesFile.createNewFile();
-            FileUtils.writeStringToFile(propertiesFile, getPropertiesAsText().trim(), "latin1");
-            propertiesFileLastModified = propertiesFile.lastModified();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    private void normalizeProperties()
-    {
-        if (Settings.SETTINGS.fixedPorts)
-        {
-            properties.setProperty(SERVER_PORT, String.valueOf(data.serverPort));
-            properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
-        }
-        else
-        {
-            data.serverPort = Integer.parseInt(properties.getProperty(SERVER_PORT, String.valueOf(data.serverPort)));
-            properties.setProperty(QUERY_PORT, String.valueOf(data.serverPort));
-        }
-
-        if (Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, data.ip);
-        else data.ip = properties.getProperty(SERVER_IP, data.ip);
-
-        if (Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(data.rconPort));
-        else data.rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(data.rconPort)));
-
-        properties.put(RCON_ENABLE, "true");
-        properties.put(QUERY_ENABLE, "true");
-        properties.put(RCON_PASSWORD, data.rconPswd);
-    }
-
-    /**
-     * Set a server.properties property and save the file.
-     *
-     * @param key   the key
-     * @param value the value
-     * @throws ServerOnlineException when the server is online
-     */
-    public void setProperty(String key, String value) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        properties.put(key, value);
-        normalizeProperties();
-    }
-
-    /**
-     * Get a server.properties
-     *
-     * @param key the key
-     * @return the value
-     */
-    public String getProperty(String key)
-    {
-        return properties.getProperty(key);
-    }
-
-    /**
      * Get all server.properties keys
      *
      * @return the value
@@ -319,29 +304,18 @@ public class Server
 
     public String getIP()
     {
-        return data.ip;
+        return ip;
     }
 
-    public String getPropertiesAsText()
+    /**
+     * Get a server.properties
+     *
+     * @param key the key
+     * @return the value
+     */
+    public String getProperty(String key)
     {
-        getProperties();
-        StringBuilder sb = new StringBuilder();
-        for (Object s : properties.keySet()) sb.append(s.toString()).append('=').append(properties.get(s)).append('\n');
-        return sb.toString();
-    }
-
-    public void setPropertiesAsText(String urlEncodedText)
-    {
-        try
-        {
-            FileUtils.writeStringToFile(propertiesFile, urlEncodedText.trim(), "latin1");
-            propertiesFileLastModified = 0L;
-            getProperties();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        return properties.getProperty(key);
     }
 
     /**
@@ -364,31 +338,14 @@ public class Server
     }
 
     /**
-     * Invokes getter method with reflection.
-     * Used in templates as 'get($key)' where $key can be assigned by a list.
-     *
-     * @param name of property
-     * @return null or the result of the method
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
-     */
-    public Object get(String name) throws InvocationTargetException, IllegalAccessException
-    {
-        for (Method method : this.getClass().getDeclaredMethods())
-            if (method.getName().equalsIgnoreCase("get" + name)) return method.invoke(this);
-        return null;
-    }
-
-    /**
      * @return Human readable server address
      */
-
     public String getDisplayAddress()
     {
         StringBuilder builder = new StringBuilder(25);
-        if (data.ip != null && data.ip.trim().length() != 0) builder.append(data.ip);
+        if (ip != null && ip.trim().length() != 0) builder.append(ip);
         else builder.append(Settings.SETTINGS.hostname);
-        builder.append(':').append(data.serverPort);
+        builder.append(':').append(serverPort);
         return builder.toString();
     }
 
@@ -442,13 +399,255 @@ public class Server
         return cachedResponse == null ? "?" : cachedResponse.getVersion();
     }
 
+    public String getGameID()
+    {
+        return cachedResponse == null ? "?" : cachedResponse.getGameID();
+    }
+
+    public String getID()
+    {
+        return ID;
+    }
+
+    public int getRamMin()
+    {
+        return ramMin;
+    }
+
+    public int getRamMax()
+    {
+        return ramMax;
+    }
+
+    public int getPermGen()
+    {
+        return permGen;
+    }
+
+    public List<String> getExtraJavaParameters()
+    {
+        return extraJavaParameters;
+    }
+
+    public List<String> getExtraMCParameters()
+    {
+        return extraMCParameters;
+    }
+
+    public String getJarName()
+    {
+        return jarName;
+    }
+
+    public boolean getAutoStart()
+    {
+        return autoStart;
+    }
+
+    public String getOwner()
+    {
+        return owner;
+    }
+
+    public List<String> getAdmins()
+    {
+        return admins;
+    }
+
+    public User getOwnerObject()
+    {
+        if (ownerObject == null) ownerObject = Settings.getUserByName(getOwner());
+        if (ownerObject == null)
+        {
+            for (User user : Settings.SETTINGS.users.values())
+            {
+                if (user.isAdmin())
+                {
+                    ownerObject = user;
+                    break;
+                }
+            }
+        }
+        return ownerObject;
+    }
+
+    public List<String> getCoOwners()
+    {
+        return coOwners;
+    }
+
+    public File getBackupFolder()
+    {
+        return backupFolder;
+    }
+
+    public int[] getDiskspaceUse()
+    {
+        return size;
+    }
+
+    public WorldManager getWorldManager()
+    {
+        return worldManager;
+    }
+
+    public Map<Integer, Dimension> getDimensionMap()
+    {
+        return dimensionMap;
+    }
+
+    public File getFolder()
+    {
+        return folder;
+    }
+
+    public String getLogLinesAfter(int index)
+    {
+        JsonObject responce = new JsonObject();
+        StringBuilder stringBuilder = new StringBuilder();
+        synchronized (log)
+        {
+            responce.addProperty("size", log.size());
+            if (index < log.size()) for (String line : log.subList(index, log.size())) stringBuilder.append(line).append('\n');
+        }
+        responce.addProperty("text", stringBuilder.toString());
+        return responce.toString();
+    }
+
+    @Override
+    public String toString()
+    {
+        return getID();
+    }
+
+    /*
+     * ========================================================================================
+     * SETTERS
+     */
+
+    /**
+     * Set a server.properties property and save the file.
+     *
+     * @param key   the key
+     * @param value the value
+     * @throws ServerOnlineException when the server is online
+     */
+    public void setProperty(IMethodCaller caller, String key, String value) throws IOException
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        properties.put(key, value);
+        normalizeProperties();
+        saveProperties();
+    }
+
+    public void setRamMin(IMethodCaller caller, int ramMin)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.ramMin = ramMin;
+        update();
+    }
+
+    public void setRamMax(IMethodCaller caller, int ramMax)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.ramMax = ramMax;
+        update();
+    }
+
+    public void setPermGen(IMethodCaller caller, int permGen)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.permGen = permGen;
+        update();
+    }
+
+    public void setJarName(IMethodCaller caller, String jarName)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.jarName = jarName;
+        update();
+    }
+
+    public void setAutoStart(IMethodCaller caller, boolean autoStart)
+    {
+        this.autoStart = autoStart;
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        update();
+    }
+
+    public void setExtraJavaParameters(IMethodCaller caller, List<String> list)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        for (String s : list)
+            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
+                if (pattern.matcher(s).matches()) throw new RuntimeException(s + " NOT ALLOWED.");
+        extraJavaParameters = list;
+        update();
+    }
+
+    public void setExtraMCParameters(IMethodCaller caller, List<String> list)
+    {
+        if (getOnline()) throw new ServerOnlineException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        for (String s : list)
+            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
+                if (pattern.matcher(s).matches()) throw new RuntimeException(s + " NOT ALLOWED.");
+        extraMCParameters = list;
+        update();
+    }
+
+    public void setOwner(IMethodCaller methodCaller, String username)
+    {
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        ownerObject = null;
+        owner = username;
+        update();
+    }
+
+    public void setRconPswd(IMethodCaller caller, String rconPswd)
+    {
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.rconPswd = rconPswd;
+    }
+
+    public void setServerPort(IMethodCaller caller, int serverPort)
+    {
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.serverPort = serverPort;
+    }
+
+    public void setRconPort(IMethodCaller caller, int rconPort)
+    {
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.rconPort = rconPort;
+    }
+
+    public void setIP(IMethodCaller caller, String IP)
+    {
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        this.ip = IP;
+    }
+
+    /*
+     * ========================================================================================
+     * SETTERS VIA DOWNLOADERS
+     */
+
     /**
      * Remove the old and download the new server jar file
      */
-    public void setVersion(final String version) throws ServerOnlineException
+    public void setVersion(final IMethodCaller methodCaller, final String version)
     {
         if (getOnline()) throw new ServerOnlineException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        final Server instance = this;
         new Thread(new Runnable()
         {
             @Override
@@ -476,11 +675,14 @@ public class Server
                     {
                         if (download.getSize() != -1)
                         {
+                            methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             break;
                         }
                         Thread.sleep(10);
                     }
+
+                    methodCaller.sendProgress(0);
 
                     while (download.getStatus() == Download.Status.Downloading)
                     {
@@ -489,6 +691,7 @@ public class Server
                             lastInfo = (int) download.getProgress();
                             lastTime = System.currentTimeMillis();
 
+                            methodCaller.sendProgress(download.getProgress());
                             printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
@@ -499,8 +702,10 @@ public class Server
                     {
                         throw new Exception(download.getMessage());
                     }
+                    methodCaller.sendDone();
 
                     tempFile.renameTo(jarfile);
+                    instance.update();
                 }
                 catch (Exception e)
                 {
@@ -517,12 +722,14 @@ public class Server
     /**
      * Downloads and uses specific forge installer
      */
-    public void installForge(String name) throws ServerOnlineException
+    public void installForge(final IMethodCaller methodCaller, final String name)
     {
         if (getOnline()) throw new ServerOnlineException();
         final String version = Helper.getForgeVersionForName(name);
         if (version == null) throw new IllegalArgumentException("Forge with ID " + name + " not found.");
         if (downloading) throw new IllegalStateException("Already downloading something.");
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        final Server instance = this;
         new Thread(new Runnable()
         {
             @Override
@@ -544,7 +751,7 @@ public class Server
                     // run installer
                     List<String> arguments = new ArrayList<>();
 
-                    arguments.add(Constants.JAVAPATH);
+                    arguments.add(Constants.getJavaPath());
                     arguments.add("-Xmx1G");
 
                     arguments.add("-jar");
@@ -559,7 +766,11 @@ public class Server
                     printLine(arguments.toString());
                     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line;
-                    while ((line = reader.readLine()) != null) printLine(line);
+                    while ((line = reader.readLine()) != null)
+                    {
+                        methodCaller.sendMessage(line);
+                        printLine(line);
+                    }
 
                     try
                     {
@@ -570,12 +781,14 @@ public class Server
                         e.printStackTrace();
                     }
 
-                    for (String name : folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)) data.jarName = name;
+                    for (String name : folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)) jarName = name;
 
                     forge.delete();
-                    Settings.save();
 
+                    methodCaller.sendDone();
                     printLine("Forge installer done.");
+
+                    instance.update();
                 }
                 catch (IOException e)
                 {
@@ -590,202 +803,177 @@ public class Server
         }, getID() + "-forge-installer").start();
     }
 
-    public String getGameID()
+    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge) throws IOException, ZipException
     {
-        return cachedResponse == null ? "?" : cachedResponse.getGameID();
-    }
-
-    public String getID()
-    {
-        return data.ID;
-    }
-
-    public int getRamMin()
-    {
-        return data.ramMin;
-    }
-
-    public void setRamMin(int ramMin) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.ramMin = ramMin;
-        Settings.save();
-    }
-
-    public int getRamMax()
-    {
-        return data.ramMax;
-    }
-
-    public void setRamMax(int ramMax) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.ramMax = ramMax;
-        Settings.save();
-    }
-
-    public int getPermGen()
-    {
-        return data.permGen;
-    }
-
-    public void setPermGen(int permGen) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.permGen = permGen;
-        Settings.save();
-    }
-
-    public List<String> getExtraJavaParameters()
-    {
-        return data.extraJavaParameters;
-    }
-
-    public void setExtraJavaParameters(String list) throws Exception
-    {
-        setExtraJavaParameters(Arrays.asList(list.split(",")));
-    }
-
-    public void setExtraJavaParameters(List<String> list) throws Exception
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        for (String s : list)
-            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
-                if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
-        data.extraJavaParameters = list;
-        Settings.save();
-    }
-
-    public List<String> getExtraMCParameters()
-    {
-        return data.extraMCParameters;
-    }
-
-    public void setExtraMCParameters(String list) throws Exception
-    {
-        setExtraMCParameters(Arrays.asList(list.split(",")));
-    }
-
-    public void setExtraMCParameters(List<String> list) throws Exception
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        for (String s : list)
-            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
-                if (pattern.matcher(s).matches()) throw new Exception(s + " NOT ALLOWED.");
-        data.extraMCParameters = list;
-        Settings.save();
-    }
-
-    public String getJarName()
-    {
-        return data.jarName;
-    }
-
-    public void setJarName(String jarName) throws ServerOnlineException
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        data.jarName = jarName;
-        Settings.save();
-    }
-
-    public boolean getAutoStart()
-    {
-        return data.autoStart;
-    }
-
-    public void setAutoStart(boolean autoStart)
-    {
-        printLine("setAutoStart " + autoStart);
-        data.autoStart = autoStart;
-        Settings.save();
-    }
-
-    public String getOwner()
-    {
-        return data.owner;
-    }
-
-    public void setOwner(String username)
-    {
-        ownerObject = null;
-        data.owner = username;
-    }
-
-    public User getOwnerObject()
-    {
-        if (ownerObject == null) ownerObject = Settings.getUserByName(getOwner());
-        if (ownerObject == null)
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (downloading) throw new IllegalStateException("Already downloading something.");
+        new Thread(new Runnable()
         {
-            for (User user : Settings.SETTINGS.users.values())
+            @Override
+            public void run()
             {
-                if (user.isAdmin())
+                try
                 {
-                    ownerObject = user;
-                    break;
+                    downloading = true;
+                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
+                        if (file.isFile()) file.delete();
+                        else FileUtils.deleteDirectory(file);
+                    if (!folder.exists()) folder.mkdirs();
+
+                    final File zip = new File(folder, "modpack.zip");
+
+                    if (zip.exists()) zip.delete();
+                    zip.createNewFile();
+
+                    printLine("Downloading zip...");
+
+                    Download download = new Download(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+
+                    long lastTime = System.currentTimeMillis();
+                    int lastInfo = 0;
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if (download.getSize() != -1)
+                        {
+                            methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                            break;
+                        }
+                        Thread.sleep(10);
+                    }
+
+                    methodCaller.sendProgress(0);
+
+                    while (download.getStatus() == Download.Status.Downloading)
+                    {
+                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
+                        {
+                            lastInfo = (int) download.getProgress();
+                            lastTime = System.currentTimeMillis();
+
+                            methodCaller.sendProgress(download.getProgress());
+
+                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                        }
+
+                        Thread.sleep(10);
+                    }
+
+                    if (download.getStatus() == Download.Status.Error)
+                    {
+                        throw new Exception(download.getMessage());
+                    }
+
+                    printLine("Downloading zip done, extracting...");
+
+                    ZipFile zipFile = new ZipFile(zip);
+                    zipFile.setRunInThread(true);
+                    zipFile.extractAll(folder.getCanonicalPath());
+                    lastTime = System.currentTimeMillis();
+                    lastInfo = 0;
+                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+                    {
+                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
+                        {
+                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
+                            lastTime = System.currentTimeMillis();
+
+                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                        }
+
+                        Thread.sleep(10);
+                    }
+
+                    methodCaller.sendProgress(100);
+                    methodCaller.sendDone();
+
+                    zip.delete();
+
+                    printLine("Done extracting zip.");
                 }
+                catch (Exception e)
+                {
+                    printLine("##################################################################");
+                    printLine("Error installing the modpack");
+                    printLine(e.toString());
+                    printLine("##################################################################");
+                    e.printStackTrace();
+                }
+                downloading = false;
             }
-        }
-        return ownerObject;
+        }, getID() + "-modpack-installer").start();
     }
 
-    public List<String> getAdmins()
-    {
-        return data.admins;
-    }
+    /*
+     * ========================================================================================
+     * REMOVE and ADD methods
+     */
 
-    public void removeAdmin(String name)
+    public void removeAdmin(IMethodCaller methodCaller, String name)
     {
-        Iterator<String> i = data.admins.iterator();
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        Iterator<String> i = admins.iterator();
         while (i.hasNext())
         {
             if (i.next().equalsIgnoreCase(name)) i.remove();
         }
+        update();
     }
 
-    public void addAdmin(String name)
+    public void addAdmin(IMethodCaller methodCaller, String name)
     {
-        data.admins.add(name);
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        admins.add(name);
+        update();
     }
 
-    public List<String> getCoOwners()
+    public void addCoowner(IMethodCaller methodCaller, String name)
     {
-        return data.coOwners;
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        coOwners.add(name);
+        update();
     }
 
-    public void addCoowner(String name)
+    public void removeCoowner(IMethodCaller methodCaller, String name)
     {
-        data.coOwners.add(name);
-    }
-
-    public void removeCoowner(String name)
-    {
-        Iterator<String> i = data.coOwners.iterator();
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        Iterator<String> i = coOwners.iterator();
         while (i.hasNext())
         {
             if (i.next().equalsIgnoreCase(name)) i.remove();
         }
+        update();
     }
 
-    /**
-     * Clear the extraJavaParameters array.
-     *
-     * @throws ServerOnlineException
+    /*
+     * ========================================================================================
+     * MAKE or RENEW methods
      */
-
-    public void setExtraJavaParameters() throws Exception
+    public void makeRcon()
     {
-        setExtraJavaParameters(Arrays.asList(new String[0]));
+        try
+        {
+            rCon = new RCon(LOCALHOST, rconPort, rconPswd.toCharArray());
+        }
+        catch (Exception ignored) // Server offline.
+        {
+        }
     }
 
-    /**
-     * Clear the extraMCParameters array.
-     *
-     * @throws ServerOnlineException
-     */
-
-    public void setExtraMCParameters() throws Exception
+    public void renewQuery()
     {
-        setExtraMCParameters(Arrays.asList(new String[0]));
+        cachedResponse = getQuery().fullStat();
+    }
+
+    private void saveProperties() throws IOException
+    {
+        if (!propertiesFile.exists()) propertiesFile.createNewFile();
+
+        FileOutputStream outputStream = new FileOutputStream(propertiesFile);
+        Properties properties = getProperties();
+        properties.store(outputStream, "Modified by the backend");
+        propertiesFileLastModified = propertiesFile.lastModified();
     }
 
     /**
@@ -794,13 +982,12 @@ public class Server
      *
      * @throws ServerOnlineException
      */
-
     public void startServer() throws Exception
     {
         if (getOnline() || starting) throw new ServerOnlineException();
         if (downloading) throw new Exception("Still downloading something. You can see the progress in the server console.");
-        if (new File(folder, data.jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
-        if (!new File(folder, data.jarName).exists()) throw new FileNotFoundException(data.jarName + " not found.");
+        if (new File(folder, jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
+        if (!new File(folder, jarName).exists()) throw new FileNotFoundException(jarName + " not found.");
         User user = Settings.getUserByName(getOwner());
         if (user == null) throw new Exception("No owner set??");
         if (user.getMaxRamLeft() != -1 && getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
@@ -820,7 +1007,7 @@ public class Server
                      * Build arguments list.
                      */
                     List<String> arguments = new ArrayList<>();
-                    arguments.add(Constants.JAVAPATH);
+                    arguments.add(Constants.getJavaPath());
                     arguments.add("-server");
                     {
                         int amount = getRamMin();
@@ -830,11 +1017,11 @@ public class Server
                         amount = getPermGen();
                         if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
                     }
-                    for (String s : data.extraJavaParameters) if (s.trim().length() != 0) arguments.add(s.trim());
+                    for (String s : extraJavaParameters) if (s.trim().length() != 0) arguments.add(s.trim());
                     arguments.add("-jar");
-                    arguments.add(data.jarName);
+                    arguments.add(jarName);
                     arguments.add("nogui");
-                    for (String s : data.extraMCParameters) if (s.trim().length() != 0) arguments.add(s.trim());
+                    for (String s : extraMCParameters) if (s.trim().length() != 0) arguments.add(s.trim());
 
                     // Debug printout
                     printLine("Arguments: " + arguments.toString());
@@ -845,7 +1032,7 @@ public class Server
                     ProcessBuilder pb = new ProcessBuilder(arguments);
                     pb.directory(folder);
                     pb.redirectErrorStream(true);
-                    if (!new File(folder, data.jarName).exists()) return; // for reasons of WTF?
+                    if (!new File(folder, jarName).exists()) return; // for reasons of WTF?
                     process = pb.start();
                     new Thread(new Runnable()
                     {
@@ -861,21 +1048,21 @@ public class Server
                                 {
                                     printLine(line);
                                 }
-                                WebSocketHelper.sendServerUpdate(instance);
+                                instance.update();
                             }
                             catch (IOException e)
                             {
                                 logger.error(e);
                             }
                         }
-                    }, data.ID.concat("-streamEater")).start();
+                    }, ID.concat("-streamEater")).start();
 
                     /**
                      * Renews cashed vars so they are up to date when the page is refreshed.
                      */
                     makeRcon();
 
-                    WebSocketHelper.sendServerUpdate(instance);
+                    instance.update();
                 }
                 catch (IOException e)
                 {
@@ -950,11 +1137,6 @@ public class Server
         return true;
     }
 
-    public Process getProcess()
-    {
-        return process;
-    }
-
     public boolean canUserControl(User user)
     {
         if (user == null) return false;
@@ -972,188 +1154,62 @@ public class Server
         return false;
     }
 
-    public void delete() throws ServerOnlineException, IOException
+    public void delete(final IMethodCaller methodCaller) throws IOException
     {
-        if (getOnline()) throw new ServerOnlineException();
-        Settings.SETTINGS.servers.remove(getID()); // Needs to happen first because
-        FileUtils.deleteDirectory(folder);
-        FileUtils.deleteDirectory(backupFolder);
-    }
-
-    public void downloadModpack(final String zipURL, final boolean purge) throws IOException, ZipException
-    {
-        if (downloading) throw new IllegalStateException("Already downloading something.");
-        new Thread(new Runnable()
+        try
         {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    downloading = true;
-                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
-                        if (file.isFile()) file.delete();
-                        else FileUtils.deleteDirectory(file);
-                    if (!folder.exists()) folder.mkdirs();
-
-                    final File zip = new File(folder, "modpack.zip");
-
-                    if (zip.exists()) zip.delete();
-                    zip.createNewFile();
-
-                    printLine("Downloading zip...");
-
-                    Download download = new Download(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
-
-                    long lastTime = System.currentTimeMillis();
-                    int lastInfo = 0;
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if (download.getSize() != -1)
-                        {
-                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
-                            break;
-                        }
-                        Thread.sleep(10);
-                    }
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
-                        {
-                            lastInfo = (int) download.getProgress();
-                            lastTime = System.currentTimeMillis();
-
-                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
-                        }
-
-                        Thread.sleep(10);
-                    }
-
-                    if (download.getStatus() == Download.Status.Error)
-                    {
-                        throw new Exception(download.getMessage());
-                    }
-
-                    printLine("Downloading zip done, extracting...");
-
-                    ZipFile zipFile = new ZipFile(zip);
-                    zipFile.setRunInThread(true);
-                    zipFile.extractAll(folder.getCanonicalPath());
-                    lastTime = System.currentTimeMillis();
-                    lastInfo = 0;
-                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
-                    {
-                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
-                        {
-                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
-                            lastTime = System.currentTimeMillis();
-
-                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
-                        }
-
-                        Thread.sleep(10);
-                    }
-
-                    zip.delete();
-
-                    printLine("Done extracting zip.");
-                }
-                catch (Exception e)
-                {
-                    printLine("##################################################################");
-                    printLine("Error installing the modpack");
-                    printLine(e.toString());
-                    printLine("##################################################################");
-                    e.printStackTrace();
-                }
-                downloading = false;
-            }
-        }, getID() + "-modpack-installer").start();
-    }
-
-    public File getFolder()
-    {
-        return folder;
-    }
-
-    public String getLogLinesAfter(int index)
-    {
-        JsonObject responce = new JsonObject();
-        StringBuilder stringBuilder = new StringBuilder();
-        synchronized (log)
-        {
-            responce.addProperty("size", log.size());
-            if (index < log.size()) for (String line : log.subList(index, log.size())) stringBuilder.append(line).append('\n');
+            if (getOnline()) throw new ServerOnlineException();
+            if (!methodCaller.getUser().isAdmin() && methodCaller.getUser() != getOwnerObject()) throw new AuthenticationException();
+            Settings.SETTINGS.servers.remove(getID()); // Needs to happen first because
+            FileUtils.deleteDirectory(folder);
+            FileUtils.deleteDirectory(backupFolder);
         }
-        responce.addProperty("text", stringBuilder.toString());
-        return responce.toString();
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void send(String s)
+    public void sendCmd(String s)
     {
         PrintWriter printWriter = new PrintWriter(process.getOutputStream());
         printWriter.println(s);
         printWriter.flush();
     }
 
-    public File getBackupFolder()
-    {
-        return backupFolder;
-    }
+    /*
+     * ========================================================================================
+     * ========================================================================================
+     * PRIVATE METHODS
+     */
 
-    public int[] getDiskspaceUse()
+    private void normalizeProperties()
     {
-        return size;
-    }
-
-    public WorldManager getWorldManager()
-    {
-        return worldManager;
-    }
-
-    public JsonElement toJson()
-    {
-        return GSON.toJsonTree(data);
-    }
-
-    public Map<Integer, Dimension> getDimensionMap()
-    {
-        return dimensionMap;
-    }
-
-    @Override
-    public String toString()
-    {
-        return getID();
-    }
-
-    public static class Deserializer implements JsonDeserializer<Server>
-    {
-        @Override
-        public Server deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
+        if (Settings.SETTINGS.fixedPorts)
         {
-            Server server = new Server((ServerData) context.deserialize(json, ServerData.class), false);
-            if (json.getAsJsonObject().has("dimensions"))
-            {
-                for (Dimension dimension : (Dimension[]) context.deserialize(json.getAsJsonObject().get("dimensions"), Dimension[].class))
-                {
-                    server.dimensionMap.put(dimension.dimid, dimension);
-                }
-            }
-            return server;
+            properties.setProperty(SERVER_PORT, String.valueOf(serverPort));
+            properties.setProperty(QUERY_PORT, String.valueOf(serverPort));
         }
+        else
+        {
+            serverPort = Integer.parseInt(properties.getProperty(SERVER_PORT, String.valueOf(serverPort)));
+            properties.setProperty(QUERY_PORT, String.valueOf(serverPort));
+        }
+
+        if (Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, ip);
+        else ip = properties.getProperty(SERVER_IP, ip);
+
+        if (Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(rconPort));
+        else rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(rconPort)));
+
+        properties.put(RCON_ENABLE, "true");
+        properties.put(QUERY_ENABLE, "true");
+        properties.put(RCON_PASSWORD, rconPswd);
     }
 
-    public static class Serializer implements JsonSerializer<Server>
+    private void update()
     {
-        @Override
-        public JsonElement serialize(Server src, Type typeOfSrc, JsonSerializationContext context)
-        {
-            JsonObject data = context.serialize(src.data).getAsJsonObject();
-            data.add("dimensions", context.serialize(src.dimensionMap.values()));
-            return data;
-        }
+        WebSocketHelper.sendServerUpdate(this);
+        Settings.save();
     }
 }

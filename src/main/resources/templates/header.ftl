@@ -73,12 +73,15 @@
                 websocket.send(message);
             }
             websocket.onmessage = function (evt) {
+
+                console.log(evt.data);
+
+                var temp = JSON.parse(evt.data);
                 if (typeof func === 'undefined')
                 {
-                    var temp = JSON.parse(evt.data);
                     if (temp.status !== "ok") alert(temp.message);
                 }
-                else func(evt.data);
+                else func(temp.data);
             };
             websocket.onerror = function (evt) {
                 alert("The call socket connction errored. Try again.");
@@ -134,4 +137,4 @@
         <!--/.nav-collapse -->
     </div>
 </div>
-<div class="container">
+<div class="container" id="container">

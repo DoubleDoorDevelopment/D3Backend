@@ -45,7 +45,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.webserver_old.Webserver;
+import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -199,6 +199,7 @@ public class Cache extends TimerTask
         {
             for (Server server : Settings.SETTINGS.servers.values())
             {
+                if (server.getFolder() == null || server.getBackupFolder() == null) continue;
                 try
                 {
                     SizeCounter sizeCounter = new SizeCounter();
@@ -312,7 +313,7 @@ public class Cache extends TimerTask
     {
         long now = System.currentTimeMillis();
 
-        if (now - Webserver.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
+        if (now - FreemarkerHandler.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
 
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(UPDATE_CHECKER, "cache-updateChecking").start();

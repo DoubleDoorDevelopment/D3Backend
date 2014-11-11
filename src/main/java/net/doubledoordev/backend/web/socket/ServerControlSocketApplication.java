@@ -42,19 +42,19 @@
 package net.doubledoordev.backend.web.socket;
 
 import com.google.common.base.Strings;
-import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.util.WebSocketHelper;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.*;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
@@ -73,24 +73,26 @@ public class ServerControlSocketApplication extends WebSocketApplication
     {
     }
 
-    private static void invokeWithRefectionMagic(Object instance, String[] split, int start) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    private static boolean invokeWithRefectionMagic(WebSocket caller, Object instance, String[] split, int start) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
     {
         start++;
         for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
         {
-            // Check to see if ID is same and if the amount of parameters fits.
-            if (method.getName().equals(split[start - 1]) && method.getParameterTypes().length == split.length - start)
+            if (!method.getName().equalsIgnoreCase(split[start - 1])) continue; // Name match
+            boolean userMethodCaller = method.getParameterTypes().length != 0 && method.getParameterTypes()[0].isAssignableFrom(IMethodCaller.class); // See if first type is IMethodCaller
+            if (method.getParameterTypes().length == split.length - start + (userMethodCaller ? 1 : 0)) // parameter length match
             {
                 try
                 {
-                    Object parms[] = new Object[split.length - start];
-                    for (int i = 0; i < method.getParameterTypes().length; i++) parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + start]);
+                    Object parms[] = new Object[split.length - start + (userMethodCaller ? 1 : 0)];
+                    if (userMethodCaller) parms[0] = new WebSocketCaller(caller);
+                    for (int i = userMethodCaller ? 1 : 0; i < method.getParameterTypes().length; i++) parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + start - (userMethodCaller ? 1 : 0)]);
                     method.invoke(instance, parms);
-                    return;
+                    return userMethodCaller;
                 }
                 catch (ClassCastException ignored)
                 {
-                    // Ignored because we don't care.
+                    ignored.printStackTrace();
                 }
             }
         }
@@ -145,14 +147,17 @@ public class ServerControlSocketApplication extends WebSocketApplication
         }
         try
         {
-            invokeWithRefectionMagic(server, args, 0);
-            WebSocketHelper.sendOk(socket);
+            if (!invokeWithRefectionMagic(socket, server, args, 0))
+            {
+                WebSocketHelper.sendOk(socket);
+                socket.close();
+            }
         }
         catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
         {
-            WebSocketHelper.sendError(socket, e.getClass().getSimpleName() + ": " + e.getMessage());
+            WebSocketHelper.sendError(socket, e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : ""));
+            socket.close();
         }
-        socket.close();
     }
 
     public static void register()

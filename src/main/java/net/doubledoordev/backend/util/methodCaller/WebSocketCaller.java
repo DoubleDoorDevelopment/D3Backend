@@ -36,63 +36,64 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.server;
+package net.doubledoordev.backend.util.methodCaller;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import net.doubledoordev.backend.util.Helper;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.util.WebSocketHelper;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
+import static net.doubledoordev.backend.util.Constants.USER;
 
 /**
- * Java bean for server data
- *
  * @author Dries007
  */
-public class ServerData
+public class WebSocketCaller implements IMethodCaller
 {
-    public String ID;
-    public Integer      serverPort          = 25565;
-    public Integer      rconPort            = 25575;
-    public String       ip                  = "";
-    public Integer      ramMin              = 1024;
-    public Integer      ramMax              = 2048;
-    public Integer      permGen             = 128;
-    public List<String> extraJavaParameters = new ArrayList<>();
-    public List<String> extraMCParameters   = new ArrayList<>();
-    public String       jarName             = "minecraft_server.jar";
-    public String       rconPswd            = Helper.randomString(10);
-    public Boolean      autoStart           = false;
-    public String       owner               = "";
-    public List<String> admins              = new ArrayList<>();
-    public List<String> coOwners            = new ArrayList<>();
+    final WebSocket socket;
 
-    public static class Deserializer implements JsonDeserializer<ServerData>
+    public WebSocketCaller(WebSocket socket)
     {
-        @Override
-        public ServerData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException
-        {
-            ServerData data = new ServerData();
-            for (Field field : ServerData.class.getDeclaredFields())
-            {
-                try
-                {
-                    if (json.getAsJsonObject().has(field.getName())) field.set(data, context.deserialize(json.getAsJsonObject().get(field.getName()), field.getGenericType()));
-                }
-                catch (IllegalAccessException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-            if (json.getAsJsonObject().has("name")) data.ID = json.getAsJsonObject().get("name").getAsString();
-            return data;
-        }
+        this.socket = socket;
+    }
+
+    @Override
+    public User getUser()
+    {
+        return (User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER);
+    }
+
+    @Override
+    public void sendOK()
+    {
+        WebSocketHelper.sendOk(socket);
+    }
+
+    @Override
+    public void sendMessage(String message)
+    {
+        WebSocketHelper.sendData(socket, message);
+    }
+
+    @Override
+    public void sendProgress(float progress)
+    {
+        WebSocketHelper.sendData(socket, progress);
+    }
+
+    @Override
+    public void sendError(String message)
+    {
+        WebSocketHelper.sendError(socket, message);
+    }
+
+    @Override
+    public void sendDone()
+    {
+        WebSocketHelper.sendData(socket, "done");
+        socket.close();
     }
 }

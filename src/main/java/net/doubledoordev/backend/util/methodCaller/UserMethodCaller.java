@@ -39,97 +39,55 @@
  *
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.util.methodCaller;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
-import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
-import org.glassfish.grizzly.websockets.WebSocket;
-
-import static net.doubledoordev.backend.util.Constants.*;
+import net.doubledoordev.backend.permissions.User;
 
 /**
  * @author Dries007
  */
-public class WebSocketHelper
+public class UserMethodCaller implements IMethodCaller
 {
-    private WebSocketHelper()
+    private final User user;
+
+    public UserMethodCaller(User user)
     {
+        this.user = user;
     }
 
-    public static void sendError(WebSocket socket, String message)
+    @Override
+    public User getUser()
     {
-        JsonObject root = new JsonObject();
-
-        root.addProperty(STATUS, ERROR);
-        root.addProperty(MESSAGE, message);
-
-        socket.send(root.toString());
+        return user;
     }
 
-    public static void sendData(WebSocket socket, String s)
+    @Override
+    public void sendOK()
     {
-        JsonObject root = new JsonObject();
 
-        root.addProperty(STATUS, OK);
-        root.addProperty(DATA, s);
-
-        socket.send(root.toString());
     }
 
-    public static void sendData(WebSocket socket, Boolean b)
+    @Override
+    public void sendMessage(String message)
     {
-        JsonObject root = new JsonObject();
 
-        root.addProperty(STATUS, OK);
-        root.addProperty(DATA, b);
-
-        socket.send(root.toString());
     }
 
-    public static void sendData(WebSocket socket, Character c)
+    @Override
+    public void sendProgress(float progress)
     {
-        JsonObject root = new JsonObject();
 
-        root.addProperty(STATUS, OK);
-        root.addProperty(DATA, c);
-
-        socket.send(root.toString());
     }
 
-    public static void sendData(WebSocket socket, Number n)
+    @Override
+    public void sendError(String message)
     {
-        JsonObject root = new JsonObject();
-
-        root.addProperty(STATUS, OK);
-        root.addProperty(DATA, n);
-
-        socket.send(root.toString());
+        throw new RuntimeException(message);
     }
 
-    public static void sendData(WebSocket socket, JsonElement s)
+    @Override
+    public void sendDone()
     {
-        JsonObject root = new JsonObject();
 
-        root.addProperty(STATUS, OK);
-        root.add(DATA, s);
-
-        socket.send(root.toString());
-    }
-
-    public static void sendServerUpdate(Server instance)
-    {
-        ServerMonitorSocketApplication.sendUpdateToAll(instance);
-    }
-
-    public static void sendOk(WebSocket socket)
-    {
-        JsonObject root = new JsonObject();
-
-        root.addProperty(STATUS, OK);
-
-        socket.send(root.toString());
     }
 }

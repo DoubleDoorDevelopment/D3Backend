@@ -41,21 +41,23 @@
 package net.doubledoordev.backend.util;
 
 import com.google.common.base.Joiner;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.server.ServerData;
 import net.doubledoordev.backend.util.winreg.JavaFinder;
 import net.doubledoordev.backend.util.winreg.JavaInfo;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.regex.Pattern;
+
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * Constants!
@@ -64,6 +66,7 @@ import java.util.regex.Pattern;
  */
 public class Constants
 {
+
     /*
      * String constants
      */
@@ -78,6 +81,7 @@ public class Constants
     public static final String           STATUS                                 = "status";
     public static final String           OK                                     = "ok";
     public static final String           ERROR                                  = "error";
+    public static final String           DATA                                  = "data";
     public static final String           DIM                                    = "DIM";
     /*
      * FilenameFilter constants
@@ -189,7 +193,6 @@ public class Constants
      * Can be order sensitive!
      */
     public static final Random           RANDOM                                 = new Random();
-    public static final String           JAVAPATH                               = getJavaPath();
     public static final SimpleDateFormat BACKUP_SDF                             = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
     public static final Timer            TIMER                                  = new Timer();
 
@@ -212,28 +215,35 @@ public class Constants
         }
     }
 
-    private static String getJavaPath()
+    public static String javaPath;
+    public static String getJavaPath()
     {
-        JavaInfo javaVersion;
-        if (OSUtils.getCurrentOS() == OSUtils.OS.MACOSX)
+        if (javaPath == null)
         {
-            javaVersion = JavaFinder.parseJavaVersion();
+            JavaInfo javaVersion;
+            if (OSUtils.getCurrentOS() == OSUtils.OS.MACOSX)
+            {
+                javaVersion = JavaFinder.parseJavaVersion();
 
-            if (javaVersion != null && javaVersion.path != null) return javaVersion.path;
+                if (javaVersion != null && javaVersion.path != null) return javaPath = javaVersion.path;
+            }
+            else if (OSUtils.getCurrentOS() == OSUtils.OS.WINDOWS)
+            {
+                javaVersion = JavaFinder.parseJavaVersion();
+
+                if (javaVersion != null && javaVersion.path != null) return javaPath = javaVersion.path.replace(".exe", "w.exe");
+            }
+
+            // Windows specific code adds <java.home>/bin/java no need mangle javaw.exe here.
+            return javaPath = System.getProperty("java.home") + "/bin/java";
         }
-        else if (OSUtils.getCurrentOS() == OSUtils.OS.WINDOWS)
-        {
-            javaVersion = JavaFinder.parseJavaVersion();
-
-            if (javaVersion != null && javaVersion.path != null) return javaVersion.path.replace(".exe", "w.exe");
-        }
-
-        // Windows specific code adds <java.home>/bin/java no need mangle javaw.exe here.
-        return System.getProperty("java.home") + "/bin/java";
+        return javaPath;
     }
 
     private static Gson getGSON()
     {
-        return new GsonBuilder().registerTypeAdapter(Server.class, new Server.Deserializer()).registerTypeAdapter(ServerData.class, new ServerData.Deserializer()).registerTypeAdapter(Server.class, new Server.Serializer()).setPrettyPrinting().create();
+        return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
     }
+
+
 }

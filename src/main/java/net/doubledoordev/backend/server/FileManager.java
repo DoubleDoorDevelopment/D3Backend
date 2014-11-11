@@ -43,8 +43,6 @@ package net.doubledoordev.backend.server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
-import net.doubledoordev.backend.webserver_old.NanoHTTPD;
-import net.doubledoordev.backend.webserver_old.SimpleWebServer;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -57,9 +55,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-
-import static net.doubledoordev.backend.webserver_old.NanoHTTPD.MIME_PLAINTEXT;
-import static net.doubledoordev.backend.webserver_old.NanoHTTPD.Response.Status.*;
 
 /**
  * Current limitations:
@@ -226,34 +221,34 @@ public class FileManager
         return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
     }
 
-    public String getFileContentsAsBase64() throws IOException
-    {
-        return String.format("data:%s;base64,%s", SimpleWebServer.MIME_TYPES.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
-    }
+//    public String getFileContentsAsBase64() throws IOException
+//    {
+//        return String.format("data:%s;base64,%s", SimpleWebServer.MIME_TYPES.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
+//    }
 
-    public NanoHTTPD.Response set(String contents)
-    {
-        if (!file.canWrite()) return new NanoHTTPD.Response(FORBIDDEN, MIME_PLAINTEXT, "File is write protected.");
-        try
-        {
-            switch (getExtension())
-            {
-                case "dat":
-                    Helper.writeRawNBT(file, Helper.readRawNBT(file, true) != null, JsonNBTHelper.parseJSON(Constants.JSONPARSER.parse(contents)));
-                    break;
-                default:
-                    FileUtils.writeStringToFile(file, contents);
-                    break;
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return new NanoHTTPD.Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
-        }
-
-        return new NanoHTTPD.Response(OK, MIME_PLAINTEXT, "OK");
-    }
+//    public NanoHTTPD.Response set(String contents)
+//    {
+//        if (!file.canWrite()) return new NanoHTTPD.Response(FORBIDDEN, MIME_PLAINTEXT, "File is write protected.");
+//        try
+//        {
+//            switch (getExtension())
+//            {
+//                case "dat":
+//                    Helper.writeRawNBT(file, Helper.readRawNBT(file, true) != null, JsonNBTHelper.parseJSON(Constants.JSONPARSER.parse(contents)));
+//                    break;
+//                default:
+//                    FileUtils.writeStringToFile(file, contents);
+//                    break;
+//            }
+//        }
+//        catch (IOException e)
+//        {
+//            e.printStackTrace();
+//            return new NanoHTTPD.Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
+//        }
+//
+//        return new NanoHTTPD.Response(OK, MIME_PLAINTEXT, "OK");
+//    }
 
     public void rename(String newname)
     {

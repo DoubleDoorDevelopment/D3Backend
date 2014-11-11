@@ -75,7 +75,8 @@ import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
 public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPageGenerator
 {
     private static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
-    private final        Configuration         freemarker = new Configuration();
+    public static long lastRequest = 0L;
+    private final Configuration freemarker = new Configuration();
 
     public FreemarkerHandler(Class clazz, String path) throws TemplateModelException
     {
@@ -93,6 +94,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
     @Override
     protected boolean handle(String uri, Request request, Response response) throws Exception
     {
+        lastRequest = System.currentTimeMillis();
         if (request.getSession(false) != null) request.getSession();
 
         HashMap<String, Object> data = new HashMap<>(request.getSession().attributes().size() + 10);

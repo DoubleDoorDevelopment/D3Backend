@@ -156,7 +156,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            server.send(String.format("/say %s", msg));
+            server.sendCmd(String.format("/say %s", msg));
         }
     }
 

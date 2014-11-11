@@ -36,67 +36,23 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.server;
+package net.doubledoordev.backend.util.methodCaller;
 
-import net.doubledoordev.backend.util.Constants;
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-import net.lingala.zip4j.model.ZipParameters;
-
-import java.io.File;
-import java.util.Date;
-import java.util.TimerTask;
+import net.doubledoordev.backend.permissions.User;
 
 /**
  * @author Dries007
  */
-public class BackupTask extends TimerTask
+public interface IMethodCaller
 {
-    private final Server server;
+    User getUser();
 
-    public BackupTask(Server server)
-    {
-        this.server = server;
-    }
-
-    @Override
-    public void run()
-    {
-        if (server.getOnline())
-        {
-            server.sendCmd("say Making backup....");
-            server.sendCmd("save-off");
-            server.sendCmd("save-all");
-
-            try
-            {
-                ZipParameters parameters = new ZipParameters();
-                parameters.setIncludeRootFolder(false);
-                ZipFile zipFile = new ZipFile(new File(server.getBackupFolder(), Constants.BACKUP_SDF.format(new Date()) + ".zip"));
-                zipFile.addFolder(server.getFolder(), parameters);
-            }
-            catch (ZipException e)
-            {
-                server.sendCmd("say Error when making backup");
-                server.printLine(e.toString());
-            }
-
-            server.sendCmd("save-on");
-        }
-    }
-
-    private void removeOldestBackup()
-    {
-        File oldest = null;
-        //noinspection ConstantConditions
-        for (File file : server.getBackupFolder().listFiles())
-        {
-            if (oldest == null) oldest = file;
-            if (file.lastModified() < oldest.lastModified()) oldest = file;
-        }
-        if (oldest == null || !oldest.delete()) server.printLine("Could not delete old backup file " + oldest);
-        else server.printLine("Deleted old backup " + oldest);
-    }
+    void sendOK();
+    void sendMessage(String message);
+    void sendProgress(float progress);
+    void sendError(String message);
+    void sendDone();
 }
