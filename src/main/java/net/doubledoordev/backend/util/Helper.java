@@ -40,14 +40,20 @@
 
 package net.doubledoordev.backend.util;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonPrimitive;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.apache.logging.log4j.util.Strings;
+import org.glassfish.grizzly.websockets.WebSocket;
 import org.spout.nbt.Tag;
 import org.spout.nbt.stream.NBTInputStream;
 import org.spout.nbt.stream.NBTOutputStream;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URL;
@@ -60,6 +66,7 @@ import java.util.Map;
 
 import static net.doubledoordev.backend.util.Constants.JSONPARSER;
 import static net.doubledoordev.backend.util.Constants.RANDOM;
+import static net.doubledoordev.backend.util.Constants.SERVERS;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
@@ -293,5 +300,50 @@ public class Helper
         }
         sb.append(String.format(secondsString, time / (1000)));
         return sb.toString();
+    }
+
+    public static String getReadOnlyProperties()
+    {
+        JsonArray array = new JsonArray();
+
+        if (SETTINGS.fixedPorts)
+        {
+            array.add(new JsonPrimitive(Server.SERVER_PORT));
+            array.add(new JsonPrimitive(Server.QUERY_PORT));
+            array.add(new JsonPrimitive(Server.RCON_PORT));
+        }
+        if (SETTINGS.fixedIP) array.add(new JsonPrimitive(Server.SERVER_IP));
+
+        array.add(new JsonPrimitive(Server.RCON_ENABLE));
+        array.add(new JsonPrimitive(Server.RCON_PASSWORD));
+        array.add(new JsonPrimitive(Server.QUERY_ENABLE));
+
+        return array.toString();
+    }
+
+    public static boolean invokeWithRefectionMagic(WebSocket caller, Object instance, String[] split, int start) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    {
+        start++;
+        for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
+        {
+            if (!method.getName().equalsIgnoreCase(split[start - 1])) continue; // Name match
+            boolean userMethodCaller = method.getParameterTypes().length != 0 && method.getParameterTypes()[0].isAssignableFrom(IMethodCaller.class); // See if first type is IMethodCaller
+            if (method.getParameterTypes().length == split.length - start + (userMethodCaller ? 1 : 0)) // parameter length match
+            {
+                try
+                {
+                    Object parms[] = new Object[split.length - start + (userMethodCaller ? 1 : 0)];
+                    if (userMethodCaller) parms[0] = new WebSocketCaller(caller);
+                    for (int i = userMethodCaller ? 1 : 0; i < method.getParameterTypes().length; i++) parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + start - (userMethodCaller ? 1 : 0)]);
+                    method.invoke(instance, parms);
+                    return userMethodCaller;
+                }
+                catch (ClassCastException ignored)
+                {
+                    ignored.printStackTrace();
+                }
+            }
+        }
+        throw new NoSuchMethodException(split[start - 1]);
     }
 }

@@ -50,6 +50,7 @@ import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import net.doubledoordev.backend.web.http.ServerFileHandler;
 import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
+import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
@@ -143,6 +144,7 @@ public class Main
         // Socket stuff
         ServerMonitorSocketApplication.register();
         ServerControlSocketApplication.register();
+        ServerPropertiesSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("secured-listener");
         //networkListener.setSecure(true);
@@ -168,6 +170,7 @@ public class Main
         CommandHandler.init();
         for (Server server : SETTINGS.servers.values())
         {
+            server.init();
             if (server.getAutoStart())
             {
                 try

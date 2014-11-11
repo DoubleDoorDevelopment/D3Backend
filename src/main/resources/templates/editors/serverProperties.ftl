@@ -1,24 +1,17 @@
-<#include "header.ftl">
-<h1 class="hiddenlink"><a href="/server?server=${server.ID}">${server.ID}</a>
-    <small> ${server.getDisplayAddress()}   <span id="online"></span></small>
-</h1>
-<div class="panel panel-info">
-    <div class="panel-heading">server.properties</div>
-    <div class="panel-body">
-        Click on any value to change it. Changes only apply once the server has been restarted!<br>
-        Red values are read only.
-    </div>
-    <table class="table table-hover table-condensed">
-        <thead>
-        <tr>
-            <th style="text-align: right;width: 33%">Property</th>
-            <th style="text-align: left;">Value</th>
-        </tr>
-        <tbody id="tableBody">
-
-        </tbody>
-    </table>
+<div class="panel-body">
+    Click on any value to change it. Changes only apply once the server has been restarted!<br>
+    Red values are read only.
 </div>
+<table class="table table-hover table-condensed">
+    <thead>
+    <tr>
+        <th style="text-align: right;width: 33%">Property</th>
+        <th style="text-align: left;">Value</th>
+    </tr>
+    <tbody id="tableBody">
+
+    </tbody>
+</table>
 <script>
     const readOnlyProperties = ${Helper.getReadOnlyProperties()};
 
@@ -65,4 +58,3 @@
 
     $('[rel=tooltip]').tooltip()
 </script>
-<#include "footer.ftl">

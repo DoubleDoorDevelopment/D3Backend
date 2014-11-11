@@ -42,35 +42,35 @@
 package net.doubledoordev.backend.web.socket;
 
 import com.google.common.base.Strings;
+import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.util.WebSocketHelper;
-import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;
-import org.glassfish.grizzly.websockets.*;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
+import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.IOException;
 
-import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Constants.SERVER;
+import static net.doubledoordev.backend.util.Constants.SOCKET_CONTEXT;
+import static net.doubledoordev.backend.util.Constants.USER;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
- * Short term sockets
- * Get 1 command, and send 1 response back.
- *
  * @author Dries007
  */
-public class ServerControlSocketApplication extends WebSocketApplication
+public class ServerPropertiesSocketApplication extends KeepAliveWebSocketApplication
 {
-    private static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
-    private static final String                         URL_PATTERN                       = "/servercmd/*";
+    private static final  ServerPropertiesSocketApplication APPLICATION = new ServerPropertiesSocketApplication();
+    private static final String URL_PATTERN = "/serverproperties/*";
 
-    private ServerControlSocketApplication()
+    private ServerPropertiesSocketApplication()
     {
     }
 
@@ -85,6 +85,7 @@ public class ServerControlSocketApplication extends WebSocketApplication
             return;
         }
         ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, session.getAttribute(USER));
+
         String serverName = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo();
         if (Strings.isNullOrEmpty(serverName) || Strings.isNullOrEmpty(serverName.substring(1)))
         {
@@ -99,13 +100,16 @@ public class ServerControlSocketApplication extends WebSocketApplication
             socket.close();
             return;
         }
-        else if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        else if (!server.canUserControl((User) session.getAttribute(USER)))
         {
             WebSocketHelper.sendError(socket, "You have no rights to this server.");
             socket.close();
             return;
         }
+        WebSocketHelper.sendData(socket, getData(server));
         ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(SERVER, server);
+
+        // Add socket to the list of sockets
         super.onConnect(socket);
     }
 
@@ -113,29 +117,46 @@ public class ServerControlSocketApplication extends WebSocketApplication
     public void onMessage(WebSocket socket, String text)
     {
         Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
-        String[] args = text.split("\\|");
-        if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
-        {
-            WebSocketHelper.sendError(socket, "You have no rights to this server.");
-            socket.close();
-            return;
-        }
+        String[] split = text.split("=", 2);
         try
         {
-            if (!Helper.invokeWithRefectionMagic(socket, server, args, 0))
-            {
-                WebSocketHelper.sendOk(socket);
-                socket.close();
-            }
+            server.setProperty(new WebSocketCaller(socket), split[0], split[1]);
         }
-        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+        catch (IOException e)
         {
             WebSocketHelper.sendError(socket, e);
         }
+        sendUpdateToAll(server);
+    }
+
+    public static void sendUpdateToAll(Server server)
+    {
+        APPLICATION.doSendUpdateToAll(server);
+    }
+
+    private void doSendUpdateToAll(Server server)
+    {
+        for (WebSocket socket : getWebSockets())
+        {
+            if (((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER) != server) continue;
+            if (server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER))) WebSocketHelper.sendData(socket, getData(server));
+        }
+    }
+
+    public JsonObject getData(Server server)
+    {
+        JsonObject object = new JsonObject();
+
+        for (Object key : server.getProperties().keySet())
+        {
+            object.addProperty(key.toString(), server.getProperty(key.toString()));
+        }
+
+        return object;
     }
 
     public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, SERVER_CONTROL_SOCKET_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 }

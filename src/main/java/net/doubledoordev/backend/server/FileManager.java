@@ -48,6 +48,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.glassfish.grizzly.http.util.MimeType;
 import org.spout.nbt.Tag;
 
 import java.io.File;
@@ -140,6 +141,9 @@ public class FileManager
             case "jar":
             case "zip":
             case "disabled":
+            case "exe":
+            case "mca":
+            case "mcr":
                 return false;
 
             default:
@@ -153,15 +157,19 @@ public class FileManager
         if (file.getName().equals("whitelist.json")) return "whitelist.ftl";
         if (file.getName().equals("banned-players.json")) return "banned-players.ftl";
         if (file.getName().equals("banned-ips.json")) return "banned-ips.ftl";
+        if (file.getName().equals("server.properties")) return "serverProperties.ftl";
         switch (getExtension())
         {
             case "jar":
             case "zip":
             case "disabled":
+            case "mca":
+            case "mcr":
                 return null;
 
             case "json":
             case "dat":
+            case "dat_old":
                 return "json.ftl";
 
             case "jpg":
@@ -182,6 +190,8 @@ public class FileManager
             case "html":
             case "json":
             case "dat":
+            case "dat_old":
+            case "properties":
                 return "file-code-o";
 
             case "txt":
@@ -208,6 +218,7 @@ public class FileManager
             case "json":
                 return FileUtils.readFileToString(file);
             case "dat":
+            case "dat_old":
                 Tag tag = Helper.readRawNBT(file, true);
                 if (tag == null) tag = Helper.readRawNBT(file, false);
                 if (tag != null) return JsonNBTHelper.parseNBT(tag).toString();
@@ -221,34 +232,10 @@ public class FileManager
         return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
     }
 
-//    public String getFileContentsAsBase64() throws IOException
-//    {
-//        return String.format("data:%s;base64,%s", SimpleWebServer.MIME_TYPES.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
-//    }
-
-//    public NanoHTTPD.Response set(String contents)
-//    {
-//        if (!file.canWrite()) return new NanoHTTPD.Response(FORBIDDEN, MIME_PLAINTEXT, "File is write protected.");
-//        try
-//        {
-//            switch (getExtension())
-//            {
-//                case "dat":
-//                    Helper.writeRawNBT(file, Helper.readRawNBT(file, true) != null, JsonNBTHelper.parseJSON(Constants.JSONPARSER.parse(contents)));
-//                    break;
-//                default:
-//                    FileUtils.writeStringToFile(file, contents);
-//                    break;
-//            }
-//        }
-//        catch (IOException e)
-//        {
-//            e.printStackTrace();
-//            return new NanoHTTPD.Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
-//        }
-//
-//        return new NanoHTTPD.Response(OK, MIME_PLAINTEXT, "OK");
-//    }
+    public String getFileContentsAsBase64() throws IOException
+    {
+        return String.format("data:%s;base64,%s", MimeType.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
+    }
 
     public void rename(String newname)
     {

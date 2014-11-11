@@ -46,6 +46,7 @@ import com.google.gson.JsonObject;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
+import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocket;
 
 import static net.doubledoordev.backend.util.Constants.*;
@@ -122,6 +123,7 @@ public class WebSocketHelper
     public static void sendServerUpdate(Server instance)
     {
         ServerMonitorSocketApplication.sendUpdateToAll(instance);
+        ServerPropertiesSocketApplication.sendUpdateToAll(instance);
     }
 
     public static void sendOk(WebSocket socket)
@@ -131,5 +133,18 @@ public class WebSocketHelper
         root.addProperty(STATUS, OK);
 
         socket.send(root.toString());
+    }
+
+    public static void sendError(WebSocket socket, Throwable e)
+    {
+        StringBuilder error = new StringBuilder();
+        do
+        {
+            error.append('\n').append(e.getClass().getSimpleName());
+            if (e.getMessage() != null) error.append(": ").append(e.getMessage());
+        }
+        while ((e = e.getCause()) != null);
+        WebSocketHelper.sendError(socket, error.substring(1));
+        socket.close();
     }
 }

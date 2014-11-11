@@ -53,6 +53,11 @@
         body {
             padding-top: 70px;
         }
+
+        .hiddenlink a:link { color: #000000; text-decoration: none}
+        .hiddenlink a:visited { color: #000000; text-decoration: none}
+        .hiddenlink a:hover { color: #3366CC; text-decoration: underline}
+        .hiddenlink a:active { color: #000000; text-decoration: none}
     </style>
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>

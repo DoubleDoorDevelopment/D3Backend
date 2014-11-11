@@ -77,14 +77,14 @@ import static net.doubledoordev.backend.util.CustomLogAppender.LOG_LINES_KEPT;
 @SuppressWarnings("UnusedDeclaration")
 public class Server
 {
-    private static final String SERVER_PROPERTIES = "server.properties";
-    private static final String SERVER_PORT       = "server-port";
-    private static final String QUERY_PORT        = "query.port";
-    private static final String QUERY_ENABLE      = "enable-query";
-    private static final String RCON_ENABLE       = "enable-rcon";
-    private static final String RCON_PASSWORD     = "rcon.password";
-    private static final String RCON_PORT         = "rcon.port";
-    private static final String SERVER_IP         = "server-ip";
+    public static final String SERVER_PROPERTIES = "server.properties";
+    public static final String SERVER_PORT       = "server-port";
+    public static final String QUERY_PORT        = "query.port";
+    public static final String QUERY_ENABLE      = "enable-query";
+    public static final String RCON_ENABLE       = "enable-rcon";
+    public static final String RCON_PASSWORD     = "rcon.password";
+    public static final String RCON_PORT         = "rcon.port";
+    public static final String SERVER_IP         = "server-ip";
 
     /*
      * START exposed Json data
