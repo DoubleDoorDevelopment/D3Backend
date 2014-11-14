@@ -9,7 +9,7 @@
     <select id="modeSelector" onchange="setMode(this.value)">
     </select>
 
-    <div id="editor">${fm.getFileContentsAsString()}</div>
+    <div id="editor">${fm.getFileContents()}</div>
 
     <script src="/static/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -39,9 +39,20 @@
         function setMode(mode) {
             editor.getSession().setMode("ace/mode/" + mode);
         }
+
+        websocket.onmessage = function (evt)
+        {
+            var temp = JSON.parse(evt.data);
+            if (temp.status === "ok")
+            {
+                editor.setValue(temp.data);
+                editor.clearSelection();
+            }
+            else alert(temp.message);
+        }
     </script>
     <#if !readonly>
-    <button type="button" class="btn btn-primary btn-block" onclick="callNoRefresh('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', editor.getValue());">Save</button>
+    <button type="button" class="btn btn-primary btn-block" onclick="send(editor.getValue());">Save</button>
     <#else>
     <p>File is readonly.</p>
     </#if>

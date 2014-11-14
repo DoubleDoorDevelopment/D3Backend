@@ -42,7 +42,6 @@
 package net.doubledoordev.backend.web.socket;
 
 import com.google.common.base.Strings;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
@@ -53,7 +52,10 @@ import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
+import org.glassfish.grizzly.websockets.WebSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
+
+import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
@@ -63,7 +65,7 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  *
  * @author Dries007
  */
-public class ServerMonitorSocketApplication extends KeepAliveWebSocketApplication
+public class ServerMonitorSocketApplication extends WebSocketApplication
 {
     private static final  ServerMonitorSocketApplication SERVER_LIST_MONITOR_SOCKET_APPLICATION = new ServerMonitorSocketApplication(true);
     private static final  ServerMonitorSocketApplication SERVER_MONITOR_SOCKET_APPLICATION = new ServerMonitorSocketApplication(false);
@@ -74,6 +76,14 @@ public class ServerMonitorSocketApplication extends KeepAliveWebSocketApplicatio
     private ServerMonitorSocketApplication(boolean allServers)
     {
         this.allServers = allServers;
+        TIMER.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
+            }
+        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
     }
 
     @Override

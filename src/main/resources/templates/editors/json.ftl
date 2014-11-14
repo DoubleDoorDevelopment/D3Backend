@@ -33,7 +33,7 @@
             }
         };
 
-        var json = ${fm.getFileContentsAsJson()!"null"};
+        var json = ${fm.getFileContents()!"null"};
 
         if (json == null) {
             alert("Data file might be currupt. It can't be read by our parser.");

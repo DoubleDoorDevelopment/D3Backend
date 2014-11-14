@@ -53,7 +53,6 @@
 <body onresize="document.getElementById('text').style.height = (window.innerHeight - 35) + 'px';">
 <textarea class="textarea form-control" id="text" style="height: 482px;"></textarea>
 <input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
-<script src="/static/js/commands.js"></script>
 <script>
     function sendCommand($input) {
         execute('PUT', window.location.origin, ["serverconsole", "${server.ID}", $input.value], function () {

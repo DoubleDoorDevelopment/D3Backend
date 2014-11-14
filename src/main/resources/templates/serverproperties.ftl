@@ -56,7 +56,6 @@
     websocket.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
-        console.log(temp.data);
         if (temp.status === "ok") updateInfo(temp.data);
         else alert(temp.message);
     }

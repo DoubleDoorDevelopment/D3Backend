@@ -42,8 +42,10 @@
 package net.doubledoordev.backend.web.http;
 
 import com.google.common.base.Strings;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import org.glassfish.grizzly.http.Method;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
@@ -54,6 +56,7 @@ import org.glassfish.grizzly.http.util.HttpStatus;
 import java.io.File;
 
 import static net.doubledoordev.backend.util.Constants.SLASH_STR;
+import static net.doubledoordev.backend.util.Constants.USER;
 
 /**
  * @author Dries007
@@ -67,9 +70,15 @@ public class ServerFileHandler extends StaticHttpHandlerBase
         this.path = path;
     }
 
+    public ServerFileHandler()
+    {
+        this.path = null;
+    }
+
     @Override
     protected boolean handle(String uri, Request request, Response response) throws Exception
     {
+        if (request.getSession(false) != null) request.getSession();
         if (uri.startsWith(SLASH_STR)) uri = uri.substring(1);
 
         String[] uris = uri.split("/", 2); // 0 = server, 1 = file
@@ -77,6 +86,14 @@ public class ServerFileHandler extends StaticHttpHandlerBase
 
         Server server = Settings.getServerByName(uris[0]);
         if (server == null) return false;
+
+        User user = (User) request.getSession().getAttribute(USER);
+        if (user == null || !(user.isAdmin() || server.canUserControl(user)))
+        {
+            response.setHeader(Header.Allow, Method.GET.getMethodString());
+            response.sendError(HttpStatus.UNAUTHORIZED_401.getStatusCode());
+            return true;
+        }
 
         File baseFolder = Strings.isNullOrEmpty(path) ? server.getFolder() : new File(server.getFolder(), path);
 
@@ -87,6 +104,7 @@ public class ServerFileHandler extends StaticHttpHandlerBase
         {
             response.setHeader(Header.Allow, Method.GET.getMethodString());
             response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
+            return true;
         }
 
         pickupContentType(response, file.getPath());

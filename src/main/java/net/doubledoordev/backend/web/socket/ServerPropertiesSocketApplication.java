@@ -41,76 +41,46 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import com.google.common.base.Strings;
 import com.google.gson.JsonObject;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
-import org.glassfish.grizzly.http.server.DefaultSessionManager;
-import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.io.IOException;
+import java.util.TimerTask;
 
-import static net.doubledoordev.backend.util.Constants.SERVER;
-import static net.doubledoordev.backend.util.Constants.SOCKET_CONTEXT;
-import static net.doubledoordev.backend.util.Constants.USER;
-import static net.doubledoordev.backend.util.Settings.SETTINGS;
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * @author Dries007
  */
-public class ServerPropertiesSocketApplication extends KeepAliveWebSocketApplication
+public class ServerPropertiesSocketApplication extends ServerWebSocketApplication
 {
     private static final  ServerPropertiesSocketApplication APPLICATION = new ServerPropertiesSocketApplication();
     private static final String URL_PATTERN = "/serverproperties/*";
 
     private ServerPropertiesSocketApplication()
     {
+        TIMER.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
+            }
+        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
     }
 
     @Override
     public void onConnect(WebSocket socket)
     {
-        Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
-        if (session == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid session.");
-            socket.close();
-            return;
-        }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, session.getAttribute(USER));
-
-        String serverName = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo();
-        if (Strings.isNullOrEmpty(serverName) || Strings.isNullOrEmpty(serverName.substring(1)))
-        {
-            WebSocketHelper.sendError(socket, "No valid server.");
-            socket.close();
-            return;
-        }
-        Server server = Settings.getServerByName(serverName.substring(1));
-        if (server == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid server.");
-            socket.close();
-            return;
-        }
-        else if (!server.canUserControl((User) session.getAttribute(USER)))
-        {
-            WebSocketHelper.sendError(socket, "You have no rights to this server.");
-            socket.close();
-            return;
-        }
-        WebSocketHelper.sendData(socket, getData(server));
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(SERVER, server);
-
-        // Add socket to the list of sockets
         super.onConnect(socket);
+
+        WebSocketHelper.sendData(socket, getData((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)));
     }
 
     @Override

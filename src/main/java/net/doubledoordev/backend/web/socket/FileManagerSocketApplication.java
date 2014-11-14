@@ -41,12 +41,71 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import org.glassfish.grizzly.websockets.WebSocketApplication;
+import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.server.FileManager;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.WebSocketHelper;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
+import org.glassfish.grizzly.websockets.WebSocketEngine;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.TimerTask;
+
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
+ * TODO: use for file control
+ *
  * @author Dries007
  */
-public class FileManagerSocketApplication extends WebSocketApplication
+public class FileManagerSocketApplication extends ServerWebSocketApplication
 {
-    //TODO: 
+    private static final FileManagerSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new FileManagerSocketApplication();
+    private static final String                         URL_PATTERN                       = "/filemanager/*";
+
+    private FileManagerSocketApplication()
+    {
+        TIMER.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
+            }
+        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+    }
+
+    @Override
+    public void onConnect(WebSocket socket)
+    {
+        super.onConnect(socket);
+        String[] split = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo().substring(1).split("/", 2);
+        FileManager fileManager = new FileManager((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER), split[1]);
+        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(FILE_MANAGER, fileManager);
+    }
+
+    @Override
+    public void onMessage(WebSocket socket, String text)
+    {
+        try
+        {
+            ((FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER)).set(text);
+        }
+        catch (IOException e)
+        {
+            WebSocketHelper.sendError(socket, e);
+        }
+        for (WebSocket socket1 : getWebSockets())
+        {
+            if (socket == socket1) continue;
+            WebSocketHelper.sendData(socket1, text);
+        }
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, SERVER_CONTROL_SOCKET_APPLICATION);
+    }
 }

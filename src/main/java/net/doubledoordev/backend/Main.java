@@ -48,6 +48,7 @@ import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import net.doubledoordev.backend.web.http.ServerFileHandler;
+import net.doubledoordev.backend.web.socket.FileManagerSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
@@ -140,11 +141,13 @@ public class Main
         config.setDefaultErrorPageGenerator(freemarkerHandler);
         config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), STATIC_PATH), STATIC_PATH);
         config.addHttpHandler(new ServerFileHandler(P2S_PATH), P2S_PATH);
+        config.addHttpHandler(new ServerFileHandler(), RAW_PATH);
 
         // Socket stuff
         ServerMonitorSocketApplication.register();
         ServerControlSocketApplication.register();
         ServerPropertiesSocketApplication.register();
+        FileManagerSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("secured-listener");
         //networkListener.setSecure(true);

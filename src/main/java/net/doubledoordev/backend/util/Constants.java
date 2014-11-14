@@ -74,6 +74,7 @@ public class Constants
     public static final String           LOCALHOST                              = "localhost";
     public static final String           WORLD                                  = "world";
     public static final String           SERVER                                 = "server";
+    public static final String           FILE_MANAGER                           = "filemanager";
     public static final String           FILE                                   = "file";
     public static final String           INDEX                                  = "index";
     public static final String           USER                                   = "user";
@@ -81,7 +82,7 @@ public class Constants
     public static final String           STATUS                                 = "status";
     public static final String           OK                                     = "ok";
     public static final String           ERROR                                  = "error";
-    public static final String           DATA                                  = "data";
+    public static final String           DATA                                   = "data";
     public static final String           DIM                                    = "DIM";
     /*
      * FilenameFilter constants
@@ -111,6 +112,7 @@ public class Constants
     public static final String           STATIC_PATH                            = "/static/";
     public static final String           TEMPLATES_PATH                         = "/templates/";
     public static final String           P2S_PATH                               = "/pay2spawn/";
+    public static final String           RAW_PATH                               = "/raw/";
     public static final String           SOCKET_CONTEXT                         = "/socket";
     public static final String           LOGIN_URL                              = "/login";
     public static final String           REGISTER_URL                           = "/register";
@@ -216,6 +218,7 @@ public class Constants
     }
 
     public static String javaPath;
+
     public static String getJavaPath()
     {
         if (javaPath == null)
@@ -244,6 +247,5 @@ public class Constants
     {
         return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
     }
-
 
 }

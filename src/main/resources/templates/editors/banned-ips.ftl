@@ -37,7 +37,7 @@
         </tbody>
     </table>
     <script type="text/javascript">
-        var json = ${fm.getFileContentsAsJson()};
+        var json = ${fm.getFileContents()};
         var opList = document.getElementById("opList");
         json.forEach(function (object) {
             opList.innerHTML +=

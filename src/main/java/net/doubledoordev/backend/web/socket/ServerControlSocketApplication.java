@@ -41,19 +41,13 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import com.google.common.base.Strings;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Helper;
-import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.util.WebSocketHelper;
-import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
-import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
-import org.glassfish.grizzly.http.server.DefaultSessionManager;
-import org.glassfish.grizzly.http.server.Session;
-import org.glassfish.grizzly.websockets.*;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
+import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -65,48 +59,13 @@ import static net.doubledoordev.backend.util.Constants.*;
  *
  * @author Dries007
  */
-public class ServerControlSocketApplication extends WebSocketApplication
+public class ServerControlSocketApplication extends ServerWebSocketApplication
 {
     private static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
     private static final String                         URL_PATTERN                       = "/servercmd/*";
 
     private ServerControlSocketApplication()
     {
-    }
-
-    @Override
-    public void onConnect(WebSocket socket)
-    {
-        Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
-        if (session == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid session.");
-            socket.close();
-            return;
-        }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, session.getAttribute(USER));
-        String serverName = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo();
-        if (Strings.isNullOrEmpty(serverName) || Strings.isNullOrEmpty(serverName.substring(1)))
-        {
-            WebSocketHelper.sendError(socket, "No valid server.");
-            socket.close();
-            return;
-        }
-        Server server = Settings.getServerByName(serverName.substring(1));
-        if (server == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid server.");
-            socket.close();
-            return;
-        }
-        else if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
-        {
-            WebSocketHelper.sendError(socket, "You have no rights to this server.");
-            socket.close();
-            return;
-        }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(SERVER, server);
-        super.onConnect(socket);
     }
 
     @Override

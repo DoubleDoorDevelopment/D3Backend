@@ -1,3 +1,3 @@
 <div class="panel-body">
-    <img src="${fm.getFileContentsAsBase64()}"/>
+    <img src="${fm.getFileContents()}"/>
 </div>

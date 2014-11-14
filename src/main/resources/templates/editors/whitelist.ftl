@@ -18,7 +18,7 @@
         </tbody>
     </table>
     <script type="text/javascript">
-        var json = ${fm.getFileContentsAsJson()};
+        var json = ${fm.getFileContents()};
         var opList = document.getElementById("opList");
         json.forEach(function (object) {
             opList.innerHTML += "<tr id=\"" + object['name'] + "\"><td>" + object['name'] + "</td><td>" + object['uuid'] + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Remove</button></div></td></#if></tr>";

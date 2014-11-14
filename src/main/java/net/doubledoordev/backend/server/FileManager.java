@@ -40,7 +40,6 @@
 
 package net.doubledoordev.backend.server;
 
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
 import org.apache.commons.codec.binary.Base64;
@@ -211,7 +210,7 @@ public class FileManager
         }
     }
 
-    public String getFileContentsAsJson() throws IOException
+    public String getFileContents() throws IOException
     {
         switch (getExtension())
         {
@@ -222,19 +221,18 @@ public class FileManager
                 Tag tag = Helper.readRawNBT(file, true);
                 if (tag == null) tag = Helper.readRawNBT(file, false);
                 if (tag != null) return JsonNBTHelper.parseNBT(tag).toString();
-            default:
+            case "jpg":
+            case "png":
+                return String.format("data:%s;base64,%s", MimeType.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
+            case "jar":
+            case "zip":
+            case "disabled":
+            case "mca":
+            case "mcr":
                 return null;
+            default:
+                return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
         }
-    }
-
-    public String getFileContentsAsString() throws IOException
-    {
-        return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
-    }
-
-    public String getFileContentsAsBase64() throws IOException
-    {
-        return String.format("data:%s;base64,%s", MimeType.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
     }
 
     public void rename(String newname)
@@ -261,5 +259,10 @@ public class FileManager
     public void newFolder(String name)
     {
         new File(file, name).mkdir();
+    }
+
+    public void set(String text) throws IOException
+    {
+        FileUtils.writeStringToFile(file, text);
     }
 }
