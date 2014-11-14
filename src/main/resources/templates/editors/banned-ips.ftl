@@ -1,4 +1,5 @@
 <div class="panel-body">
+    <p>This file has no live updating.</p>
     <form class="form-inline" role="form" onsubmit="makeNew(); return false;">
         <div class="form-group">
             <label class="sr-only" for="newip">IP</label>

@@ -18,7 +18,7 @@
     </style>
     <div id="jsoneditor"></div>
     <#if !readonly>
-    <button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="callNoRefresh('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(editor.get()));">Save</button>
+    <button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="send(JSON.stringify(editor.get()));">Save</button>
     <#else>
     <p>File is readonly.</p>
     </#if>
@@ -41,5 +41,15 @@
             document.getElementById("jsoneditor").innerHTML = "Error. File corrupt?";
         }
         else editor = new JSONEditor(container, options, json);
+
+        websocket.onmessage = function (evt)
+        {
+            var temp = JSON.parse(evt.data);
+            if (temp.status === "ok")
+            {
+                editor.set(JSON.parse(temp.data));
+            }
+            else alert(temp.message);
+        }
     </script>
 </div>
