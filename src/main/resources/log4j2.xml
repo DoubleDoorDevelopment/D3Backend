@@ -47,7 +47,7 @@
         <CustomLogAppender name="CustomLogAppender">
             <PatternLayout pattern="%d [%p - %c] %enc{%m}%n"/>
         </CustomLogAppender>
-        <RollingRandomAccessFile name="FileMain" fileName="logs/main/latest.log" filePattern="logs/main/%d{yyyy-MM-dd}-%i.log.gz">
+        <RollingRandomAccessFile name="FileMain" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="%d [%p - %c] %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -61,14 +61,6 @@
         <CustomLogAppender name="CustomLogAppenderCmd">
             <PatternLayout pattern="%enc{%m}%n"/>
         </CustomLogAppender>
-        <!-- Access log -->
-        <RollingRandomAccessFile name="FileAccess" fileName="logs/access/latest.log" filePattern="logs/access/%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="%d %m%n"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-                <OnStartupTriggeringPolicy/>
-            </Policies>
-        </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
         <Logger name="Main" level="trace" additivity="false">

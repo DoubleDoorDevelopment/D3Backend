@@ -55,11 +55,11 @@ public class RestartingInfo
     @Expose
     public int globalTimeout = 24;
     @Expose
-    public int whenEmpty = 30;
+    public int whenEmptyTimeout = 30;
     @Expose
-    public boolean timer = false;
+    public boolean scheduleTimeout = false;
     @Expose
-    public boolean restartDailyTimeout = false;
+    public int restartDailyTimeout = 0;
 
     private boolean restartNextRun = false;
     private Date lastRestart = new Date(0L);
@@ -83,6 +83,6 @@ public class RestartingInfo
 
     public String getLastRestart(String format)
     {
-        return new SimpleDateFormat(format).format(lastRestart);
+        return lastRestart.getTime() == 0L ? "" : new SimpleDateFormat(format).format(lastRestart);
     }
 }
