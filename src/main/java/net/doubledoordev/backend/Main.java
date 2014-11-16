@@ -48,10 +48,7 @@ import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import net.doubledoordev.backend.web.http.ServerFileHandler;
-import net.doubledoordev.backend.web.socket.FileManagerSocketApplication;
-import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
-import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
-import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
+import net.doubledoordev.backend.web.socket.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
@@ -148,6 +145,7 @@ public class Main
         ServerControlSocketApplication.register();
         ServerPropertiesSocketApplication.register();
         FileManagerSocketApplication.register();
+        ServerconsoleSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("secured-listener");
         //networkListener.setSecure(true);

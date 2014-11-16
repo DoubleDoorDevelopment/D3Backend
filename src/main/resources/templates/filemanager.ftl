@@ -18,22 +18,30 @@
             <button type="button" onclick="{var n = prompt('New folder ID?', ''); if (n != null) call('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'newFolder', n);}" class="btn btn-default btn-xs">New folder</button>
         </div>
     </div>
-    <table class="table table-hover table-condensed">
+    <table class="table table-hover table-condensed tablesorter" id="servers">
+        <thead>
+        <tr>
+            <th></th>
+            <th class="col-sm-4">File name</th>
+            <th class="col-sm-2">File size</th>
+            <th class="col-sm-1"></th>
+            <th class="col-sm-5"></th>
+        </tr>
+        </thead>
         <tbody>
             <#list fm.file.listFiles() as file>
             <tr>
                 <td><i class="fa fa-${fm.getIcon(file)}"></i></td>
                 <#if fm.canEdit(file)>
-                    <td class="col-sm-4">
+                    <td>
                         <a href="?server=${server.ID}&file=${fm.stripServer(file)}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a>
                     </td>
                 <#else>
-                    <td class="col-sm-4">${file.getName()}</td>
+                    <td>${file.getName()}</td>
                 </#if>
+                <td><#if !file.isDirectory()>${fm.getSize(file)}</#if></td>
+                <td><#if !file.isDirectory()><a type="button" class="btn btn-default btn-xs" href="/raw/${server.ID}/${fm.stripServer(file)}">Raw file</a></#if></td>
                 <td>
-                    <#if !file.isDirectory()><a type="button" class="btn btn-default btn-xs" href="/raw/${server.ID}/${fm.stripServer(file)}">Raw file</a></#if>
-                </td>
-                <td class="col-sm-8">
                     <div class="btn-group">
                         <button type="button" onclick="{var n = prompt('New file ID?', '${file.getName()}'); if (n != null) call('filemanager', '${fm.server.ID}', '${fm.stripServer(file)}', 'rename', n);}" class="btn btn-default btn-xs">
                             Rename
@@ -53,6 +61,12 @@
         </tbody>
     </table>
 </div>
+<script src="/static/js/jquery.dataTables.min.js"></script>
+<script>
+    var table = $('#servers').DataTable({
+        paging: false
+    });
+</script>
 <#else >
     <#assign readonly = !fm.file.canWrite()>
 <script>

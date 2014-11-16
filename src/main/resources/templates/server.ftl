@@ -57,7 +57,7 @@
                     <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
                 </div>
                 <hr>
-                <a type="button" id="killServerBtn" class="btn btn-default" href="/serverproperties?server=${server.ID}">Modify server properties</a>
+                <a type="button" id="killServerBtn" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">Modify server properties</a>
                 <hr>
                 <div class="btn-group">
                     <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {callOnThisServer('setOwner|' + name);}"<#else>disabled</#if> class="btn btn-danger">Change owner</button>

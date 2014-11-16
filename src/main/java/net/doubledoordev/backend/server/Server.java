@@ -51,6 +51,7 @@ import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -124,8 +125,6 @@ public class Server
     /*
      * END exposed Json data
      */
-
-    private final ArrayList<String> log  = new ArrayList<>(LOG_LINES_KEPT + 10);
     /**
      * Diskspace var + timer to avoid long page load times.
      */
@@ -499,19 +498,6 @@ public class Server
     public File getFolder()
     {
         return folder;
-    }
-
-    public String getLogLinesAfter(int index)
-    {
-        JsonObject responce = new JsonObject();
-        StringBuilder stringBuilder = new StringBuilder();
-        synchronized (log)
-        {
-            responce.addProperty("size", log.size());
-            if (index < log.size()) for (String line : log.subList(index, log.size())) stringBuilder.append(line).append('\n');
-        }
-        responce.addProperty("text", stringBuilder.toString());
-        return responce.toString();
     }
 
     @Override
@@ -1076,8 +1062,7 @@ public class Server
     public void printLine(String line)
     {
         logger.info(line);
-        log.add(line);
-        while (log.size() > LOG_LINES_KEPT) log.remove(0);
+        ServerconsoleSocketApplication.sendLine(this, line);
     }
 
     /**

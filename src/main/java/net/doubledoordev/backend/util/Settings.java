@@ -43,6 +43,7 @@ package net.doubledoordev.backend.util;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
@@ -68,17 +69,28 @@ public class Settings
     public Map<String, Server> servers = new HashMap<>();
     public Map<String, User>   users   = new HashMap<>();
 
+    @Expose
     public String hostname;
+    @Expose
     public int          portHTTP         = 80;
+    @Expose
     public int          portHTTPS        = 443;
+    @Expose
     public boolean      useJava8         = false;
+    @Expose
     public boolean      fixedPorts       = false;
+    @Expose
     public boolean      fixedIP          = false;
+    @Expose
     public PortRange    portRange        = new PortRange();
+    @Expose
     public int          defaultDiskspace = -1;
+    @Expose
     public List<String> anonPages        = Arrays.asList("index", "login", "register");
+    @Expose
     public String       certificatePath  = "";
-    public char[]       certificatePass  = new char[0];
+    @Expose
+    public String       certificatePass  = "";
 
     public static final Settings SETTINGS;
 
@@ -86,7 +98,7 @@ public class Settings
     {
         try
         {
-            SETTINGS = new Settings();
+            SETTINGS = Constants.GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
         }
         catch (IOException e)
         {
@@ -99,44 +111,6 @@ public class Settings
         try
         {
             FileReader fileReader;
-            if (CONFIG_FILE.exists())
-            {
-                try
-                {
-                    hostname = Inet4Address.getLocalHost().getHostAddress();
-                }
-                catch (UnknownHostException e)
-                {
-                    e.printStackTrace();
-                    hostname = "";
-                }
-
-                fileReader = new FileReader(CONFIG_FILE);
-                JsonObject jsonElement = Constants.JSONPARSER.parse(fileReader).getAsJsonObject();
-                if (jsonElement.has("hostname")) hostname = jsonElement.get("hostname").getAsString();
-                if (jsonElement.has("portHTTP")) portHTTP = jsonElement.get("portHTTP").getAsInt();
-                if (jsonElement.has("portHTTPS")) portHTTPS = jsonElement.get("portHTTPS").getAsInt();
-                if (jsonElement.has("useJava8")) useJava8 = jsonElement.get("useJava8").getAsBoolean();
-                if (jsonElement.has("fixedPorts")) fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
-                if (jsonElement.has("fixedIP")) fixedIP = jsonElement.get("fixedIP").getAsBoolean();
-                if (jsonElement.has("portRange")) portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
-                if (jsonElement.has("defaultDiskspace")) defaultDiskspace = jsonElement.get("defaultDiskspace").getAsInt();
-
-                if (jsonElement.has("certificate"))
-                {
-                    certificatePath = jsonElement.get("certificate").getAsJsonObject().get("path").getAsString();
-                    certificatePass = jsonElement.get("certificate").getAsJsonObject().get("pass").getAsString().toCharArray();
-                }
-
-                if (jsonElement.has("anonPages"))
-                {
-                    anonPages = new ArrayList<>();
-                    JsonArray array = jsonElement.getAsJsonArray("anonPages");
-                    for (int i = 0; i < array.size(); i++)
-                        anonPages.add(array.get(i).getAsString());
-                }
-                fileReader.close();
-            }
 
             if (SERVERS_FILE.exists())
             {

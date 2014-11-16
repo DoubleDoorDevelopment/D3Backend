@@ -265,4 +265,16 @@ public class FileManager
     {
         FileUtils.writeStringToFile(file, text);
     }
+
+    public String getSize(File file)
+    {
+        long sizeL = file.length();
+        if (sizeL < 1000) return String.format("%d B", sizeL);
+        double sizeD = sizeL / 1000D;
+        if (sizeD < 1000) return String.format("%.2f kB", sizeD);
+        sizeD = sizeL / 1000000D;
+        if (sizeD < 1000) return String.format("%.2f MB", sizeD);
+        sizeD = sizeL / 1000000000D;
+        return String.format("%.2f GB", sizeD);
+    }
 }

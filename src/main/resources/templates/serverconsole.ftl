@@ -51,43 +51,35 @@
     <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico" />
 </head>
 <body onresize="document.getElementById('text').style.height = (window.innerHeight - 35) + 'px';">
-<textarea class="textarea form-control" id="text" style="height: 482px;"></textarea>
-<input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) sendCommand(this)">
+<textarea class="textarea form-control" id="text" style="height: 465px;"></textarea>
+<input type="text" class="form-control" placeholder="Command..." onkeydown="if (event.keyCode == 13) {send(this.value); this.value = ''}">
 <script>
-    function sendCommand($input) {
-        execute('PUT', window.location.origin, ["serverconsole", "${server.ID}", $input.value], function () {
-            getConsoleText();
-        })
-        $input.value = "";
+    function wsurl(s) {
+        var l = window.location;
+        return (l.protocol === "https:" ? "wss://" : "ws://") + l.hostname + ":" + l.port + "/socket/" + s;
+    }
+    var textarea = document.getElementById("text");
+    var autoScroll = true;
+    var websocket = new WebSocket(wsurl("serverconsole/${server.ID}"));
+    websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+    websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+
+    websocket.onmessage = function (evt)
+    {
+        var temp = JSON.parse(evt.data);
+        if (temp.status !== "ok") alert(temp.message);
+        else
+        {
+            autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
+            textarea.value += temp.data + "\n";
+            if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
+        }
     }
 
-    var callURL = window.location.origin + "/serverConsoleText?server=${server.ID}";
-    var lines = 0;
-    var textarea = document.getElementById('text');
-    var autoScroll = true;
-    var
-
-    var getConsoleText = function () {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", callURL + "/" + lines, true)
-        xmlhttp.setRequestHeader("content-type", "application/x-www-form-urlencoded")
-        xmlhttp.send(null);
-
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4) {
-                if (xmlhttp.status != 200) alert("Error...\n" + xmlhttp.responseText);
-                else {
-                    autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
-                    responce = JSON.parse(xmlhttp.responseText);
-                    textarea.value += responce["text"];
-                    lines = responce["size"];
-                    if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
-                }
-            }
-        }
-    };
-    setInterval(getConsoleText, 5000);
-    getConsoleText();
+    function send(data)
+    {
+        websocket.send(data);
+    }
 </script>
 </body>
 </html>

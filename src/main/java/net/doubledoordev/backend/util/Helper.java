@@ -250,7 +250,7 @@ public class Helper
 
     public static boolean usingHttps()
     {
-        return !(Strings.isBlank(SETTINGS.certificatePath) || SETTINGS.certificatePass == null || SETTINGS.certificatePass.length == 0);
+        return !(Strings.isBlank(SETTINGS.certificatePath) || Strings.isBlank(SETTINGS.certificatePass));
     }
 
     public static boolean hasUpdate()

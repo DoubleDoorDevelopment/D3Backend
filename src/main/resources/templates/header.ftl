@@ -77,9 +77,6 @@
                 websocket.send(message);
             }
             websocket.onmessage = function (evt) {
-
-                console.log(evt.data);
-
                 var temp = JSON.parse(evt.data);
                 if (typeof func === 'undefined')
                 {
