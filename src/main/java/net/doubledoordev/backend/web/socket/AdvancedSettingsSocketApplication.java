@@ -41,8 +41,11 @@
 
 package net.doubledoordev.backend.web.socket;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.RestartingInfo;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
@@ -50,20 +53,39 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
+import javax.xml.crypto.Data;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Constants.SERVER;
 
 /**
  * @author Dries007
  */
-public class ServerPropertiesSocketApplication extends ServerWebSocketApplication
+public class AdvancedSettingsSocketApplication extends ServerWebSocketApplication
 {
-    private static final ServerPropertiesSocketApplication APPLICATION = new ServerPropertiesSocketApplication();
-    private static final String                            URL_PATTERN = "/serverproperties/*";
+    private static final AdvancedSettingsSocketApplication APPLICATION = new AdvancedSettingsSocketApplication();
+    private static final String                            URL_PATTERN = "/advancedsettings/*";
+    public static final HashMap<String, Data>              DATA_TYPES = new HashMap<>();
 
-    private ServerPropertiesSocketApplication()
+    static
+    {
+        try
+        {
+            DATA_TYPES.put(RESTARTING_INFO, new Data(RestartingInfo.class, RESTARTING_INFO));
+        }
+        catch (NoSuchMethodException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private AdvancedSettingsSocketApplication()
     {
         TIMER.scheduleAtFixedRate(new TimerTask()
         {
@@ -87,21 +109,22 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
     public void onMessage(WebSocket socket, String text)
     {
         Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
-        String[] split = text.split("=", 2);
-        try
+        JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
+        for (String key : DATA_TYPES.keySet())
         {
-            server.setProperty(new WebSocketCaller(socket), split[0], split[1]);
-        }
-        catch (IOException e)
-        {
-            WebSocketHelper.sendError(socket, e);
+            if (object.has(key))
+            {
+                try
+                {
+                    DATA_TYPES.get(key).handle(server, object.getAsJsonObject(key));
+                }
+                catch (Exception e)
+                {
+                    WebSocketHelper.sendError(socket, e);
+                }
+            }
         }
         doSendUpdateToAll(server);
-    }
-
-    public static void sendUpdateToAll(Server server)
-    {
-        APPLICATION.doSendUpdateToAll(server);
     }
 
     private void doSendUpdateToAll(Server server)
@@ -117,16 +140,56 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
     {
         JsonObject object = new JsonObject();
 
-        for (Object key : server.getProperties().keySet())
-        {
-            object.addProperty(key.toString(), server.getProperty(key.toString()));
-        }
-
         return object;
     }
 
     public static void register()
     {
         WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
+    }
+
+    public static class Data
+    {
+        public final Class clazz;
+        public final Method getter;
+
+        public Data(Class clazz, String getterName) throws NoSuchMethodException
+        {
+            this.clazz = clazz;
+            Method m = null;
+            try
+            {
+                m = Server.class.getDeclaredMethod(getterName);
+            }
+            catch (NoSuchMethodException ignored)
+            {
+                m = Server.class.getDeclaredMethod("get" + getterName);
+            }
+            this.getter = m;
+        }
+
+        public void handle(Server server, JsonObject data) throws Exception
+        {
+            for (Map.Entry<String, JsonElement> entry : data.entrySet())
+            {
+                Field f = RestartingInfo.class.getDeclaredField(entry.getKey());
+
+                if (f.getType() == byte.class || f.getType() == Byte.class) f.setByte(getter.invoke(server), entry.getValue().getAsByte());
+                else if (f.getType() == short.class || f.getType() == Short.class) f.setShort(getter.invoke(server), entry.getValue().getAsShort());
+                else if (f.getType() == int.class || f.getType() == Integer.class) f.setInt(getter.invoke(server), entry.getValue().getAsInt());
+                else if (f.getType() == long.class || f.getType() == Long.class) f.setLong(getter.invoke(server), entry.getValue().getAsLong());
+                else if (f.getType() == float.class || f.getType() == Float.class) f.setFloat(getter.invoke(server), entry.getValue().getAsFloat());
+                else if (f.getType() == double.class || f.getType() == Double.class) f.setDouble(getter.invoke(server), entry.getValue().getAsDouble());
+                else if (f.getType() == boolean.class || f.getType() == Boolean.class) f.setBoolean(getter.invoke(server), entry.getValue().getAsBoolean());
+                else if (f.getType() == char.class || f.getType() == Character.class) f.setChar(getter.invoke(server), entry.getValue().getAsCharacter());
+                else if (f.getType() == String.class) f.set(getter.invoke(server), entry.getValue().getAsString());
+                else
+                {
+                    String m = String.format("Unknown type! Field type: %s Json entry: %s Data class: %s Getter Method: %s", f.getType(), entry.getValue().toString(), clazz.getSimpleName(), getter.getName());
+                    Main.LOGGER.error(m);
+                    throw new Exception(m);
+                }
+            }
+        }
     }
 }

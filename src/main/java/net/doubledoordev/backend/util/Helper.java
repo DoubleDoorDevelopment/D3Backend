@@ -309,12 +309,9 @@ public class Helper
         {
             array.add(new JsonPrimitive(Server.SERVER_PORT));
             array.add(new JsonPrimitive(Server.QUERY_PORT));
-            array.add(new JsonPrimitive(Server.RCON_PORT));
         }
         if (SETTINGS.fixedIP) array.add(new JsonPrimitive(Server.SERVER_IP));
 
-        array.add(new JsonPrimitive(Server.RCON_ENABLE));
-        array.add(new JsonPrimitive(Server.RCON_PASSWORD));
         array.add(new JsonPrimitive(Server.QUERY_ENABLE));
 
         return array.toString();

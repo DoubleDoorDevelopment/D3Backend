@@ -20,7 +20,6 @@
                 <p>
                     Server owner is <span id="serverOwner"></span>.<br>
                     Server port status: <span id="serverPortAvailable"></span><br>
-                    RCon port status: <span id="rconPortAvailable"></span><br>
                     <hr>
                     Diskspace in use:<br>
                     by server: <span id="diskspace_server"></span>MB<br>
@@ -52,11 +51,13 @@
                 <h3 class="panel-title" style="text-align: center;">Danger zone&#x2122;</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
+                <div class="btn-group">
+                    <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID}' >File Manager</a>
+                    <a type="button" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">server.properties</a>
+                    <a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID}">World Manager</a>
+                </div>
                 <hr>
-                <a type="button" id="serverProperties" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">server.properties</a>
-                <hr>
-                <a type="button" id="advancedProperties" class="btn btn-default" href="/advancedproperties?server=${server.ID}&file=server.properties">Advanced properties & backup settings</a>
+                <a type="button" class="btn btn-warning" href="/advancedsettings?server=${server.ID}">Advanced Settings</a>
                 <hr>
                 <div class="btn-group">
                     <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {callOnThisServer('setOwner|' + name);}"<#else>disabled</#if> class="btn btn-danger">Change owner</button>
@@ -77,7 +78,7 @@
                     <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="callOnThisServer('removeAdmin|${name}')" class="fa fa-times"></i></#if></li>
                 </#list>
                 </ul>
-                <p class="text-muted">Usernames on the backend. One per line. Can start, stop & use console.</p>
+                <p class="text-muted">Usernames on the backend. Can start, stop & use console.</p>
             </div>
         </div>
     </div>
@@ -180,7 +181,6 @@
         {
             modal.modal("show");
             needsShowing = false;
-            document.getElementById("modal-body").innerHTML = "<p>" + data + "</p>";
         }
         if (data === "done")
         {
@@ -193,7 +193,7 @@
         {
             if (firstData)
             {
-                document.getElementById("modal-body").innerHTML += "<div class=\"progress\"><div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"progressBar\"></div></div>";
+                document.getElementById("modal-body").innerHTML += "<div class=\"progress progress-striped active\"><div class=\"progress-bar\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"progressBar\"></div></div>";
                 pb = $('#progressBar');
                 firstData = false;
             }
@@ -234,8 +234,6 @@
 
         document.getElementById("serverPortAvailable").innerHTML = data.port_server_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
         document.getElementById("serverPortAvailable").className = "label label-" + (data.port_server_available ? "success" : (data.online ? "warning" : "danger"));
-        document.getElementById("rconPortAvailable").innerHTML = data.port_rcon_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
-        document.getElementById("rconPortAvailable").className = "label label-" + (data.port_rcon_available ? "success" : (data.online ? "warning" : "danger"));
 
         document.getElementById("online").innerHTML = data.online ? "Online" : "Offline";
         document.getElementById("online").className = "label label-" + (data.online ? "success" : "danger");
@@ -250,16 +248,12 @@
             document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"callOnThisServer('removeAdmin|" + entry + "')\" class=\"fa fa-times\"></i></#if></li>";
         });
     }
-
-    var websocket = new WebSocket(wsurl("servermonitor/${server.ID}"));
-    websocket.onmessage = function (evt)
+    websocketMonitor.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
         console.log(temp.data);
         if (temp.status === "ok") updateInfo(temp.data);
         else alert(temp.message);
     }
-    websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-    websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
 </script>
 <#include "footer.ftl">

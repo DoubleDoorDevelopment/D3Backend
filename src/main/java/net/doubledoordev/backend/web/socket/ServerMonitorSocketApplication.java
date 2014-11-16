@@ -67,10 +67,10 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class ServerMonitorSocketApplication extends WebSocketApplication
 {
-    private static final  ServerMonitorSocketApplication SERVER_LIST_MONITOR_SOCKET_APPLICATION = new ServerMonitorSocketApplication(true);
-    private static final  ServerMonitorSocketApplication SERVER_MONITOR_SOCKET_APPLICATION = new ServerMonitorSocketApplication(false);
-    private static final String LIST_URL_PATTERN = "/serverlist";
-    private static final String ONE_SERVER_URL_PATTERN = "/servermonitor/*";
+    private static final  ServerMonitorSocketApplication ALL_SERVERS_APPLICATION = new ServerMonitorSocketApplication(true);
+    private static final  ServerMonitorSocketApplication ONE_SERVER_APPLICATION = new ServerMonitorSocketApplication(false);
+    private static final  String                         ALL_SERVERS_URL_PATTERN = "/serverlist";
+    private static final  String                         ONE_SERVER_URL_PATTERN = "/servermonitor/*";
     private final boolean allServers;
 
     private ServerMonitorSocketApplication(boolean allServers)
@@ -146,8 +146,8 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
 
     public static void sendUpdateToAll(Server server)
     {
-        SERVER_LIST_MONITOR_SOCKET_APPLICATION.doSendUpdateToAll(server);
-        SERVER_MONITOR_SOCKET_APPLICATION.doSendUpdateToAll(server);
+        ALL_SERVERS_APPLICATION.doSendUpdateToAll(server);
+        ONE_SERVER_APPLICATION.doSendUpdateToAll(server);
     }
 
     public JsonObject getData(Server server)
@@ -169,7 +169,6 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         root.addProperty("plugins", server.getPlugins());
         root.addProperty("gameID", server.getGameID());
         root.addProperty("port_server_available", Helper.isPortAvailable(server.getIP(), server.getServerPort()));
-        root.addProperty("port_rcon_available", Helper.isPortAvailable(server.getIP(), server.getRconPort()));
         JsonObject object = new JsonObject();
             object.addProperty("server", server.getDiskspaceUse()[0]);
             object.addProperty("backups", server.getDiskspaceUse()[1]);
@@ -190,7 +189,7 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
 
     public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, LIST_URL_PATTERN, SERVER_LIST_MONITOR_SOCKET_APPLICATION);
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ONE_SERVER_URL_PATTERN, SERVER_MONITOR_SOCKET_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ALL_SERVERS_URL_PATTERN, ALL_SERVERS_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ONE_SERVER_URL_PATTERN, ONE_SERVER_APPLICATION);
     }
 }

@@ -49,6 +49,7 @@ import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -79,9 +80,6 @@ public class Server
     public static final String SERVER_PORT       = "server-port";
     public static final String QUERY_PORT        = "query.port";
     public static final String QUERY_ENABLE      = "enable-query";
-    public static final String RCON_ENABLE       = "enable-rcon";
-    public static final String RCON_PASSWORD     = "rcon.password";
-    public static final String RCON_PORT         = "rcon.port";
     public static final String SERVER_IP         = "server-ip";
 
     /*
@@ -119,19 +117,21 @@ public class Server
     private       List<String>            coOwners            = new ArrayList<>();
     @Expose
     private final Map<Integer, Dimension> dimensionMap        = new HashMap<>();
+    @Expose
+    private       RestartingInfo          restartingInfo      = new RestartingInfo();
     /*
      * END exposed Json data
      */
     /**
      * Diskspace var + timer to avoid long page load times.
      */
-    public        int[]             size = new int[3];
+    public        int[] size = new int[3];
     public QueryResponse cachedResponse;
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
      */
-    Logger logger;
+    private Logger logger;
     private File folder;
     private File propertiesFile;
     private long       propertiesFileLastModified = 0L;
@@ -206,11 +206,6 @@ public class Server
     public String getRconPswd()
     {
         return rconPswd;
-    }
-
-    public Logger getLogger()
-    {
-        return logger;
     }
 
     public boolean isDownloading()
@@ -314,11 +309,6 @@ public class Server
     public int getServerPort()
     {
         return Integer.parseInt(properties.containsKey(SERVER_PORT) ? getProperty(SERVER_PORT) : "-1");
-    }
-
-    public int getRconPort()
-    {
-        return Integer.parseInt(properties.containsKey(RCON_PORT) ? getProperty(RCON_PORT) : "-1");
     }
 
     public int getOnlinePlayers()
@@ -467,6 +457,12 @@ public class Server
     public String toString()
     {
         return getID();
+    }
+
+    public RestartingInfo getRestartingInfo()
+    {
+        if (restartingInfo == null) restartingInfo = new RestartingInfo();
+        return restartingInfo;
     }
 
     /*
@@ -658,10 +654,7 @@ public class Server
                 }
                 catch (Exception e)
                 {
-                    printLine("##################################################################");
-                    printLine("Error downloading a new minecraft jar (version " + version + ")");
-                    printLine("##################################################################");
-                    logger.error(e);
+                    error(e);
                 }
                 downloading = false;
             }
@@ -990,7 +983,7 @@ public class Server
                             }
                             catch (IOException e)
                             {
-                                logger.error(e);
+                                error(e);
                             }
                         }
                     }, ID.concat("-streamEater")).start();
@@ -999,7 +992,7 @@ public class Server
                 }
                 catch (IOException e)
                 {
-                    logger.error(e);
+                    error(e);
                 }
                 starting = false;
             }
@@ -1010,6 +1003,14 @@ public class Server
     {
         logger.info(line);
         ServerconsoleSocketApplication.sendLine(this, line);
+    }
+
+    public void error(Throwable e)
+    {
+        logger.error(e);
+        StringWriter error = new StringWriter();
+        e.printStackTrace(new PrintWriter(error));
+        ServerconsoleSocketApplication.sendLine(this, error.toString());
     }
 
     /**
@@ -1127,12 +1128,7 @@ public class Server
         if (Settings.SETTINGS.fixedIP) properties.setProperty(SERVER_IP, ip);
         else ip = properties.getProperty(SERVER_IP, ip);
 
-        if (Settings.SETTINGS.fixedPorts) properties.setProperty(RCON_PORT, String.valueOf(rconPort));
-        else rconPort = Integer.parseInt(properties.getProperty(RCON_PORT, String.valueOf(rconPort)));
-
-        properties.put(RCON_ENABLE, "true");
         properties.put(QUERY_ENABLE, "true");
-        properties.put(RCON_PASSWORD, rconPswd);
     }
 
     private void update()

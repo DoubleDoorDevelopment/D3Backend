@@ -45,6 +45,27 @@
             }
         });
     });
+
+    <#if server??>
+        if (websocketMonitor.onmessage == null)
+        {
+            websocketMonitor.onmessage = function (evt)
+            {
+                var temp = JSON.parse(evt.data);
+                console.log(temp.data);
+                if (temp.status === "ok")
+                {
+                    var onlineDom = document.getElementById("online");
+                    if (onlineDom != null)
+                    {
+                        onlineDom.innerHTML = temp.data.online ? "Online" : "Offline";
+                        onlineDom.className = "label label-" + (temp.data.online ? "success" : "danger");
+                    }
+                }
+                else alert(temp.message);
+            }
+        }
+    </#if>
 </script>
 </body>
 </html>

@@ -220,4 +220,14 @@ public class CommandHandler implements Runnable
         if (force) System.exit(0);
         Main.shutdown();
     }
+
+    @Command(aliases = {"command", "cmd"}, desc = "Send a command to one or more servers", usage = "<server ID (regex)> <message ...>", min = 2)
+    public void cmdCommand(Server[] servers, @Text String cmd) throws CommandException
+    {
+        for (Server server : servers)
+        {
+            if (!server.getOnline()) continue;
+            server.sendCmd(cmd);
+        }
+    }
 }

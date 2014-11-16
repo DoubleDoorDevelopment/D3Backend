@@ -36,41 +36,53 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.server;
 
-import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
+import com.google.gson.annotations.Expose;
 
-import java.util.HashSet;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
- * Used to make sure all port assigned are within a range
- *
  * @author Dries007
  */
-public class PortRange
+@SuppressWarnings("UnusedDeclaration")
+public class RestartingInfo
 {
-    public int min = 25500;
-    public int max = 25600;
+    @Expose
+    public int globalTimeout = 24;
+    @Expose
+    public int whenEmpty = 30;
+    @Expose
+    public boolean timer = false;
+    @Expose
+    public boolean restartDailyTimeout = false;
 
-    public int getNextAvailablePort(int ignored) throws OutOfPortsException
+    private boolean restartNextRun = false;
+    private Date lastRestart = new Date(0L);
+
+    public void run(Server server)
     {
-        HashSet<Integer> usedPorts = new HashSet<>();
-        for (Server server : Settings.SETTINGS.servers.values())
+        try
         {
-            usedPorts.add(server.getServerPort());
+            if (!server.getOnline() && !server.isDownloading() && restartNextRun)
+            {
+                restartNextRun = false;
+                server.startServer();
+            }
         }
-        for (int port = min; port < max; port++)
+        catch (Exception e)
         {
-            if (!usedPorts.contains(port) && port != ignored) return port;
+
+            e.printStackTrace();
         }
-        throw new OutOfPortsException();
     }
 
-    public int getNextAvailablePort() throws OutOfPortsException
+    public String getLastRestart(String format)
     {
-        return getNextAvailablePort(-1);
+        return new SimpleDateFormat(format).format(lastRestart);
     }
 }

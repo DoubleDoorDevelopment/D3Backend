@@ -61,8 +61,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ServerControlSocketApplication extends ServerWebSocketApplication
 {
-    private static final  ServerControlSocketApplication SERVER_CONTROL_SOCKET_APPLICATION = new ServerControlSocketApplication();
-    private static final String                         URL_PATTERN                       = "/servercmd/*";
+    private static final  ServerControlSocketApplication APPLICATION = new ServerControlSocketApplication();
+    private static final  String                         URL_PATTERN = "/servercmd/*";
 
     private ServerControlSocketApplication()
     {
@@ -95,6 +95,6 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
 
     public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, SERVER_CONTROL_SOCKET_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 }

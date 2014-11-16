@@ -56,8 +56,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ServerconsoleSocketApplication extends ServerWebSocketApplication
 {
-    private static final  ServerconsoleSocketApplication SERVERCONSOLE_SOCKET_APPLICATION = new ServerconsoleSocketApplication();
-    private static final String                         URL_PATTERN                       = "/serverconsole/*";
+    private static final  ServerconsoleSocketApplication APPLICATION = new ServerconsoleSocketApplication();
+    private static final  String                         URL_PATTERN = "/serverconsole/*";
 
     private ServerconsoleSocketApplication()
     {
@@ -79,12 +79,12 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
 
     public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, SERVERCONSOLE_SOCKET_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
     public static void sendLine(Server server, String line)
     {
-        for (WebSocket socket : SERVERCONSOLE_SOCKET_APPLICATION.getWebSockets())
+        for (WebSocket socket : APPLICATION.getWebSockets())
         {
             Server server_socket = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
             if (server == server_socket) WebSocketHelper.sendData(socket, line);

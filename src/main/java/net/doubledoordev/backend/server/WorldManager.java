@@ -154,8 +154,7 @@ public class WorldManager
         catch (IOException | ZipException e)
         {
             if (server.getOnline()) server.sendCmd("say Error when making backup");
-            server.logger.warn(e);
-            e.printStackTrace();
+            server.error(e);
         }
         if (server.getOnline())
         {

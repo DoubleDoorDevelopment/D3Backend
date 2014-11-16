@@ -80,6 +80,7 @@ public class Constants
     public static final String           ERROR                                  = "error";
     public static final String           DATA                                   = "data";
     public static final String           DIM                                    = "DIM";
+    public static final String           RESTARTING_INFO                        = "RestartingInfo";
     /*
      * FilenameFilter constants
      */
@@ -136,7 +137,7 @@ public class Constants
     public static final long             REALLY_LONG_CACHE_TIMEOUT              = 1000 * 60 * 60 * 24;     // 24 hours
     public static final long             LONG_CACHE_TIMEOUT                     = 1000 * 60 * 60;          // 1 hour
     public static final long             MEDIUM_CACHE_TIMEOUT                   = 1000 * 60;               // 1 minute
-    public static final long             SHORT_CACHE_TIMEOUT                    = 1000 * 10;               // 20 seconds
+    public static final long             SHORT_CACHE_TIMEOUT                    = 1000 * 10;               // 10 seconds
     /*
      * Pattern constants
      */

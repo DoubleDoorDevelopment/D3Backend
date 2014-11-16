@@ -72,11 +72,11 @@
         }
 
         function call(url, message, func) {
-            var websocket = new WebSocket(wsurl(url));
-            websocket.onopen = function (evt) {
-                websocket.send(message);
+            var cmdwebsocket = new WebSocket(wsurl(url));
+            cmdwebsocket.onopen = function (evt) {
+                cmdwebsocket.send(message);
             }
-            websocket.onmessage = function (evt) {
+            cmdwebsocket.onmessage = function (evt) {
                 var temp = JSON.parse(evt.data);
                 if (typeof func === 'undefined')
                 {
@@ -84,7 +84,7 @@
                 }
                 else func(temp.data);
             };
-            websocket.onerror = function (evt) {
+            cmdwebsocket.onerror = function (evt) {
                 alert("The call socket connction errored. Try again.");
             };
         }
@@ -93,6 +93,12 @@
         {
             call("servercmd/" +  server, message, func);
         }
+
+        <#if server??>
+        var websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
+        websocketMonitor.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+        websocketMonitor.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        </#if>
     </script>
 </head>
 <body>
