@@ -146,6 +146,7 @@ public class Main
         ServerPropertiesSocketApplication.register();
         FileManagerSocketApplication.register();
         ServerconsoleSocketApplication.register();
+        ConsoleSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("secured-listener");
         //networkListener.setSecure(true);

@@ -87,8 +87,8 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
     {
         for (WebSocket socket : SERVERCONSOLE_SOCKET_APPLICATION.getWebSockets())
         {
-            //Server server_socket = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
-            WebSocketHelper.sendData(socket, line);
+            Server server_socket = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
+            if (server == server_socket) WebSocketHelper.sendData(socket, line);
         }
     }
 }

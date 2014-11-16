@@ -36,61 +36,75 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.backend.util;
+package net.doubledoordev.backend.web.socket;
 
-import com.google.gson.JsonObject;
-import net.doubledoordev.backend.web.socket.ConsoleSocketApplication;
-import org.apache.logging.log4j.core.Filter;
-import org.apache.logging.log4j.core.Layout;
-import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.appender.AbstractAppender;
-import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.config.plugins.PluginAttribute;
-import org.apache.logging.log4j.core.config.plugins.PluginElement;
-import org.apache.logging.log4j.core.config.plugins.PluginFactory;
-import org.apache.logging.log4j.core.layout.PatternLayout;
+import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.Constants;
+import net.doubledoordev.backend.util.WebSocketHelper;
+import org.glassfish.grizzly.http.server.DefaultSessionManager;
+import org.glassfish.grizzly.http.server.Session;
+import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.glassfish.grizzly.websockets.WebSocket;
+import org.glassfish.grizzly.websockets.WebSocketApplication;
+import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.TimerTask;
+
+import static net.doubledoordev.backend.util.Constants.*;
 
 /**
  * @author Dries007
  */
-@Plugin(name = "CustomLogAppender", category = "Core", elementType = "appender", printObject = true)
-public class CustomLogAppender extends AbstractAppender
+public class ConsoleSocketApplication extends WebSocketApplication
 {
-    protected CustomLogAppender(String name, Filter filter, Layout<? extends Serializable> layout)
-    {
-        super(name, filter, layout);
-    }
+    private static final  ConsoleSocketApplication APPLICATION = new ConsoleSocketApplication();
+    private static final String URL_PATTERN = "/console";
 
-    protected CustomLogAppender(String name, Filter filter, Layout<? extends Serializable> layout, boolean ignoreExceptions)
+    private ConsoleSocketApplication()
     {
-        super(name, filter, layout, ignoreExceptions);
-    }
-
-    @PluginFactory
-    public static CustomLogAppender createAppender(@PluginAttribute("name") String name, @PluginAttribute("ignoreExceptions") boolean ignoreExceptions, @PluginElement("Layout") Layout layout, @PluginElement("Filters") Filter filter)
-    {
-        if (name == null)
+        TIMER.scheduleAtFixedRate(new TimerTask()
         {
-            LOGGER.error("No name provided for StubAppender");
-            return null;
-        }
-
-        if (layout == null)
-        {
-            layout = PatternLayout.createDefaultLayout();
-        }
-        //noinspection unchecked
-        return new CustomLogAppender(name, filter, layout, ignoreExceptions);
+            @Override
+            public void run()
+            {
+                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
+            }
+        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
     }
 
     @Override
-    public void append(LogEvent event)
+    public void onConnect(WebSocket socket)
     {
-        ConsoleSocketApplication.sendLine(new String(getLayout().toByteArray(event)));
+        Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
+        if (session == null)
+        {
+            WebSocketHelper.sendError(socket, "No valid session.");
+            socket.close();
+            return;
+        }
+        if (!((User) session.getAttribute(USER)).isAdmin())
+        {
+            WebSocketHelper.sendError(socket, "You are no admin.");
+            socket.close();
+            return;
+        }
+        super.onConnect(socket);
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
+    }
+
+    public static void sendLine(String line)
+    {
+        for (WebSocket socket : APPLICATION.getWebSockets())
+        {
+            WebSocketHelper.sendData(socket, line);
+        }
     }
 }
