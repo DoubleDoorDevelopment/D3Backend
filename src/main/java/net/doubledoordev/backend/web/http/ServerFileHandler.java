@@ -45,7 +45,6 @@ import com.google.common.base.Strings;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
-import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import org.glassfish.grizzly.http.Method;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;

@@ -96,7 +96,7 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
         {
             WebSocketHelper.sendError(socket, e);
         }
-        sendUpdateToAll(server);
+        doSendUpdateToAll(server);
     }
 
     public static void sendUpdateToAll(Server server)

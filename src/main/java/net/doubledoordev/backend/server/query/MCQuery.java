@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.server.query;
 
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 
 import java.net.*;

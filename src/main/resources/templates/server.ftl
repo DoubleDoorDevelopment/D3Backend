@@ -35,7 +35,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <#list ["ID", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
+                    <#list ["onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
                         <tr>
                             <td style="text-align: right;">${key}</td>
                             <td style="text-align: left;" id="${key}"></td>
@@ -52,12 +52,11 @@
                 <h3 class="panel-title" style="text-align: center;">Danger zone&#x2122;</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <div class="btn-group">
-                    <a type="button" href='/worldmanager?server=${server.ID}' class="btn btn-info">World Manager</a>
-                    <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
-                </div>
+                <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
                 <hr>
-                <a type="button" id="killServerBtn" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">Modify server properties</a>
+                <a type="button" id="serverProperties" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">server.properties</a>
+                <hr>
+                <a type="button" id="advancedProperties" class="btn btn-default" href="/advancedproperties?server=${server.ID}&file=server.properties">Advanced properties & backup settings</a>
                 <hr>
                 <div class="btn-group">
                     <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {callOnThisServer('setOwner|' + name);}"<#else>disabled</#if> class="btn btn-danger">Change owner</button>

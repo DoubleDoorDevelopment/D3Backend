@@ -42,7 +42,6 @@
 package net.doubledoordev.backend.web.socket;
 
 import com.google.common.base.Strings;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
@@ -52,8 +51,6 @@ import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
-
-import java.util.Arrays;
 
 import static net.doubledoordev.backend.util.Constants.SERVER;
 import static net.doubledoordev.backend.util.Constants.USER;

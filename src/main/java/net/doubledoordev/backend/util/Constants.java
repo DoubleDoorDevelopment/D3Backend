@@ -41,23 +41,19 @@
 package net.doubledoordev.backend.util;
 
 import com.google.common.base.Joiner;
-import com.google.gson.*;
-import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Server;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParser;
 import net.doubledoordev.backend.util.winreg.JavaFinder;
 import net.doubledoordev.backend.util.winreg.JavaInfo;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.regex.Pattern;
-
-import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
  * Constants!

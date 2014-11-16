@@ -48,11 +48,8 @@ import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
 import java.util.*;
 
 import static net.doubledoordev.backend.Main.LOGGER;

@@ -66,7 +66,6 @@ import java.util.Map;
 
 import static net.doubledoordev.backend.util.Constants.JSONPARSER;
 import static net.doubledoordev.backend.util.Constants.RANDOM;
-import static net.doubledoordev.backend.util.Constants.SERVERS;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
