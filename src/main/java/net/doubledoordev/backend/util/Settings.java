@@ -43,11 +43,14 @@ package net.doubledoordev.backend.util;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import org.apache.commons.io.FileUtils;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -63,87 +66,81 @@ import static net.doubledoordev.backend.util.Constants.*;
 @SuppressWarnings("UnusedDeclaration")
 public class Settings
 {
-    public static final Settings SETTINGS = new Settings();
+    public Map<String, Server> servers = new HashMap<>();
+    public Map<String, User>   users   = new HashMap<>();
+
+    @Expose
+    public String hostname;
+    @Expose
+    public int          portHTTP         = 80;
+    @Expose
+    public int          portHTTPS        = 443;
+    @Expose
+    public boolean      useJava8         = false;
+    @Expose
+    public boolean      fixedPorts       = false;
+    @Expose
+    public boolean      fixedIP          = false;
+    @Expose
+    public PortRange    portRange        = new PortRange();
+    @Expose
+    public int          defaultDiskspace = -1;
+    @Expose
+    public List<String> anonPages        = Arrays.asList("index", "login", "register");
+    @Expose
+    public String       certificatePath  = "";
+    @Expose
+    public String       certificatePass  = "";
+
+    public static final Settings SETTINGS;
 
     static
     {
         try
         {
+            SETTINGS = Constants.GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Settings() throws IOException
+    {
+        try
+        {
             FileReader fileReader;
-            if (CONFIG_FILE.exists())
-            {
-                fileReader = new FileReader(CONFIG_FILE);
-                JsonObject jsonElement = Constants.JSONPARSER.parse(fileReader).getAsJsonObject();
-                if (jsonElement.has("hostname")) SETTINGS.hostname = jsonElement.get("hostname").getAsString();
-                if (jsonElement.has("portHTTP")) SETTINGS.portHTTP = jsonElement.get("portHTTP").getAsInt();
-                if (jsonElement.has("portHTTPS")) SETTINGS.portHTTPS = jsonElement.get("portHTTPS").getAsInt();
-                if (jsonElement.has("useJava8")) SETTINGS.useJava8 = jsonElement.get("useJava8").getAsBoolean();
-                if (jsonElement.has("fixedPorts")) SETTINGS.fixedPorts = jsonElement.get("fixedPorts").getAsBoolean();
-                if (jsonElement.has("fixedIP")) SETTINGS.fixedIP = jsonElement.get("fixedIP").getAsBoolean();
-                if (jsonElement.has("portRange")) SETTINGS.portRange = GSON.fromJson(jsonElement.getAsJsonObject("portRange"), PortRange.class);
-                if (jsonElement.has("defaultDiskspace")) SETTINGS.defaultDiskspace = jsonElement.get("defaultDiskspace").getAsInt();
-
-                if (jsonElement.has("certificate"))
-                {
-                    SETTINGS.certificatePath = jsonElement.get("certificate").getAsJsonObject().get("path").getAsString();
-                    SETTINGS.certificatePass = jsonElement.get("certificate").getAsJsonObject().get("pass").getAsString().toCharArray();
-                }
-
-                if (jsonElement.has("anonPages"))
-                {
-                    SETTINGS.anonPages = new ArrayList<>();
-                    JsonArray array = jsonElement.getAsJsonArray("anonPages");
-                    for (int i = 0; i < array.size(); i++)
-                        SETTINGS.anonPages.add(array.get(i).getAsString());
-                }
-                fileReader.close();
-            }
 
             if (SERVERS_FILE.exists())
             {
                 fileReader = new FileReader(SERVERS_FILE);
-                if (SERVERS_FILE.exists()) for (Server server : GSON.fromJson(fileReader, Server[].class)) SETTINGS.servers.put(server.getID(), server);
+                if (SERVERS_FILE.exists())
+                {
+                    for (Server server : GSON.fromJson(fileReader, Server[].class))
+                    {
+                        servers.put(server.getID(), server);
+                    }
+                }
                 fileReader.close();
             }
 
             if (USERS_FILE.exists())
             {
                 fileReader = new FileReader(USERS_FILE);
-                if (USERS_FILE.exists()) for (User user : GSON.fromJson(fileReader, User[].class)) SETTINGS.users.put(user.getUsername().toLowerCase(), user);
+                if (USERS_FILE.exists())
+                {
+                    for (User user : GSON.fromJson(fileReader, User[].class))
+                    {
+                        users.put(user.getUsername().toLowerCase(), user);
+                    }
+                }
                 fileReader.close();
             }
         }
         catch (Exception e)
         {
             throw new RuntimeException(e);
-        }
-    }
-
-    public Map<String, Server> servers = new HashMap<>();
-    public Map<String, User>   users   = new HashMap<>();
-
-    public String hostname;
-    public int          portHTTP         = 80;
-    public int          portHTTPS        = 443;
-    public boolean      useJava8         = false;
-    public boolean      fixedPorts       = false;
-    public boolean      fixedIP          = false;
-    public PortRange    portRange        = new PortRange();
-    public int          defaultDiskspace = -1;
-    public List<String> anonPages        = Arrays.asList("index", "login", "register");
-    public String       certificatePath  = "";
-    public char[]       certificatePass  = new char[0];
-
-    private Settings()
-    {
-        try
-        {
-            hostname = Inet4Address.getLocalHost().getHostAddress();
-        }
-        catch (UnknownHostException e)
-        {
-            e.printStackTrace();
-            hostname = "";
         }
     }
 

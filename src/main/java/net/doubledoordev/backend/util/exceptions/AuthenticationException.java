@@ -47,7 +47,7 @@ package net.doubledoordev.backend.util.exceptions;
  *
  * @author vincent
  */
-public class AuthenticationException extends Exception
+public class AuthenticationException extends RuntimeException
 {
     /**
      *

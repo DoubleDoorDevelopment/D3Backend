@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.server;
 
+import net.doubledoordev.backend.util.exceptions.BackupException;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
@@ -126,9 +127,9 @@ public class WorldManager
         LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getID(), folder.getPath(), zip.getPath()));
         if (server.getOnline())
         {
-            server.send("say Making backup....");
-            server.send("save-off");
-            server.send("save-all");
+            server.sendCmd("say Making backup....");
+            server.sendCmd("save-off");
+            server.sendCmd("save-all");
         }
         try
         {
@@ -152,13 +153,13 @@ public class WorldManager
         }
         catch (IOException | ZipException e)
         {
-            if (server.getOnline()) server.send("say Error when making backup");
+            if (server.getOnline()) server.sendCmd("say Error when making backup");
             server.logger.warn(e);
             e.printStackTrace();
         }
         if (server.getOnline())
         {
-            server.send("save-on");
+            server.sendCmd("save-on");
         }
     }
 
@@ -166,13 +167,5 @@ public class WorldManager
     {
         if (bypassLimits) return !(bypassLimits = false);
         return server.getOwnerObject().getMaxDiskspace() == -1 || server.getOwnerObject().getDiskspaceLeft() <= 0;
-    }
-
-    public class BackupException extends Exception
-    {
-        public BackupException(String s)
-        {
-            super(s);
-        }
     }
 }

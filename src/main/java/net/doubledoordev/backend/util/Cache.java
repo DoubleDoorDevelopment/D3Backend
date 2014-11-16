@@ -45,7 +45,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.webserver.Webserver;
+import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -199,6 +199,7 @@ public class Cache extends TimerTask
         {
             for (Server server : Settings.SETTINGS.servers.values())
             {
+                if (server.getFolder() == null || server.getBackupFolder() == null) continue;
                 try
                 {
                     SizeCounter sizeCounter = new SizeCounter();
@@ -216,13 +217,6 @@ public class Cache extends TimerTask
             }
         }
     };
-    /**
-     * Time vars
-     */
-    public static        long                          REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
-    public static        long                          LONG_CACHE_TIMEOUT        = 1000 * 60 * 60;          // 1 hour
-    public static        long                          MEDIUM_CACHE_TIMEOUT      = 1000 * 60;               // 1 minute
-    public static        long                          SHORT_CACHE_TIMEOUT       = 1000 * 10;               // 20 seconds
     /**
      * Forge version related things
      */
@@ -319,7 +313,7 @@ public class Cache extends TimerTask
     {
         long now = System.currentTimeMillis();
 
-        if (now - Webserver.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
+        if (now - FreemarkerHandler.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
 
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(UPDATE_CHECKER, "cache-updateChecking").start();

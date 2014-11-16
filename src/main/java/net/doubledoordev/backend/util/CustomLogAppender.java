@@ -41,6 +41,7 @@
 package net.doubledoordev.backend.util;
 
 import com.google.gson.JsonObject;
+import net.doubledoordev.backend.web.socket.ConsoleSocketApplication;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LogEvent;
@@ -60,9 +61,6 @@ import java.util.ArrayList;
 @Plugin(name = "CustomLogAppender", category = "Core", elementType = "appender", printObject = true)
 public class CustomLogAppender extends AbstractAppender
 {
-    public static        int               LOG_LINES_KEPT = 1000;
-    private static final ArrayList<String> LOG            = new ArrayList<>(LOG_LINES_KEPT + 10);
-
     protected CustomLogAppender(String name, Filter filter, Layout<? extends Serializable> layout)
     {
         super(name, filter, layout);
@@ -90,23 +88,9 @@ public class CustomLogAppender extends AbstractAppender
         return new CustomLogAppender(name, filter, layout, ignoreExceptions);
     }
 
-    public static String getLogLinesAfter(int index)
-    {
-        JsonObject responce = new JsonObject();
-        StringBuilder stringBuilder = new StringBuilder();
-        synchronized (LOG)
-        {
-            responce.addProperty("size", LOG.size());
-            if (index < LOG.size()) for (String line : LOG.subList(index, LOG.size())) stringBuilder.append(line);
-        }
-        responce.addProperty("text", stringBuilder.toString());
-        return responce.toString();
-    }
-
     @Override
     public void append(LogEvent event)
     {
-        LOG.add(new String(getLayout().toByteArray(event)));
-        while (LOG.size() > LOG_LINES_KEPT) LOG.remove(0);
+        ConsoleSocketApplication.sendLine(new String(getLayout().toByteArray(event)));
     }
 }

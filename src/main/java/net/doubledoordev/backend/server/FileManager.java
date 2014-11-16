@@ -40,16 +40,14 @@
 
 package net.doubledoordev.backend.server;
 
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
-import net.doubledoordev.backend.webserver.NanoHTTPD;
-import net.doubledoordev.backend.webserver.SimpleWebServer;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.glassfish.grizzly.http.util.MimeType;
 import org.spout.nbt.Tag;
 
 import java.io.File;
@@ -57,9 +55,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-
-import static net.doubledoordev.backend.webserver.NanoHTTPD.MIME_PLAINTEXT;
-import static net.doubledoordev.backend.webserver.NanoHTTPD.Response.Status.*;
 
 /**
  * Current limitations:
@@ -145,6 +140,9 @@ public class FileManager
             case "jar":
             case "zip":
             case "disabled":
+            case "exe":
+            case "mca":
+            case "mcr":
                 return false;
 
             default:
@@ -158,15 +156,19 @@ public class FileManager
         if (file.getName().equals("whitelist.json")) return "whitelist.ftl";
         if (file.getName().equals("banned-players.json")) return "banned-players.ftl";
         if (file.getName().equals("banned-ips.json")) return "banned-ips.ftl";
+        if (file.getName().equals("server.properties")) return "serverProperties.ftl";
         switch (getExtension())
         {
             case "jar":
             case "zip":
             case "disabled":
+            case "mca":
+            case "mcr":
                 return null;
 
             case "json":
             case "dat":
+            case "dat_old":
                 return "json.ftl";
 
             case "jpg":
@@ -187,6 +189,8 @@ public class FileManager
             case "html":
             case "json":
             case "dat":
+            case "dat_old":
+            case "properties":
                 return "file-code-o";
 
             case "txt":
@@ -206,53 +210,29 @@ public class FileManager
         }
     }
 
-    public String getFileContentsAsJson() throws IOException
+    public String getFileContents() throws IOException
     {
         switch (getExtension())
         {
             case "json":
                 return FileUtils.readFileToString(file);
             case "dat":
+            case "dat_old":
                 Tag tag = Helper.readRawNBT(file, true);
                 if (tag == null) tag = Helper.readRawNBT(file, false);
                 if (tag != null) return JsonNBTHelper.parseNBT(tag).toString();
-            default:
+            case "jpg":
+            case "png":
+                return String.format("data:%s;base64,%s", MimeType.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
+            case "jar":
+            case "zip":
+            case "disabled":
+            case "mca":
+            case "mcr":
                 return null;
+            default:
+                return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
         }
-    }
-
-    public String getFileContentsAsString() throws IOException
-    {
-        return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
-    }
-
-    public String getFileContentsAsBase64() throws IOException
-    {
-        return String.format("data:%s;base64,%s", SimpleWebServer.MIME_TYPES.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));
-    }
-
-    public NanoHTTPD.Response set(String contents)
-    {
-        if (!file.canWrite()) return new NanoHTTPD.Response(FORBIDDEN, MIME_PLAINTEXT, "File is write protected.");
-        try
-        {
-            switch (getExtension())
-            {
-                case "dat":
-                    Helper.writeRawNBT(file, Helper.readRawNBT(file, true) != null, JsonNBTHelper.parseJSON(Constants.JSONPARSER.parse(contents)));
-                    break;
-                default:
-                    FileUtils.writeStringToFile(file, contents);
-                    break;
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return new NanoHTTPD.Response(INTERNAL_ERROR, MIME_PLAINTEXT, e.toString());
-        }
-
-        return new NanoHTTPD.Response(OK, MIME_PLAINTEXT, "OK");
     }
 
     public void rename(String newname)
@@ -279,5 +259,22 @@ public class FileManager
     public void newFolder(String name)
     {
         new File(file, name).mkdir();
+    }
+
+    public void set(String text) throws IOException
+    {
+        FileUtils.writeStringToFile(file, text);
+    }
+
+    public String getSize(File file)
+    {
+        long sizeL = file.length();
+        if (sizeL < 1000) return String.format("%d B", sizeL);
+        double sizeD = sizeL / 1000D;
+        if (sizeD < 1000) return String.format("%.2f kB", sizeD);
+        sizeD = sizeL / 1000000D;
+        if (sizeD < 1000) return String.format("%.2f MB", sizeD);
+        sizeD = sizeL / 1000000000D;
+        return String.format("%.2f GB", sizeD);
     }
 }

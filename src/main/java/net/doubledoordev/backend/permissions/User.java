@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.permissions;
 
+import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
@@ -54,8 +55,11 @@ import java.security.spec.InvalidKeySpecException;
  */
 public class User
 {
+    @Expose
     private String username, passhash;
+    @Expose
     private int maxServers, maxRam, maxDiskspace = Settings.SETTINGS.defaultDiskspace;
+    @Expose
     private Group group = Group.NORMAL;
 
     public User(String username, String passhash)
@@ -116,15 +120,15 @@ public class User
         return group;
     }
 
-    public void setGroup(String group)
-    {
-        setGroup(Group.valueOf(group));
-    }
-
     public void setGroup(Group group)
     {
         this.group = group;
         Settings.save();
+    }
+
+    public void setGroup(String group)
+    {
+        setGroup(Group.valueOf(group));
     }
 
     public int getMaxServers()
@@ -180,7 +184,7 @@ public class User
     public int getDiskspaceLeft()
     {
         if (getMaxDiskspace() == -1) return -1;
-        int leftover = getDiskspaceLeft();
+        int leftover = getMaxDiskspace();
         for (Server server : Settings.SETTINGS.servers.values())
             if (server.getOwner().equals(username)) leftover -= server.getDiskspaceUse()[2];
         return leftover > 0 ? leftover : 0;

@@ -54,8 +54,8 @@ import com.sk89q.intake.parametric.annotation.Text;
 import com.sk89q.intake.util.auth.AuthorizationException;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.server.WorldManager;
 import net.doubledoordev.backend.util.Cache;
+import net.doubledoordev.backend.util.exceptions.BackupException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -156,7 +156,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            server.send(String.format("/say %s", msg));
+            server.sendCmd(String.format("/say %s", msg));
         }
     }
 
@@ -170,7 +170,7 @@ public class CommandHandler implements Runnable
                 server.getWorldManager().bypassLimits = true;
                 server.getWorldManager().makeAllOfTheBackup();
             }
-            catch (WorldManager.BackupException e)
+            catch (BackupException e)
             {
                 CMDLOGGER.warn("Error when making a backup of " + server.getID());
                 CMDLOGGER.warn(e);

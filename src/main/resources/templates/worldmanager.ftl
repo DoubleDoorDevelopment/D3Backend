@@ -1,9 +1,10 @@
 <#include "header.ftl">
+<#assign wm = server.getWorldManager()>
 <#assign allowModify = server.canUserControl(user) >
 <#assign isCoOwner = server.isCoOwner(user) >
 ${wm.update()}
 <h1>World Manager
-    <small> <a href="/servers/${fm.server.ID}">${fm.server.ID}</a>   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
+    <small> <a href="/server?server=${server.ID}">${server.ID}</a>   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
 </h1>
 <div class="panel panel-info">
     <div class="panel-heading">

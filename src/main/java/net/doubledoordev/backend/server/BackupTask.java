@@ -66,9 +66,9 @@ public class BackupTask extends TimerTask
     {
         if (server.getOnline())
         {
-            server.send("say Making backup....");
-            server.send("save-off");
-            server.send("save-all");
+            server.sendCmd("say Making backup....");
+            server.sendCmd("save-off");
+            server.sendCmd("save-all");
 
             try
             {
@@ -79,11 +79,11 @@ public class BackupTask extends TimerTask
             }
             catch (ZipException e)
             {
-                server.send("say Error when making backup");
+                server.sendCmd("say Error when making backup");
                 server.printLine(e.toString());
             }
 
-            server.send("save-on");
+            server.sendCmd("save-on");
         }
     }
 

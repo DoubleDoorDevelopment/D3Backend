@@ -42,6 +42,7 @@ package net.doubledoordev.backend.util;
 
 import net.doubledoordev.backend.Main;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,11 +71,18 @@ public class TypeHellhole
      * @param clazz target
      * @param s     subject
      * @return Hopefully a casted version of the string.
-     * @throws Exception because it will go wrong.
      */
-    public static Object convert(Class<?> clazz, String s) throws Exception
+    public static Object convert(Class<?> clazz, String s)
     {
-        if (MAP.containsKey(clazz)) return MAP.get(clazz).invoke(null, s);
+        if (MAP.containsKey(clazz)) try
+        {
+            return MAP.get(clazz).invoke(null, s);
+        }
+        catch (IllegalAccessException | InvocationTargetException e)
+        {
+            Main.LOGGER.warn("This should not happen. Ever!");
+            e.printStackTrace();
+        }
         return clazz.cast(s);
     }
 

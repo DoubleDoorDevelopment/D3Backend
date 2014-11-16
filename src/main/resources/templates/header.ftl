@@ -48,14 +48,52 @@
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico" />
     <style>
         body {
             padding-top: 70px;
         }
+
+        .hiddenlink a:link { color: #000000; text-decoration: none}
+        .hiddenlink a:visited { color: #000000; text-decoration: none}
+        .hiddenlink a:hover { color: #3366CC; text-decoration: underline}
+        .hiddenlink a:active { color: #000000; text-decoration: none}
     </style>
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
-    <script src="/static/js/commands.js"></script>
+    <script>
+        function wsurl(s) {
+            var l = window.location;
+            return (l.protocol === "https:" ? "wss://" : "ws://") + l.hostname + ":" + l.port + "/socket/" + s;
+        }
+
+        function openPopup(url) {
+            window.open(window.location.origin + url, '_new', 'height=500,width=800');
+        }
+
+        function call(url, message, func) {
+            var websocket = new WebSocket(wsurl(url));
+            websocket.onopen = function (evt) {
+                websocket.send(message);
+            }
+            websocket.onmessage = function (evt) {
+                var temp = JSON.parse(evt.data);
+                if (typeof func === 'undefined')
+                {
+                    if (temp.status !== "ok") alert(temp.message);
+                }
+                else func(temp.data);
+            };
+            websocket.onerror = function (evt) {
+                alert("The call socket connction errored. Try again.");
+            };
+        }
+
+        function callOnServer(server, message, func)
+        {
+            call("servercmd/" +  server, message, func);
+        }
+    </script>
 </head>
 <body>
 <!-- Fixed navbar -->
@@ -81,7 +119,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <#list Settings.servers as server>
                             <#if server.canUserControl(user)>
-                                <li id="${server.ID}NavTab"><a href="/servers/${server.ID}">${server.ID}</a></li>
+                                <li id="${server.ID}NavTab"><a href="/server?server=${server.ID}">${server.ID}</a></li>
                             </#if>
                         </#list>
                     </ul>
@@ -100,4 +138,4 @@
         <!--/.nav-collapse -->
     </div>
 </div>
-<div class="container">
+<div class="container" id="container">

@@ -1,31 +1,31 @@
 <#include "header.ftl">
-<#assign allowModify = server.canUserControl(user) || admin>
-<#assign isCoOwner = server.isCoOwner(user) || admin >
+<#assign isCoOwner = server.isCoOwner(user) || user.isAdmin() >
+<#assign isOwner = server.ownerObject == user || user.isAdmin() >
 <h1>${server.ID}
-    <small> ${server.getDisplayAddress()}   <span class="label label-<#if server.online>success<#else>danger</#if>"><#if server.online>Online<#else>Offline</#if></span></small>
+    <small> ${server.getDisplayAddress()}   <span id="online"></span></small>
 </h1>
-<p>
 <div class="btn-group">
-    <button type="button" <#if allowModify && !server.online>onclick="call('server', '${server.ID}', 'startServer')" <#else>disabled</#if> class="btn btn-success">Start</button>
-    <button type="button" class="btn btn-info" <#if allowModify>onclick="openPopup('/serverconsole/${server.ID}')" <#else>disabled</#if>>Console</button>
-    <button type="button" <#if allowModify && server.online>onclick="call('server', '${server.ID}', 'stopServer', prompt('Message?', 'Server is stopping.'))" <#else>disabled</#if> class="btn btn-warning">Stop</button>
-    <button type="button" <#if allowModify && server.online>onclick="if (confirm('Are you sure?')) call('server', '${server.ID}', 'forceStopServer');" <#else>disabled</#if> class="btn btn-danger">Kill</button>
+    <button type="button" id="startServerBtn" class="btn btn-success">Start</button>
+    <button type="button" class="btn btn-info" onclick="openPopup('/serverconsole?server=${server.ID}')">Console</button>
+    <button type="button" id="stopServerBtn" class="btn btn-warning">Stop</button>
+    <button type="button" id="killServerBtn" class="btn btn-danger">Kill</button>
 </div>
-</p>
 <div class="row">
     <div class="col-sm-6">
         <div class="panel panel-info">
             <div class="panel-heading">
                 <h3 class="panel-title" style="text-align: center;">Server information</h3>
-                <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>
-                    Server owner is ${server.owner}.<br>
-                    Server port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.serverPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.serverPort)>
-                    Free<#elseif server.online>In use by us<#else>In use by ?</#if></span><br>
-                    RCon port status: <span class="label label-<#if Helper.isPortAvailable(server.ip, server.rconPort)>success<#elseif server.online>warning<#else>danger</#if>"><#if Helper.isPortAvailable(server.ip, server.rconPort)>
-                    Free<#elseif server.online>In use by us<#else>In use by ?</#if></span>
+                    Server owner is <span id="serverOwner"></span>.<br>
+                    Server port status: <span id="serverPortAvailable"></span><br>
+                    RCon port status: <span id="rconPortAvailable"></span><br>
+                    <hr>
+                    Diskspace in use:<br>
+                    by server: <span id="diskspace_server"></span>MB<br>
+                    by backups: <span id="diskspace_backup"></span>MB<br>
+                    total: <span id="diskspace_total"></span>MB
                 </p>
                 <table class="table table-hover table-condensed">
                     <thead>
@@ -36,94 +36,13 @@
                     </thead>
                     <tbody>
                     <#list ["ID", "onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
-                        <#assign value = server.get(key)>
-                    <tr>
-                        <td style="text-align: right;">${key}</td>
-                        <td style="text-align: left;"><#if value?is_number>${value?c}<#elseif value?is_boolean>${value?string}<#elseif value?is_sequence>${value?join(", ")}<#else>${value}</#if></td>
-                    </tr>
+                        <tr>
+                            <td style="text-align: right;">${key}</td>
+                            <td style="text-align: left;" id="${key}"></td>
+                        </tr>
                     </#list>
                     </tbody>
                 </table>
-                <p>
-                    Diskspace in use:<br>
-                    by server: ${server.diskspaceUse[0]}MB<br>
-                    by backups: ${server.diskspaceUse[1]}MB<br>
-                    total: ${server.diskspaceUse[2]}MB
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title" style="text-align: center;">Server control</h3>
-                <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
-            </div>
-            <div class="panel-body" style="text-align: center;">
-                <form class="form-horizontal" role="form" style="padding-left: 10px; padding-right: 10px;">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" <#if allowModify>onclick="call('server', '${server.ID}', 'setAutoStart', this.checked)" <#else>disabled</#if> <#if server.autoStart>checked</#if>> Autostart
-                        </label>
-                    </div>
-                    <br>
-
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-addon">RAM min</div>
-                            <input class="form-control" type="number" name="quantity" placeholder="1024" value="${server.ramMin?c}" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setRamMin', this.value)" <#else>disabled</#if>>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-addon">RAM max</div>
-                            <input class="form-control" type="number" name="quantity" placeholder="1024" value="${server.ramMax?c}" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setRamMax', this.value)" <#else>disabled</#if>>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-addon">perm Gen</div>
-                            <input class="form-control" type="number" name="quantity" placeholder="128" value="${server.permGen?c}" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setPermGen', this.value)" <#else>disabled</#if>>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="input-group-addon">Jar</div>
-                            <input class="form-control" placeholder="minecraft_server.jar" value="${server.jarName}" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setJarName', this.value)" <#else>disabled</#if>>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="ExtraJavaParameters">Extra Java Parameters</label>
-                        <textarea id="ExtraJavaParameters" class="form-control" rows="3" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setExtraJavaParameters', this.value.split('\n'))" <#else>disabled</#if>>${server.extraJavaParameters?join("\n")}
-                        </textarea>
-
-                        <p class="help-block">One per line.</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="ExtraServerParameters">Extra Server Parameters</label>
-                        <textarea id="ExtraServerParameters" class="form-control" rows="3" <#if isCoOwner && !server.online>onchange="call('server', '${server.ID}', 'setExtraMCParameters', this.value.split('\n'))" <#else>disabled</#if>>${server.extraMCParameters?join("\n")}</textarea>
-
-                        <p class="help-block">One per line.</p>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title" style="text-align: center;">Server Properties File</h3>
-                <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
-            </div>
-            <div class="panel-body" style="text-align: center;">
-                <p>No checks are preformed when submitting. Be careful!</p>
-
-                <form class="form-horizontal" role="form" style="padding-left: 10px; padding-right: 10px;" method="post">
-                    <textarea id="serverProperties" name="serverProperties" class="form-control" rows="25" <#if isCoOwner && server.online>disabled</#if>>${server.propertiesAsText}</textarea>
-                    <br>
-                    <button class="btn btn-primary btn-lg btn-block" <#if isCoOwner && !server.online>type="submit" <#else>disabled</#if>>Send!
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -131,76 +50,100 @@
         <div class="panel panel-danger">
             <div class="panel-heading">
                 <h3 class="panel-title" style="text-align: center;">Danger zone&#x2122;</h3>
-                <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
             </div>
             <div class="panel-body" style="text-align: center;">
                 <div class="btn-group">
-                    <a type="button" href='/worldmanager/${server.ID}' class="btn btn-info">World Manager</a>
-                    <a type="button" href='/filemanager/${server.ID}' class="btn btn-info">File Manager</a>
+                    <a type="button" href='/worldmanager?server=${server.ID}' class="btn btn-info">World Manager</a>
+                    <a type="button" href='/filemanager?server=${server.ID}' class="btn btn-info">File Manager</a>
                 </div>
+                <hr>
+                <a type="button" id="killServerBtn" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">Modify server properties</a>
+                <hr>
                 <div class="btn-group">
-                <#if server.ownerObject == user || admin>
-                    <button type="button" onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('server', '${server.ID}', 'setOwner', name);}" class="btn btn-danger">Change
-                        owner
-                    </button></#if>
-                    <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('server', '${server.ID}', 'delete'); window.location='/'}" <#else>disabled</#if> class="btn btn-danger">
-                        Delete server
-                    </button>
+                    <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {callOnThisServer('setOwner|' + name);}"<#else>disabled</#if> class="btn btn-danger">Change owner</button>
+                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {callOnThisServer('delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">Delete server</button>
                 </div>
                 <hr>
-                <div class="form-group">
-                    <label for="Admins">Co Owners</label>
-                    <textarea id="Admins" class="form-control" rows="3" <#if server.owner == user.username>onchange="call('server', '${server.ID}', 'setCoOwners', this.value.split('\n'))" <#else>disabled</#if>>${server.coOwners?join("\n")}</textarea>
-
-                    <p class="help-block">Usernames on the backend. One per line. Can do everything except modify Co Owners</p>
-                </div>
+                <h4>Co-owners <#if isOwner><small style="cursor: pointer;" onclick="var name = prompt('Username of the future co-owner?');if (name != null && name !== '') {callOnThisServer('addCoowner|' + name)}"><i class="fa fa-plus"></i></small></#if></h4>
+                <ul class="list-unstyled" id="coOwnersList">
+                    <#list server.getCoOwners() as name>
+                        <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="callOnThisServer('removeCoowner|${name}')" class="fa fa-times"></i></#if></li>
+                    </#list>
+                </ul>
+                <p class="text-muted">Usernames on the backend. Can do everything except modify co-owners, change owner and delete the server.</p>
                 <hr>
-                <div class="form-group">
-                    <label for="Admins">Admins</label>
-                    <textarea id="Admins" class="form-control" rows="3" <#if isCoOwner>onchange="call('server', '${server.ID}', 'setAdmins', this.value.split('\n'))" <#else>disabled</#if>>${server.admins?join("\n")}</textarea>
-
-                    <p class="help-block">Usernames on the backend. One per line. Can start, stop & use console.</p>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <label for="mcVersionSelector">MC jar version</label>
-                    <select id="mcVersionSelector" class="form-control">
-                    <#list Helper.getAllMCVersions() as version>
-                        <option>${version}</option></#list>
-                    </select>
-
-                    <p class="help-block">To see any progress or errors, open the console.</p>
-                </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.ID}', 'setVersion', document.getElementById('mcVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">
-                    Change MC jar
-                </button>
-                <hr>
-                <hr>
-                <div class="form-group">
-                    <label for="forgeVersionSelector">Install Forge</label>
-                    <select id="forgeVersionSelector" class="form-control">
-                    <#list Helper.getForgeNames() as version>
-                        <option>${version}</option></#list>
-                    </select>
-
-                    <p class="help-block">To see any progress or errors, open the console.</p>
-                </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) call('server', '${server.ID}', 'installForge', document.getElementById('forgeVersionSelector').value);" <#else>disabled</#if> class="btn btn-warning">
-                    Install forge
-                </button>
-                <hr>
-                <div class="form-group">
-                    <label for="modpackURL">Upload modpack zip</label>
-                    <input id="modpackURL" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="modpackPurge">
-                        <input id="modpackPurge" type="checkbox" checked> Purge the server
-                    </label>
-                </div>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove and override all files related to this server!')) call('server', '${server.ID}', 'downloadModpack', encodeURIComponent(document.getElementById('modpackURL').value), document.getElementById('modpackPurge').checked);" <#else>disabled</#if> class="btn btn-warning">
-                    Upload modpack
-                </button>
+                <h4>Admins <#if isCoOwner><small style="cursor: pointer;" onclick="var name = prompt('Username of the future admin?');if (name != null && name !== '') {callOnThisServer('addAdmin|' + name)}"><i class="fa fa-plus"></i></small></#if></h4>
+                <ul class="list-unstyled" id="adminsList">
+                <#list server.getAdmins() as name>
+                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="callOnThisServer('removeAdmin|${name}')" class="fa fa-times"></i></#if></li>
+                </#list>
+                </ul>
+                <p class="text-muted">Usernames on the backend. One per line. Can start, stop & use console.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title" style="text-align: center;">MC jar installer</h3>
+            </div>
+            <div class="panel-body" style="text-align: center;">
+                <select id="mcVersionSelector" class="form-control">
+                <#list Helper.getAllMCVersions() as version>
+                    <option>${version}</option>
+                </#list>
+                </select>
+                <br>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value; callOnThisServer('setVersion|' + document.getElementById('mcVersionSelector').value, progressBar); }" <#else>disabled</#if> class="btn btn-warning">Change MC jar</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title" style="text-align: center;">Install Forge</h3>
+            </div>
+            <div class="panel-body" style="text-align: center;">
+                <select id="forgeVersionSelector" class="form-control">
+                <#list Helper.getForgeNames() as version>
+                    <option>${version}</option>
+                </#list>
+                </select>
+                <br>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value; callOnThisServer('installForge|' + document.getElementById('forgeVersionSelector').value, progressBar); }" <#else>disabled</#if> class="btn btn-warning">Install forge</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title" style="text-align: center;">Upload modpack zip</h3>
+            </div>
+            <div class="panel-body" style="text-align: center;">
+                <input id="modpackURL" class="form-control" placeholder="URL here">
+                <label for="modpackPurge">
+                    <input id="modpackPurge" type="checkbox" checked> Purge the server
+                </label>
+                <br>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; callOnThisServer('downloadModpack|' + document.getElementById('modpackURL').value + '|' + document.getElementById('modpackPurge').value, progressBar); }" <#else>disabled</#if> class="btn btn-warning">Upload modpack</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="modalLabel">Operation in progress</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -224,5 +167,100 @@
     function openPopup($url) {
         window.open(window.location.origin + $url, '_new', 'height=500,width=800');
     }
+
+    function callOnThisServer(message, func) {
+        callOnServer("${server.ID}", message, func);
+    }
+
+    modal = $('#modal');
+    needsShowing = true;
+    firstData = true;
+    function progressBar(data) {
+        var fl = parseFloat(data);
+        if (needsShowing)
+        {
+            modal.modal("show");
+            needsShowing = false;
+            document.getElementById("modal-body").innerHTML = "<p>" + data + "</p>";
+        }
+        if (data === "done")
+        {
+            needsShowing = true;
+            firstData = true;
+            pb.css("width", "100%");
+            pb.attr("aria-valuenow", 100);
+        }
+        if (!isNaN(fl))
+        {
+            if (firstData)
+            {
+                document.getElementById("modal-body").innerHTML += "<div class=\"progress\"><div class=\"progress-bar progress-bar-striped active\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"progressBar\"></div></div>";
+                pb = $('#progressBar');
+                firstData = false;
+            }
+
+            pb.css("width", data + "%");
+            pb.attr("aria-valuenow", data);
+        }
+        else
+        {
+            document.getElementById("modal-body").innerHTML += data + "<br>";
+        }
+    }
+
+    function updateInfo (data) {
+        document.getElementById("startServerBtn").onclick = !data.online ? function() {callOnThisServer("startServer")} : null;
+        document.getElementById("startServerBtn").disabled = data.online;
+
+        document.getElementById("stopServerBtn").onclick = data.online ? function() {callOnThisServer("stopServer|" + prompt('Message?', 'Server is stopping.'))} : null;
+        document.getElementById("stopServerBtn").disabled = !data.online;
+
+        document.getElementById("killServerBtn").onclick = data.online ? function() {if (confirm('Are you sure?')) callOnThisServer("forceStopServer")} : null;
+        document.getElementById("killServerBtn").disabled = !data.online;
+
+        document.getElementById("onlinePlayers").innerHTML = data.onlinePlayers;
+        document.getElementById("slots").innerHTML = data.slots;
+        document.getElementById("motd").innerHTML = data.motd;
+        document.getElementById("mapName").innerHTML = data.mapName;
+        document.getElementById("playerList").innerHTML = data.playerList;
+        document.getElementById("version").innerHTML = data.version;
+        document.getElementById("serverOwner").innerHTML = data.owner;
+        document.getElementById("gameMode").innerHTML = data.gameMode;
+        document.getElementById("plugins").innerHTML = data.plugins;
+        document.getElementById("gameID").innerHTML = data.gameID;
+
+        document.getElementById("diskspace_server").innerHTML = data.diskspace.server;
+        document.getElementById("diskspace_backup").innerHTML = data.diskspace.backups;
+        document.getElementById("diskspace_total").innerHTML = data.diskspace.total;
+
+        document.getElementById("serverPortAvailable").innerHTML = data.port_server_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
+        document.getElementById("serverPortAvailable").className = "label label-" + (data.port_server_available ? "success" : (data.online ? "warning" : "danger"));
+        document.getElementById("rconPortAvailable").innerHTML = data.port_rcon_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
+        document.getElementById("rconPortAvailable").className = "label label-" + (data.port_rcon_available ? "success" : (data.online ? "warning" : "danger"));
+
+        document.getElementById("online").innerHTML = data.online ? "Online" : "Offline";
+        document.getElementById("online").className = "label label-" + (data.online ? "success" : "danger");
+
+        document.getElementById("coOwnersList").innerHTML = "";
+        data.coOwners.forEach(function(entry) {
+            document.getElementById("coOwnersList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"callOnThisServer('removeCoowner|" + entry + "')\" class=\"fa fa-times\"></i></#if></li>";
+        });
+
+        document.getElementById("adminsList").innerHTML = "";
+        data.admins.forEach(function(entry) {
+            document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"callOnThisServer('removeAdmin|" + entry + "')\" class=\"fa fa-times\"></i></#if></li>";
+        });
+    }
+
+    var websocket = new WebSocket(wsurl("servermonitor/${server.ID}"));
+    websocket.onmessage = function (evt)
+    {
+        var temp = JSON.parse(evt.data);
+        console.log(temp.data);
+        if (temp.status === "ok") updateInfo(temp.data);
+        else alert(temp.message);
+    }
+    websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+    websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
 </script>
 <#include "footer.ftl">

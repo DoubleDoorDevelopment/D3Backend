@@ -41,6 +41,7 @@
 package net.doubledoordev.backend.util;
 
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 
 import java.util.HashSet;
 
@@ -72,13 +73,5 @@ public class PortRange
     public int getNextAvailablePort() throws OutOfPortsException
     {
         return getNextAvailablePort(-1);
-    }
-
-    public static class OutOfPortsException extends Exception
-    {
-        private OutOfPortsException()
-        {
-            super("We have run out of available ports...");
-        }
     }
 }

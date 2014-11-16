@@ -44,6 +44,8 @@ import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 
 import java.net.*;
 
+import static net.doubledoordev.backend.util.Constants.LOCALHOST;
+
 /**
  * A class that handles Minecraft Query protocol requests
  *
@@ -54,7 +56,7 @@ public class MCQuery
     final static byte HANDSHAKE = 9;
     final static byte STAT      = 0;
 
-    String serverAddress = "localhost";
+    String serverAddress = LOCALHOST;
     int    queryPort     = 25565; // the default minecraft query port
 
     int localPort = 25566; // the local port we're connected to the server on
