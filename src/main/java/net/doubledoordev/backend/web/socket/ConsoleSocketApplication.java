@@ -42,8 +42,6 @@
 package net.doubledoordev.backend.web.socket;
 
 import net.doubledoordev.backend.permissions.User;
-import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;

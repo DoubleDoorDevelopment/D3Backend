@@ -40,7 +40,6 @@
 
 package net.doubledoordev.backend.util;
 
-import com.google.gson.JsonObject;
 import net.doubledoordev.backend.web.socket.ConsoleSocketApplication;
 import org.apache.logging.log4j.core.Filter;
 import org.apache.logging.log4j.core.Layout;
@@ -53,7 +52,6 @@ import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 /**
  * @author Dries007

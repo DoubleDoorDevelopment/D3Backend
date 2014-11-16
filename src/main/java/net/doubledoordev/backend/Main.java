@@ -42,7 +42,6 @@ package net.doubledoordev.backend;
 
 import net.doubledoordev.backend.commands.CommandHandler;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.Cache;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Settings;
@@ -206,11 +205,9 @@ public class Main
                 LOGGER.info("Server " + server.getID() + " is still online.");
                 try
                 {
-                    RCon rCon = server.getRCon();
                     try
                     {
-                        for (String user : server.getPlayerList()) rCon.send("kick", user, NAME + " shutdown!");
-                        rCon.stop();
+                        server.stopServer(NAME + " shutdown!");
                     }
                     catch (Exception e)
                     {

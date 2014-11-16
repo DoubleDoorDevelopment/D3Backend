@@ -40,6 +40,9 @@
             editor.getSession().setMode("ace/mode/" + mode);
         }
 
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
         websocket.onmessage = function (evt)
         {
             var temp = JSON.parse(evt.data);
@@ -49,6 +52,10 @@
                 editor.clearSelection();
             }
             else alert(temp.message);
+        }
+        function send(data)
+        {
+            websocket.send(data);
         }
     </script>
     <#if !readonly>

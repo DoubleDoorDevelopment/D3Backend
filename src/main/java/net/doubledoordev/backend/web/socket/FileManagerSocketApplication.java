@@ -41,7 +41,6 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.WebSocketHelper;
@@ -49,7 +48,6 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.TimerTask;
 

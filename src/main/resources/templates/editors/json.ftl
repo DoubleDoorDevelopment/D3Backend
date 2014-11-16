@@ -42,6 +42,13 @@
         }
         else editor = new JSONEditor(container, options, json);
 
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        function send(data)
+        {
+            websocket.send(data);
+        }
         websocket.onmessage = function (evt)
         {
             var temp = JSON.parse(evt.data);

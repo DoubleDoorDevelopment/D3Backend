@@ -40,12 +40,10 @@
 
 package net.doubledoordev.backend.server;
 
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
-import net.doubledoordev.backend.server.rcon.RCon;
 import net.doubledoordev.backend.util.*;
 import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
@@ -67,7 +65,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import static net.doubledoordev.backend.util.Constants.*;
-import static net.doubledoordev.backend.util.CustomLogAppender.LOG_LINES_KEPT;
 
 /**
  * Class that holds methods related to Server instances.
@@ -140,10 +137,6 @@ public class Server
     private long       propertiesFileLastModified = 0L;
     private Properties properties                 = new Properties();
     /**
-     * RCon instance + timer to avoid long page load times.
-     */
-    private RCon    rCon;
-    /**
      * MCQuery and QueryResponse instances + timer to avoid long page load times.
      */
     private MCQuery query;
@@ -183,31 +176,6 @@ public class Server
 
         if (!backupFolder.exists()) backupFolder.mkdirs();
         if (!folder.exists()) folder.mkdir();
-
-        // Check to see if the server is running outside the backend, if so reboot please!
-        if (getRCon() != null)
-        {
-            new Thread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    try
-                    {
-                        renewQuery();
-                        RCon rCon = getRCon();
-                        for (String user : getPlayerList())
-                            rCon.send("kick", user, NAME + " is taking over! Server Reboot!");
-                        rCon.stop();
-                        Thread.sleep(1000 * 10); // wait for 10 seconds to give the server time to respond.
-                        startServer();
-                    }
-                    catch (Exception ignored)
-                    {
-                    }
-                }
-            }).start();
-        }
 
         try
         {
@@ -253,11 +221,6 @@ public class Server
     public boolean isStarting()
     {
         return starting;
-    }
-
-    public RCon getRCon()
-    {
-        return rCon;
     }
 
     public MCQuery getQuery()
@@ -936,17 +899,6 @@ public class Server
      * ========================================================================================
      * MAKE or RENEW methods
      */
-    public void makeRcon()
-    {
-        try
-        {
-            rCon = new RCon(LOCALHOST, rconPort, rconPswd.toCharArray());
-        }
-        catch (Exception ignored) // Server offline.
-        {
-        }
-    }
-
     public void renewQuery()
     {
         cachedResponse = getQuery().fullStat();
@@ -1043,11 +995,6 @@ public class Server
                         }
                     }, ID.concat("-streamEater")).start();
 
-                    /**
-                     * Renews cashed vars so they are up to date when the page is refreshed.
-                     */
-                    makeRcon();
-
                     instance.update();
                 }
                 catch (IOException e)
@@ -1067,8 +1014,6 @@ public class Server
 
     /**
      * Stop the server gracefully
-     *
-     * @return true if successful via RCon
      */
     public boolean stopServer(String message)
     {
@@ -1076,11 +1021,9 @@ public class Server
         try
         {
             renewQuery();
-            makeRcon();
             printLine("----=====##### STOPPING SERVER WITH RCON #####=====-----");
-            for (String user : getPlayerList())
-                getRCon().send("kick", user, message);
-            getRCon().stop();
+            for (String user : getPlayerList()) sendCmd(String.format("kick %s %s", user, message));
+            sendCmd("stop");
             return true;
         }
         catch (Exception e)

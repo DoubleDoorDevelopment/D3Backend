@@ -44,7 +44,6 @@ package net.doubledoordev.backend.util;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocket;

@@ -330,7 +330,6 @@ public class Cache extends TimerTask
                 for (Server server : Settings.SETTINGS.servers.values())
                 {
                     server.renewQuery();
-                    if (server.getRCon() == null) server.makeRcon();
                 }
             }
         }, "cache-rConAndQuery").start();
