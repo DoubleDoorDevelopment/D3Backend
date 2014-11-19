@@ -89,6 +89,8 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         dataObject.put("Settings", Settings.SETTINGS);
         dataObject.put("Helper", BeansWrapper.getDefaultInstance().getStaticModels().get(Helper.class.getName()));
         freemarker.setAllSharedVariables(new SimpleHash(dataObject));
+
+        freemarker.setTemplateUpdateDelay(0); // TODO: remove when release!
     }
 
     @Override

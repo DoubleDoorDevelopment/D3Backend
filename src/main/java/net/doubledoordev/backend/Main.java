@@ -149,7 +149,7 @@ public class Main
         ConsoleSocketApplication.register();
         AdvancedSettingsSocketApplication.register();
 
-        final NetworkListener networkListener = new NetworkListener("secured-listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, SETTINGS.portHTTP);
+        final NetworkListener networkListener = new NetworkListener("unsecured-listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, SETTINGS.portHTTP);
         //networkListener.setSecure(true);
         //networkListener.setSSLEngineConfig(createSslConfiguration());
         webserver.addListener(networkListener);
@@ -174,7 +174,7 @@ public class Main
         for (Server server : SETTINGS.servers.values())
         {
             server.init();
-            if (server.getAutoStart())
+            if (server.getRestartingInfo().autoStart)
             {
                 try
                 {

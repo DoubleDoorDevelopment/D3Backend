@@ -145,25 +145,7 @@ public class Settings
     {
         try
         {
-            // SETTINGS
-            {
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("hostname", SETTINGS.hostname);
-                jsonObject.addProperty("portHTTP", SETTINGS.portHTTP);
-                jsonObject.addProperty("portHTTPS", SETTINGS.portHTTPS);
-                jsonObject.addProperty("useJava8", SETTINGS.useJava8);
-                jsonObject.addProperty("fixedPorts", SETTINGS.fixedPorts);
-                jsonObject.addProperty("fixedIP", SETTINGS.fixedIP);
-                JsonArray anonPages = new JsonArray();
-                for (String s : SETTINGS.anonPages) anonPages.add(new JsonPrimitive(s));
-                jsonObject.add("anonPages", anonPages);
-                jsonObject.add("portRange", GSON.toJsonTree(SETTINGS.portRange));
-                JsonObject cert = new JsonObject();
-                cert.addProperty("path", SETTINGS.certificatePath);
-                cert.addProperty("pass", new String(SETTINGS.certificatePass));
-                jsonObject.add("certificate", cert);
-                FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(jsonObject));
-            }
+            FileUtils.writeStringToFile(CONFIG_FILE, GSON.toJson(SETTINGS));
             FileUtils.writeStringToFile(SERVERS_FILE, GSON.toJson(SETTINGS.servers.values()));
             FileUtils.writeStringToFile(USERS_FILE, GSON.toJson(SETTINGS.users.values()));
 

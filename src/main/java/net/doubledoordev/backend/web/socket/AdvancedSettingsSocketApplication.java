@@ -45,16 +45,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.JvmData;
 import net.doubledoordev.backend.server.RestartingInfo;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
-import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
+import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import javax.xml.crypto.Data;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -78,6 +78,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
         try
         {
             DATA_TYPES.put(RESTARTING_INFO, new Data(RestartingInfo.class, RESTARTING_INFO));
+            DATA_TYPES.put(JVM_DATA, new Data(JvmData.class, JVM_DATA));
         }
         catch (NoSuchMethodException e)
         {
@@ -102,12 +103,30 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
     {
         super.onConnect(socket);
 
-        WebSocketHelper.sendData(socket, getData((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)));
+        Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
+        if (server.isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        {
+            try
+            {
+                WebSocketHelper.sendData(socket, getData(server));
+            }
+            catch (Exception e)
+            {
+                WebSocketHelper.sendError(socket, e);
+            }
+        }
+        else
+        {
+            WebSocketHelper.sendError(socket, new AuthenticationException());
+            socket.close();
+        }
     }
 
     @Override
     public void onMessage(WebSocket socket, String text)
     {
+        Main.LOGGER.info(text);
+
         Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
         JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
         for (String key : DATA_TYPES.keySet())
@@ -116,7 +135,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             {
                 try
                 {
-                    DATA_TYPES.get(key).handle(server, object.getAsJsonObject(key));
+                    DATA_TYPES.get(key).setValues(server, object.getAsJsonObject(key));
                 }
                 catch (Exception e)
                 {
@@ -125,6 +144,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             }
         }
         doSendUpdateToAll(server);
+        Settings.save();
     }
 
     private void doSendUpdateToAll(Server server)
@@ -132,13 +152,27 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
         for (WebSocket socket : getWebSockets())
         {
             if (((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER) != server) continue;
-            if (server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER))) WebSocketHelper.sendData(socket, getData(server));
+            if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER))) continue;
+            try
+            {
+                WebSocketHelper.sendData(socket, getData(server));
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                break;
+            }
         }
     }
 
-    public JsonObject getData(Server server)
+    public JsonObject getData(Server server) throws Exception
     {
         JsonObject object = new JsonObject();
+
+        for (String key : DATA_TYPES.keySet())
+        {
+            object.add(key, GSON.toJsonTree(DATA_TYPES.get(key).getter.invoke(server)));
+        }
 
         return object;
     }
@@ -156,7 +190,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
         public Data(Class clazz, String getterName) throws NoSuchMethodException
         {
             this.clazz = clazz;
-            Method m = null;
+            Method m;
             try
             {
                 m = Server.class.getDeclaredMethod(getterName);
@@ -168,21 +202,32 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             this.getter = m;
         }
 
-        public void handle(Server server, JsonObject data) throws Exception
+        public void setValues(Server server, JsonObject data) throws Exception
         {
+            Object object = getter.invoke(server);
             for (Map.Entry<String, JsonElement> entry : data.entrySet())
             {
-                Field f = RestartingInfo.class.getDeclaredField(entry.getKey());
+                Field f = clazz.getDeclaredField(entry.getKey());
 
-                if (f.getType() == byte.class || f.getType() == Byte.class) f.setByte(getter.invoke(server), entry.getValue().getAsByte());
-                else if (f.getType() == short.class || f.getType() == Short.class) f.setShort(getter.invoke(server), entry.getValue().getAsShort());
-                else if (f.getType() == int.class || f.getType() == Integer.class) f.setInt(getter.invoke(server), entry.getValue().getAsInt());
-                else if (f.getType() == long.class || f.getType() == Long.class) f.setLong(getter.invoke(server), entry.getValue().getAsLong());
-                else if (f.getType() == float.class || f.getType() == Float.class) f.setFloat(getter.invoke(server), entry.getValue().getAsFloat());
-                else if (f.getType() == double.class || f.getType() == Double.class) f.setDouble(getter.invoke(server), entry.getValue().getAsDouble());
-                else if (f.getType() == boolean.class || f.getType() == Boolean.class) f.setBoolean(getter.invoke(server), entry.getValue().getAsBoolean());
-                else if (f.getType() == char.class || f.getType() == Character.class) f.setChar(getter.invoke(server), entry.getValue().getAsCharacter());
-                else if (f.getType() == String.class) f.set(getter.invoke(server), entry.getValue().getAsString());
+                if (f.getType() == byte.class) f.setByte(object, entry.getValue().getAsByte());
+                else if (f.getType() == short.class) f.setShort(object, entry.getValue().getAsShort());
+                else if (f.getType() == int.class) f.setInt(object, entry.getValue().getAsInt());
+                else if (f.getType() == long.class) f.setLong(object, entry.getValue().getAsLong());
+                else if (f.getType() == float.class) f.setFloat(object, entry.getValue().getAsFloat());
+                else if (f.getType() == double.class) f.setDouble(object, entry.getValue().getAsDouble());
+                else if (f.getType() == boolean.class) f.setBoolean(object, entry.getValue().getAsBoolean());
+                else if (f.getType() == char.class) f.setChar(object, entry.getValue().getAsCharacter());
+                //
+                else if (f.getType() == Byte.class) f.set(object, entry.getValue().getAsByte());
+                else if (f.getType() == Short.class) f.set(object, entry.getValue().getAsShort());
+                else if (f.getType() == Integer.class) f.set(object, entry.getValue().getAsInt());
+                else if (f.getType() == Long.class) f.set(object, entry.getValue().getAsLong());
+                else if (f.getType() == Float.class) f.set(object, entry.getValue().getAsFloat());
+                else if (f.getType() == Double.class) f.set(object, entry.getValue().getAsDouble());
+                else if (f.getType() == Boolean.class) f.set(object, entry.getValue().getAsBoolean());
+                else if (f.getType() == Character.class) f.set(object, entry.getValue().getAsCharacter());
+                //
+                else if (f.getType() == String.class) f.set(object, entry.getValue().getAsString());
                 else
                 {
                     String m = String.format("Unknown type! Field type: %s Json entry: %s Data class: %s Getter Method: %s", f.getType(), entry.getValue().toString(), clazz.getSimpleName(), getter.getName());

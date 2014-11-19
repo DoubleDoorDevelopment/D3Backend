@@ -150,19 +150,19 @@ public class PostHandler
         }
         if (user.getMaxRam() != -1 && user.getMaxRamLeft() < ramMax) throw new PostException("You are over your max RAM.");
         if (ramMax < 2 || ramMin < 2) throw new PostException("RAM settings invalid.");
-        server.setRamMin(caller, ramMin);
-        server.setRamMax(caller, ramMax);
+        server.getJvmData().ramMin = ramMin;
+        server.getJvmData().ramMax = ramMax;
 
         int permGen = Integer.parseInt(parameters.getParameter(PERMGEN));
         if (permGen < 2) throw new PostException("PermGen settings invalid.");
-        server.setPermGen(caller, permGen);
+        server.getJvmData().permGen = permGen;
 
-        if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) server.setExtraJavaParameters(caller, Arrays.asList(parameters.getParameter(EXTRA_JAVA_PARM).trim().split("\n")));
-        if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) server.setExtraMCParameters(caller, Arrays.asList(parameters.getParameter(EXTRA_MC_PARM).trim().split("\n")));
+        if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) server.getJvmData().extraJavaParameters = parameters.getParameter(EXTRA_JAVA_PARM).trim();
+        if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) server.getJvmData().extraMCParameters = parameters.getParameter(EXTRA_MC_PARM).trim();
         if (parameters.getParameter(ADMINS).trim().length() != 0) for (String name : Arrays.asList(parameters.getParameter(ADMINS).trim().split("\n"))) server.addAdmin(caller, name);
         if (parameters.getParameter(COOWNERS).trim().length() != 0) for (String name : Arrays.asList(parameters.getParameter(COOWNERS).trim().split("\n"))) server.addCoowner(caller, name);
 
-        server.setJarName(caller, parameters.getParameter(JARNAME));
+        server.getJvmData().jarName = parameters.getParameter(JARNAME);
         server.setRconPswd(caller, parameters.getParameter(RCON_PASS));
         try
         {
@@ -174,7 +174,7 @@ public class PostHandler
             throw new PostException("The backend ran out of ports to assign.");
         }
         server.setIP(caller, parameters.getParameter(IP));
-        server.setAutoStart(caller, names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on"));
+        server.getRestartingInfo().autoStart = names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on");
 
         server.init();
 

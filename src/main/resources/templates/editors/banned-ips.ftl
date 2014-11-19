@@ -121,9 +121,27 @@
                 }
             }
         }
+
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
+        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        websocket.onmessage = function (evt)
+        {
+            var temp = JSON.parse(evt.data);
+            if (temp.status === "ok")
+            {
+                editor.setValue(temp.data);
+                editor.clearSelection();
+            }
+            else alert(temp.message);
+        }
+        function send()
+        {
+            websocket.send(JSON.stringify({ method : "set", args: [JSON.stringify(json)]}));
+        }
     </script>
     <#if !readonly>
-    <button type="button" class="btn btn-primary btn-block" onclick="callNoRefresh('filemanager', '${fm.server.ID}', '${fm.stripServer(fm.file)}', 'set', JSON.stringify(json))">Save</button>
+    <button type="button" class="btn btn-primary btn-block" onclick="send()">Save</button>
     <#else>
     <p>File is readonly.</p>
     </#if>

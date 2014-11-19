@@ -17,10 +17,10 @@
     function createBtnGroup(row, type, set1, meta)
     {
         return '<div class="btn-group">' +
-            '<button type="button" ' + (!row.online ? 'onclick="callOnServer(\'' + row.id + '\', \'startServer\')"' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
-            '<button type="button" class="btn btn-info btn-xs" onclick="openPopup(\'/console?server=' + row.id + '\')">Console</button>' +
-            '<button type="button" ' + (row.online ? 'onclick="callOnServer(\'' + row.id + '\', \'stopServer|\' + prompt(\'Message?\', \'Server is stopping.\'))"' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
-            '<button type="button" ' + (row.online ? 'onclick="if (confirm(\'Are you sure?\')) callOnServer(\'' + row.id + '\', \'forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
+            '<button type="button" ' + (!row.online ? 'onclick="call(\'servercmd/' + row.id + '\', \'startServer\')"' : 'disabled') + ' class="btn btn-success btn-xs">Start</button>' +
+            '<button type="button" class="btn btn-info btn-xs" onclick="openPopup(\'/serverconsole?server=' + row.id + '\')">Console</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="call(\'servercmd/' + row.id + '\', \'stopServer\', [prompt(\'Message?\', \'Server is stopping.\')])"' : 'disabled') + ' class="btn btn-warning btn-xs">Stop</button>' +
+            '<button type="button" ' + (row.online ? 'onclick="if (confirm(\'Are you sure?\')) call(\'servercmd/' + row.id + '\', \'forceStopServer\');"' : 'disabled') + ' class="btn btn-danger btn-xs">Kill</button>' +
         '</div>'
     }
 

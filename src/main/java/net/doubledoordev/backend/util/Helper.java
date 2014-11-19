@@ -59,10 +59,7 @@ import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static net.doubledoordev.backend.util.Constants.JSONPARSER;
 import static net.doubledoordev.backend.util.Constants.RANDOM;
@@ -144,7 +141,7 @@ public class Helper
     public static int getTotalRamUsed()
     {
         int total = 0;
-        for (Server server : Settings.SETTINGS.getOnlineServers()) total += server.getRamMax();
+        for (Server server : Settings.SETTINGS.getOnlineServers()) total += server.getJvmData().ramMax;
         return total;
     }
 
@@ -317,20 +314,23 @@ public class Helper
         return array.toString();
     }
 
-    public static boolean invokeWithRefectionMagic(WebSocket caller, Object instance, String[] split, int start) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    public static boolean invokeWithRefectionMagic(WebSocket caller, Object instance, String methodName, ArrayList<String> args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
     {
-        start++;
         for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
         {
-            if (!method.getName().equalsIgnoreCase(split[start - 1])) continue; // Name match
+            if (!method.getName().equalsIgnoreCase(methodName)) continue; // Name match
             boolean userMethodCaller = method.getParameterTypes().length != 0 && method.getParameterTypes()[0].isAssignableFrom(IMethodCaller.class); // See if first type is IMethodCaller
-            if (method.getParameterTypes().length == split.length - start + (userMethodCaller ? 1 : 0)) // parameter length match
+            int size = args.size() + (userMethodCaller ? 1 : 0); // deferments wanted parameter length
+            if (method.getParameterTypes().length == size) // parameter length match
             {
                 try
                 {
-                    Object parms[] = new Object[split.length - start + (userMethodCaller ? 1 : 0)];
+                    Object parms[] = new Object[size];
                     if (userMethodCaller) parms[0] = new WebSocketCaller(caller);
-                    for (int i = userMethodCaller ? 1 : 0; i < method.getParameterTypes().length; i++) parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], split[i + start - (userMethodCaller ? 1 : 0)]);
+                    for (int i = userMethodCaller ? 1 : 0; i < method.getParameterTypes().length; i++)
+                    {
+                        parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], args.get(i - (userMethodCaller ? 1 : 0)));
+                    }
                     method.invoke(instance, parms);
                     return userMethodCaller;
                 }
@@ -340,6 +340,6 @@ public class Helper
                 }
             }
         }
-        throw new NoSuchMethodException(split[start - 1]);
+        throw new NoSuchMethodException(methodName);
     }
 }

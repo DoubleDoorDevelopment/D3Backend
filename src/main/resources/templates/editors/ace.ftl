@@ -55,7 +55,7 @@
         }
         function send(data)
         {
-            websocket.send(data);
+            websocket.send(JSON.stringify({ method : "set", args: [data]}));
         }
     </script>
     <#if !readonly>

@@ -42,6 +42,8 @@ package net.doubledoordev.backend.server;
 
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.web.socket.FileManagerSocketApplication;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -261,9 +263,10 @@ public class FileManager
         new File(file, name).mkdir();
     }
 
-    public void set(String text) throws IOException
+    public void set(IMethodCaller caller, String text) throws IOException
     {
         FileUtils.writeStringToFile(file, text);
+        FileManagerSocketApplication.sendFile(file.getAbsolutePath(), text);
     }
 
     public String getSize(File file)

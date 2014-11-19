@@ -18,7 +18,7 @@
     </style>
     <div id="jsoneditor"></div>
     <#if !readonly>
-    <button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="send(JSON.stringify(editor.get()));">Save</button>
+    <button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="send()">Save</button>
     <#else>
     <p>File is readonly.</p>
     </#if>
@@ -45,9 +45,9 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
         websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
-        function send(data)
+        function send()
         {
-            websocket.send(data);
+            websocket.send(websocket.send(JSON.stringify({ method : "set", args: [JSON.stringify(editor.get())]})););
         }
         websocket.onmessage = function (evt)
         {

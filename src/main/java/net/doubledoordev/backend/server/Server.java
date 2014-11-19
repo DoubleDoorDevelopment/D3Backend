@@ -94,21 +94,7 @@ public class Server
     @Expose
     private       String                  ip                  = "";
     @Expose
-    private       Integer                 ramMin              = 1024;
-    @Expose
-    private       Integer                 ramMax              = 2048;
-    @Expose
-    private       Integer                 permGen             = 128;
-    @Expose
-    private       List<String>            extraJavaParameters = new ArrayList<>();
-    @Expose
-    private       List<String>            extraMCParameters   = new ArrayList<>();
-    @Expose
-    private       String                  jarName             = "minecraft_server.jar";
-    @Expose
     private       String                  rconPswd            = Helper.randomString(10);
-    @Expose
-    private       Boolean                 autoStart           = false;
     @Expose
     private       String                  owner               = "";
     @Expose
@@ -119,6 +105,8 @@ public class Server
     private final Map<Integer, Dimension> dimensionMap        = new HashMap<>();
     @Expose
     private       RestartingInfo          restartingInfo      = new RestartingInfo();
+    @Expose
+    private       JvmData                 jvmData             = new JvmData();
     /*
      * END exposed Json data
      */
@@ -361,41 +349,6 @@ public class Server
         return ID;
     }
 
-    public int getRamMin()
-    {
-        return ramMin;
-    }
-
-    public int getRamMax()
-    {
-        return ramMax;
-    }
-
-    public int getPermGen()
-    {
-        return permGen;
-    }
-
-    public List<String> getExtraJavaParameters()
-    {
-        return extraJavaParameters;
-    }
-
-    public List<String> getExtraMCParameters()
-    {
-        return extraMCParameters;
-    }
-
-    public String getJarName()
-    {
-        return jarName;
-    }
-
-    public boolean getAutoStart()
-    {
-        return autoStart;
-    }
-
     public String getOwner()
     {
         return owner;
@@ -465,6 +418,12 @@ public class Server
         return restartingInfo;
     }
 
+    public JvmData getJvmData()
+    {
+        if (jvmData == null) jvmData = new JvmData();
+        return jvmData;
+    }
+
     /*
      * ========================================================================================
      * SETTERS
@@ -484,67 +443,6 @@ public class Server
         properties.put(key, value);
         normalizeProperties();
         saveProperties();
-    }
-
-    public void setRamMin(IMethodCaller caller, int ramMin)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.ramMin = ramMin;
-        update();
-    }
-
-    public void setRamMax(IMethodCaller caller, int ramMax)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.ramMax = ramMax;
-        update();
-    }
-
-    public void setPermGen(IMethodCaller caller, int permGen)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.permGen = permGen;
-        update();
-    }
-
-    public void setJarName(IMethodCaller caller, String jarName)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.jarName = jarName;
-        update();
-    }
-
-    public void setAutoStart(IMethodCaller caller, boolean autoStart)
-    {
-        this.autoStart = autoStart;
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        update();
-    }
-
-    public void setExtraJavaParameters(IMethodCaller caller, List<String> list)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        for (String s : list)
-            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
-                if (pattern.matcher(s).matches()) throw new RuntimeException(s + " NOT ALLOWED.");
-        extraJavaParameters = list;
-        update();
-    }
-
-    public void setExtraMCParameters(IMethodCaller caller, List<String> list)
-    {
-        if (getOnline()) throw new ServerOnlineException();
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        for (String s : list)
-            for (Pattern pattern : Constants.SERVER_START_ARGS_BLACKLIST_PATTERNS)
-                if (pattern.matcher(s).matches()) throw new RuntimeException(s + " NOT ALLOWED.");
-        extraMCParameters = list;
-        update();
     }
 
     public void setOwner(IMethodCaller methodCaller, String username)
@@ -605,9 +503,9 @@ public class Server
                     for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
                     for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
 
-                    File jarfile = new File(folder, getJarName());
+                    File jarfile = new File(folder, getJvmData().jarName);
                     if (jarfile.exists()) jarfile.delete();
-                    File tempFile = new File(folder, getJarName() + ".tmp");
+                    File tempFile = new File(folder, getJvmData().jarName + ".tmp");
 
                     // Downloading new file
 
@@ -723,7 +621,7 @@ public class Server
                         e.printStackTrace();
                     }
 
-                    for (String name : folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)) jarName = name;
+                    for (String name : folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)) getJvmData().jarName = name;
 
                     forge.delete();
 
@@ -917,11 +815,11 @@ public class Server
     {
         if (getOnline() || starting) throw new ServerOnlineException();
         if (downloading) throw new Exception("Still downloading something. You can see the progress in the server console.");
-        if (new File(folder, jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
-        if (!new File(folder, jarName).exists()) throw new FileNotFoundException(jarName + " not found.");
+        if (new File(folder, getJvmData().jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
+        if (!new File(folder, getJvmData().jarName).exists()) throw new FileNotFoundException(getJvmData().jarName + " not found.");
         User user = Settings.getUserByName(getOwner());
         if (user == null) throw new Exception("No owner set??");
-        if (user.getMaxRamLeft() != -1 && getRamMax() > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
+        if (user.getMaxRamLeft() != -1 && getJvmData().ramMax > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
         saveProperties();
         starting = true;
         final Server instance = this;
@@ -941,18 +839,18 @@ public class Server
                     arguments.add(Constants.getJavaPath());
                     arguments.add("-server");
                     {
-                        int amount = getRamMin();
+                        int amount = getJvmData().ramMin;
                         if (amount > 0) arguments.add(String.format("-Xms%dM", amount));
-                        amount = getRamMax();
+                        amount = getJvmData().ramMax;
                         if (amount > 0) arguments.add(String.format("-Xmx%dM", amount));
-                        amount = getPermGen();
+                        amount = getJvmData().permGen;
                         if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
                     }
-                    for (String s : extraJavaParameters) if (s.trim().length() != 0) arguments.add(s.trim());
+                    if (getJvmData().extraJavaParameters.trim().length() != 0) arguments.add(getJvmData().extraJavaParameters.trim());
                     arguments.add("-jar");
-                    arguments.add(jarName);
+                    arguments.add(getJvmData().jarName);
                     arguments.add("nogui");
-                    for (String s : extraMCParameters) if (s.trim().length() != 0) arguments.add(s.trim());
+                    if (getJvmData().extraMCParameters.trim().length() != 0) arguments.add(getJvmData().extraMCParameters.trim());
 
                     // Debug printout
                     printLine("Arguments: " + arguments.toString());
@@ -963,7 +861,7 @@ public class Server
                     ProcessBuilder pb = new ProcessBuilder(arguments);
                     pb.directory(folder);
                     pb.redirectErrorStream(true);
-                    if (!new File(folder, jarName).exists()) return; // for reasons of WTF?
+                    if (!new File(folder, getJvmData().jarName).exists()) return; // for reasons of WTF?
                     process = pb.start();
                     new Thread(new Runnable()
                     {

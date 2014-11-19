@@ -41,6 +41,9 @@
 
 package net.doubledoordev.backend.web.socket;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Helper;
@@ -50,6 +53,7 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
@@ -72,7 +76,6 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
     public void onMessage(WebSocket socket, String text)
     {
         Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
-        String[] args = text.split("\\|");
         if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
         {
             WebSocketHelper.sendError(socket, "You have no rights to this server.");
@@ -81,7 +84,11 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
         }
         try
         {
-            if (!Helper.invokeWithRefectionMagic(socket, server, args, 0))
+            JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
+            String name = object.get("method").getAsString();
+            ArrayList<String> args = new ArrayList<>();
+            if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
+            if (!Helper.invokeWithRefectionMagic(socket, server, name, args))
             {
                 WebSocketHelper.sendOk(socket);
                 socket.close();
@@ -90,6 +97,7 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
         catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
         {
             WebSocketHelper.sendError(socket, e);
+            socket.close();
         }
     }
 

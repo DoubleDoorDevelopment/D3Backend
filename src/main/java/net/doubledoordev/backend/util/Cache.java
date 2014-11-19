@@ -313,8 +313,6 @@ public class Cache extends TimerTask
     {
         long now = System.currentTimeMillis();
 
-        if (now - FreemarkerHandler.lastRequest > MEDIUM_CACHE_TIMEOUT) return;
-
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
         if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(UPDATE_CHECKER, "cache-updateChecking").start();
         if (now - lastForgeVersions > LONG_CACHE_TIMEOUT) new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();

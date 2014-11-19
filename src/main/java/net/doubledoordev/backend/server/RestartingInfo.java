@@ -42,8 +42,10 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.annotations.Expose;
+import net.doubledoordev.backend.Main;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -53,36 +55,106 @@ import java.util.Date;
 public class RestartingInfo
 {
     @Expose
-    public int globalTimeout = 24;
+    public boolean autoStart              = false;
     @Expose
-    public int whenEmptyTimeout = 30;
+    public int     globalTimeout          = 24;
     @Expose
-    public boolean scheduleTimeout = false;
+    public int     whenEmptyTimeout       = 30;
     @Expose
-    public int restartDailyTimeout = 0;
+    public boolean enableRestartSchedule  = false;
+    @Expose
+    public int     restartScheduleHours   = 0;
+    @Expose
+    public int     restartScheduleMinutes = 0;
+    @Expose
+    public String  restartScheduleMessage = "Server reboot in %time minutes!";
 
-    private boolean restartNextRun = false;
-    private Date lastRestart = new Date(0L);
+    private boolean      restartNextRun  = false;
+    private ScheduleStep runningSchedule = ScheduleStep.NONE;
+    private Date lastRestart, emptyDate;
 
     public void run(Server server)
     {
+        // To restart the server after it has been stopped by us.
         try
         {
             if (!server.getOnline() && !server.isDownloading() && restartNextRun)
             {
-                restartNextRun = false;
                 server.startServer();
+                restartNextRun = false;
             }
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
         }
+
+        if (!server.getOnline()) return;
+        if (lastRestart != null && System.currentTimeMillis() - lastRestart.getTime() < globalTimeout * 3500000) return; // No 3600000! Because of correction factor
+
+        // Empty check
+        if (server.getPlayerList().size() == 0)
+        {
+            if (emptyDate == null) emptyDate = new Date();
+            else if (System.currentTimeMillis() - emptyDate.getTime() > whenEmptyTimeout * 60000)
+            {
+                initReboot(server, "Server restart because empty.");
+            }
+        }
+        else emptyDate = null;
+
+        // Restart Schedule
+        if (enableRestartSchedule)
+        {
+            Calendar calendar = Calendar.getInstance();
+            switch (runningSchedule)
+            {
+                case NONE:
+                    calendar.add(Calendar.MINUTE, 15);
+                    if (calendar.get(Calendar.HOUR_OF_DAY) == restartScheduleHours && calendar.get(Calendar.MINUTE) >= restartScheduleMinutes)
+                    {
+                        runningSchedule = ScheduleStep.M15;
+                        server.sendCmd("say " + restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
+                    }
+                    break;
+                default:
+                    calendar.add(Calendar.MINUTE, runningSchedule.timeLeft);
+                    if (calendar.get(Calendar.HOUR_OF_DAY) == restartScheduleHours && calendar.get(Calendar.MINUTE) >= restartScheduleMinutes)
+                    {
+                        server.sendCmd("say " + restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
+                        runningSchedule = runningSchedule.nextStep;
+                    }
+                    break;
+                case NOW:
+                    runningSchedule = ScheduleStep.NONE;
+                    initReboot(server, "Restarting on schedule.");
+            }
+        }
+    }
+
+    private void initReboot(Server server, String s)
+    {
+        lastRestart = new Date();
+        server.stopServer(s);
+        restartNextRun = true;
     }
 
     public String getLastRestart(String format)
     {
-        return lastRestart.getTime() == 0L ? "" : new SimpleDateFormat(format).format(lastRestart);
+        return lastRestart == null ? "" : new SimpleDateFormat(format).format(lastRestart);
+    }
+
+    public enum ScheduleStep
+    {
+        NONE(-1, null), NOW(0, NONE), M1(1, NOW), M2(2, M1), M3(3, M2), M4(4, M3), M5(5, M4), M10(10, M5), M15(15, M10);
+
+        public final int timeLeft;
+        public final ScheduleStep nextStep;
+
+        ScheduleStep(int timeLeft, ScheduleStep nextStep)
+        {
+            this.timeLeft = timeLeft;
+            this.nextStep = nextStep != null ? nextStep : this;
+        }
     }
 }

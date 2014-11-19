@@ -80,16 +80,14 @@
         <label for="extraJavaParameters" class="col-sm-2 control-label">Extra Java parameters</label>
 
         <div class="col-sm-10">
-            <textarea class="form-control" rows="3" id="extraJavaParameters" name="extraJavaParameters"></textarea>
-            <span class="help-block">One per line!</span>
+            <input class="form-control" rows="3" id="extraJavaParameters" name="extraJavaParameters" type="text">
         </div>
     </div>
     <div class="form-group">
         <label for="extraMCParameters" class="col-sm-2 control-label">Extra MC parameters</label>
 
         <div class="col-sm-10">
-            <textarea class="form-control" rows="3" id="extraMCParameters" name="extraMCParameters"></textarea>
-            <span class="help-block">One per line!</span>
+            <input class="form-control" rows="3" id="extraMCParameters" name="extraMCParameters" type="text">
         </div>
     </div>
     <div class="form-group">

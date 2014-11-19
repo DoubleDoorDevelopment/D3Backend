@@ -27,8 +27,8 @@ ${wm.update()}
         </p>
 
         <div class="btn-group">
-            <button type="button" <#if isCoOwner>onclick="call('worldmanager', '${server.ID}', 'makeWorldBackup')" <#else>disabled</#if> class="btn btn-info">The World</button>
-            <button type="button" <#if isCoOwner>onclick="call('worldmanager', '${server.ID}', 'makeAllOfTheBackup')" <#else>disabled</#if> class="btn btn-info">EVERYTHING</button>
+            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeWorldBackup')" <#else>disabled</#if> class="btn btn-info">The World</button>
+            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeAllOfTheBackup')" <#else>disabled</#if> class="btn btn-info">EVERYTHING</button>
         </div>
     </div>
 </div>
@@ -41,8 +41,8 @@ ${wm.update()}
                 <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <button type="button" <#if isCoOwner>onclick="call('worldmanager', '${server.ID}', 'makeBackup', '${dimid}')" <#else>disabled</#if> class="btn btn-info">Backup</button>
-                <button type="button" <#if isCoOwner>onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager', '${server.ID}', 'delete', '${dimid}');" <#else>disabled</#if> class="btn btn-danger">
+                <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeBackup', ['${dimid}'])" <#else>disabled</#if> class="btn btn-info">Backup</button>
+                <button type="button" <#if isCoOwner>onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager/${server.ID}', 'delete', ['${dimid}']);" <#else>disabled</#if> class="btn btn-danger">
                     Delete
                 </button>
             </div>

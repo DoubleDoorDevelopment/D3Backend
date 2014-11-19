@@ -81,6 +81,7 @@ public class Constants
     public static final String           DATA                                   = "data";
     public static final String           DIM                                    = "DIM";
     public static final String           RESTARTING_INFO                        = "RestartingInfo";
+    public static final String           JVM_DATA                               = "JvmData";
     /*
      * FilenameFilter constants
      */

@@ -41,21 +41,25 @@
 
 package net.doubledoordev.backend.web.socket;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
- * TODO: use for file control
- *
  * @author Dries007
  */
 public class FileManagerSocketApplication extends ServerWebSocketApplication
@@ -87,18 +91,41 @@ public class FileManagerSocketApplication extends ServerWebSocketApplication
     @Override
     public void onMessage(WebSocket socket, String text)
     {
+        FileManager fileManager = (FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER);
+        if (!fileManager.getServer().isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        {
+            WebSocketHelper.sendError(socket, "You have no rights to this server.");
+            socket.close();
+            return;
+        }
         try
         {
-            ((FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER)).set(text);
+            JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
+            String name = object.get("method").getAsString();
+            ArrayList<String> args = new ArrayList<>();
+            if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
+            if (!Helper.invokeWithRefectionMagic(socket, fileManager, name, args))
+            {
+                WebSocketHelper.sendOk(socket);
+                socket.close();
+            }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
+            e.printStackTrace();
             WebSocketHelper.sendError(socket, e);
         }
-        for (WebSocket socket1 : getWebSockets())
+    }
+
+    public static void sendFile(String path, String text)
+    {
+        for (WebSocket socket1 : APPLICATION.getWebSockets())
         {
-            if (socket == socket1) continue;
-            WebSocketHelper.sendData(socket1, text);
+            FileManager fileManager = (FileManager) ((DefaultWebSocket) socket1).getUpgradeRequest().getAttribute(FILE_MANAGER);
+            if (fileManager.getFile().getAbsolutePath().equals(path))
+            {
+                WebSocketHelper.sendData(socket1, text);
+            }
         }
     }
 

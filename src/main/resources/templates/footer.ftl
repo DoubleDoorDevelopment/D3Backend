@@ -52,7 +52,6 @@
             websocketMonitor.onmessage = function (evt)
             {
                 var temp = JSON.parse(evt.data);
-                console.log(temp.data);
                 if (temp.status === "ok")
                 {
                     var onlineDom = document.getElementById("online");

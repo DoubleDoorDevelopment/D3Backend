@@ -174,13 +174,6 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
             object.addProperty("backups", server.getDiskspaceUse()[1]);
             object.addProperty("total", server.getDiskspaceUse()[2]);
         root.add("diskspace", object);
-        root.addProperty("autostart", server.getAutoStart());
-        root.addProperty("ram_min", server.getRamMin());
-        root.addProperty("ram_max", server.getRamMax());
-        root.addProperty("permgen", server.getPermGen());
-        root.addProperty("jar", server.getJarName());
-        root.add("javaParams", GSON.toJsonTree(server.getExtraJavaParameters()));
-        root.add("McParams", GSON.toJsonTree(server.getExtraMCParameters()));
         root.add("coOwners", GSON.toJsonTree(server.getCoOwners()));
         root.add("admins", GSON.toJsonTree(server.getAdmins()));
 

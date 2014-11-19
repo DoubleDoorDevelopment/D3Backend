@@ -71,10 +71,10 @@
             window.open(window.location.origin + url, '_new', 'height=500,width=800');
         }
 
-        function call(url, message, func) {
+        function call(url, method, args, func) {
             var cmdwebsocket = new WebSocket(wsurl(url));
             cmdwebsocket.onopen = function (evt) {
-                cmdwebsocket.send(message);
+                cmdwebsocket.send(JSON.stringify({ method : method , args: args}));
             }
             cmdwebsocket.onmessage = function (evt) {
                 var temp = JSON.parse(evt.data);
@@ -88,12 +88,6 @@
                 alert("The call socket connction errored. Try again.");
             };
         }
-
-        function callOnServer(server, message, func)
-        {
-            call("servercmd/" +  server, message, func);
-        }
-
         <#if server??>
         var websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
         websocketMonitor.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
