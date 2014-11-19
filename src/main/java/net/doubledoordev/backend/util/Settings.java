@@ -40,9 +40,6 @@
 
 package net.doubledoordev.backend.util;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
@@ -63,9 +60,21 @@ import static net.doubledoordev.backend.util.Constants.*;
 @SuppressWarnings("UnusedDeclaration")
 public class Settings
 {
+    public static final Settings SETTINGS;
+    static
+    {
+        try
+        {
+            if (CONFIG_FILE.exists()) SETTINGS = Constants.GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
+            else SETTINGS = new Settings();
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
     public Map<String, Server> servers = new HashMap<>();
     public Map<String, User>   users   = new HashMap<>();
-
     @Expose
     public String hostname;
     @Expose
@@ -88,20 +97,6 @@ public class Settings
     public String       certificatePath  = "";
     @Expose
     public String       certificatePass  = "";
-
-    public static final Settings SETTINGS;
-
-    static
-    {
-        try
-        {
-            SETTINGS = Constants.GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
-        }
-        catch (IOException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
 
     private Settings() throws IOException
     {

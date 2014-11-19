@@ -56,8 +56,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ServerconsoleSocketApplication extends ServerWebSocketApplication
 {
-    private static final  ServerconsoleSocketApplication APPLICATION = new ServerconsoleSocketApplication();
-    private static final  String                         URL_PATTERN = "/serverconsole/*";
+    private static final ServerconsoleSocketApplication APPLICATION = new ServerconsoleSocketApplication();
+    private static final String                         URL_PATTERN = "/serverconsole/*";
 
     private ServerconsoleSocketApplication()
     {
@@ -69,12 +69,6 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
-    }
-
-    @Override
-    public void onMessage(WebSocket socket, String text)
-    {
-        ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).sendCmd(text);
     }
 
     public static void register()
@@ -89,5 +83,11 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
             Server server_socket = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
             if (server == server_socket) WebSocketHelper.sendData(socket, line);
         }
+    }
+
+    @Override
+    public void onMessage(WebSocket socket, String text)
+    {
+        ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).sendCmd(text);
     }
 }

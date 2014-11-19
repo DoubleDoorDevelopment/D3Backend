@@ -50,15 +50,15 @@ import com.google.gson.annotations.Expose;
 public class JvmData
 {
     @Expose
-    public int ramMin              = 1024;
+    public int    ramMin              = 1024;
     @Expose
-    public int ramMax              = 2048;
+    public int    ramMax              = 2048;
     @Expose
-    public int permGen             = 128;
+    public int    permGen             = 128;
     @Expose
-    public String  extraJavaParameters = "";
+    public String extraJavaParameters = "";
     @Expose
-    public String  extraMCParameters   = "";
+    public String extraMCParameters   = "";
     @Expose
-    public String  jarName             = "minecraft_server.jar";
+    public String jarName             = "minecraft_server.jar";
 }

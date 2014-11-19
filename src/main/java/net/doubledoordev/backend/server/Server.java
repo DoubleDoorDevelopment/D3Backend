@@ -49,7 +49,6 @@ import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
-import net.doubledoordev.backend.web.socket.ServerControlSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
@@ -63,7 +62,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
@@ -81,47 +79,46 @@ public class Server
     public static final String QUERY_PORT        = "query.port";
     public static final String QUERY_ENABLE      = "enable-query";
     public static final String SERVER_IP         = "server-ip";
-
+    @Expose
+    private final Map<Integer, Dimension> dimensionMap   = new HashMap<>();
+    /**
+     * Diskspace var + timer to avoid long page load times.
+     */
+    public        int[]                   size           = new int[3];
+    public  QueryResponse cachedResponse;
     /*
      * START exposed Json data
      */
     @Expose
     private String ID;
     @Expose
-    private       Integer                 serverPort          = 25565;
+    private       Integer                 serverPort     = 25565;
     @Expose
-    private       Integer                 rconPort            = 25575;
+    private       Integer                 rconPort       = 25575;
     @Expose
-    private       String                  ip                  = "";
+    private       String                  ip             = "";
     @Expose
-    private       String                  rconPswd            = Helper.randomString(10);
+    private       String                  rconPswd       = Helper.randomString(10);
     @Expose
-    private       String                  owner               = "";
+    private       String                  owner          = "";
     @Expose
-    private       List<String>            admins              = new ArrayList<>();
+    private       List<String>            admins         = new ArrayList<>();
     @Expose
-    private       List<String>            coOwners            = new ArrayList<>();
-    @Expose
-    private final Map<Integer, Dimension> dimensionMap        = new HashMap<>();
-    @Expose
-    private       RestartingInfo          restartingInfo      = new RestartingInfo();
-    @Expose
-    private       JvmData                 jvmData             = new JvmData();
+    private       List<String>            coOwners       = new ArrayList<>();
     /*
      * END exposed Json data
      */
-    /**
-     * Diskspace var + timer to avoid long page load times.
-     */
-    public        int[] size = new int[3];
-    public QueryResponse cachedResponse;
+    @Expose
+    private       RestartingInfo          restartingInfo = new RestartingInfo();
+    @Expose
+    private       JvmData                 jvmData        = new JvmData();
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
      */
-    private Logger logger;
-    private File folder;
-    private File propertiesFile;
+    private Logger        logger;
+    private File          folder;
+    private File          propertiesFile;
     private long       propertiesFileLastModified = 0L;
     private Properties properties                 = new Properties();
     /**

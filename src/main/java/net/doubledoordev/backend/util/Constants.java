@@ -80,8 +80,6 @@ public class Constants
     public static final String           ERROR                                  = "error";
     public static final String           DATA                                   = "data";
     public static final String           DIM                                    = "DIM";
-    public static final String           RESTARTING_INFO                        = "RestartingInfo";
-    public static final String           JVM_DATA                               = "JvmData";
     /*
      * FilenameFilter constants
      */
@@ -101,6 +99,8 @@ public class Constants
             return name.startsWith(DIM);
         }
     };
+    public static final String           RESTARTING_INFO                        = "RestartingInfo";
+    public static final String           JVM_DATA                               = "JvmData";
     public static final String           TEMPLATE_EXTENSION                     = ".ftl";
     public static final String           ERROR_TEMPLATE                         = "error.ftl";
     /*
@@ -195,6 +195,7 @@ public class Constants
     public static final Random           RANDOM                                 = new Random();
     public static final SimpleDateFormat BACKUP_SDF                             = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
     public static final Timer            TIMER                                  = new Timer();
+    public static String javaPath;
 
     /**
      * Methods that only get called to init the Constants
@@ -214,8 +215,6 @@ public class Constants
             return new File(".");
         }
     }
-
-    public static String javaPath;
 
     public static String getJavaPath()
     {

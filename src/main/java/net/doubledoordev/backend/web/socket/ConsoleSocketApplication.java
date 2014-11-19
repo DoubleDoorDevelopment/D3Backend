@@ -59,8 +59,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ConsoleSocketApplication extends WebSocketApplication
 {
-    private static final  ConsoleSocketApplication APPLICATION = new ConsoleSocketApplication();
-    private static final String URL_PATTERN = "/console";
+    private static final ConsoleSocketApplication APPLICATION = new ConsoleSocketApplication();
+    private static final String                   URL_PATTERN = "/console";
 
     private ConsoleSocketApplication()
     {
@@ -72,6 +72,19 @@ public class ConsoleSocketApplication extends WebSocketApplication
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
+    }
+
+    public static void sendLine(String line)
+    {
+        for (WebSocket socket : APPLICATION.getWebSockets())
+        {
+            WebSocketHelper.sendData(socket, line);
+        }
     }
 
     @Override
@@ -91,18 +104,5 @@ public class ConsoleSocketApplication extends WebSocketApplication
             return;
         }
         super.onConnect(socket);
-    }
-
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
-    }
-
-    public static void sendLine(String line)
-    {
-        for (WebSocket socket : APPLICATION.getWebSockets())
-        {
-            WebSocketHelper.sendData(socket, line);
-        }
     }
 }

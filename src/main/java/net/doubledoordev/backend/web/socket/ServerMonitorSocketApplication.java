@@ -67,10 +67,10 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class ServerMonitorSocketApplication extends WebSocketApplication
 {
-    private static final  ServerMonitorSocketApplication ALL_SERVERS_APPLICATION = new ServerMonitorSocketApplication(true);
-    private static final  ServerMonitorSocketApplication ONE_SERVER_APPLICATION = new ServerMonitorSocketApplication(false);
-    private static final  String                         ALL_SERVERS_URL_PATTERN = "/serverlist";
-    private static final  String                         ONE_SERVER_URL_PATTERN = "/servermonitor/*";
+    private static final ServerMonitorSocketApplication ALL_SERVERS_APPLICATION = new ServerMonitorSocketApplication(true);
+    private static final ServerMonitorSocketApplication ONE_SERVER_APPLICATION  = new ServerMonitorSocketApplication(false);
+    private static final String                         ALL_SERVERS_URL_PATTERN = "/serverlist";
+    private static final String                         ONE_SERVER_URL_PATTERN  = "/servermonitor/*";
     private final boolean allServers;
 
     private ServerMonitorSocketApplication(boolean allServers)
@@ -84,6 +84,18 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+    }
+
+    public static void sendUpdateToAll(Server server)
+    {
+        ALL_SERVERS_APPLICATION.doSendUpdateToAll(server);
+        ONE_SERVER_APPLICATION.doSendUpdateToAll(server);
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ALL_SERVERS_URL_PATTERN, ALL_SERVERS_APPLICATION);
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ONE_SERVER_URL_PATTERN, ONE_SERVER_APPLICATION);
     }
 
     @Override
@@ -144,12 +156,6 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         }
     }
 
-    public static void sendUpdateToAll(Server server)
-    {
-        ALL_SERVERS_APPLICATION.doSendUpdateToAll(server);
-        ONE_SERVER_APPLICATION.doSendUpdateToAll(server);
-    }
-
     public JsonObject getData(Server server)
     {
         JsonObject root = new JsonObject();
@@ -170,19 +176,13 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         root.addProperty("gameID", server.getGameID());
         root.addProperty("port_server_available", Helper.isPortAvailable(server.getIP(), server.getServerPort()));
         JsonObject object = new JsonObject();
-            object.addProperty("server", server.getDiskspaceUse()[0]);
-            object.addProperty("backups", server.getDiskspaceUse()[1]);
-            object.addProperty("total", server.getDiskspaceUse()[2]);
+        object.addProperty("server", server.getDiskspaceUse()[0]);
+        object.addProperty("backups", server.getDiskspaceUse()[1]);
+        object.addProperty("total", server.getDiskspaceUse()[2]);
         root.add("diskspace", object);
         root.add("coOwners", GSON.toJsonTree(server.getCoOwners()));
         root.add("admins", GSON.toJsonTree(server.getAdmins()));
 
         return root;
-    }
-
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ALL_SERVERS_URL_PATTERN, ALL_SERVERS_APPLICATION);
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ONE_SERVER_URL_PATTERN, ONE_SERVER_APPLICATION);
     }
 }

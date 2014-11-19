@@ -49,30 +49,26 @@ import net.doubledoordev.backend.server.JvmData;
 import net.doubledoordev.backend.server.RestartingInfo;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
+import net.doubledoordev.backend.util.TypeHellhole;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.exceptions.AuthenticationException;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
-import static net.doubledoordev.backend.util.Constants.SERVER;
 
 /**
  * @author Dries007
  */
 public class AdvancedSettingsSocketApplication extends ServerWebSocketApplication
 {
-    private static final AdvancedSettingsSocketApplication APPLICATION = new AdvancedSettingsSocketApplication();
-    private static final String                            URL_PATTERN = "/advancedsettings/*";
-    public static final HashMap<String, Data>              DATA_TYPES = new HashMap<>();
-
+    public static final  HashMap<String, Data>             DATA_TYPES  = new HashMap<>();
     static
     {
         try
@@ -85,6 +81,8 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             throw new RuntimeException(e);
         }
     }
+    private static final AdvancedSettingsSocketApplication APPLICATION = new AdvancedSettingsSocketApplication();
+    private static final String                            URL_PATTERN = "/advancedsettings/*";
 
     private AdvancedSettingsSocketApplication()
     {
@@ -96,6 +94,11 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
     @Override
@@ -177,14 +180,9 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
         return object;
     }
 
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
-    }
-
     public static class Data
     {
-        public final Class clazz;
+        public final Class  clazz;
         public final Method getter;
 
         public Data(Class clazz, String getterName) throws NoSuchMethodException
@@ -207,33 +205,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             Object object = getter.invoke(server);
             for (Map.Entry<String, JsonElement> entry : data.entrySet())
             {
-                Field f = clazz.getDeclaredField(entry.getKey());
-
-                if (f.getType() == byte.class) f.setByte(object, entry.getValue().getAsByte());
-                else if (f.getType() == short.class) f.setShort(object, entry.getValue().getAsShort());
-                else if (f.getType() == int.class) f.setInt(object, entry.getValue().getAsInt());
-                else if (f.getType() == long.class) f.setLong(object, entry.getValue().getAsLong());
-                else if (f.getType() == float.class) f.setFloat(object, entry.getValue().getAsFloat());
-                else if (f.getType() == double.class) f.setDouble(object, entry.getValue().getAsDouble());
-                else if (f.getType() == boolean.class) f.setBoolean(object, entry.getValue().getAsBoolean());
-                else if (f.getType() == char.class) f.setChar(object, entry.getValue().getAsCharacter());
-                //
-                else if (f.getType() == Byte.class) f.set(object, entry.getValue().getAsByte());
-                else if (f.getType() == Short.class) f.set(object, entry.getValue().getAsShort());
-                else if (f.getType() == Integer.class) f.set(object, entry.getValue().getAsInt());
-                else if (f.getType() == Long.class) f.set(object, entry.getValue().getAsLong());
-                else if (f.getType() == Float.class) f.set(object, entry.getValue().getAsFloat());
-                else if (f.getType() == Double.class) f.set(object, entry.getValue().getAsDouble());
-                else if (f.getType() == Boolean.class) f.set(object, entry.getValue().getAsBoolean());
-                else if (f.getType() == Character.class) f.set(object, entry.getValue().getAsCharacter());
-                //
-                else if (f.getType() == String.class) f.set(object, entry.getValue().getAsString());
-                else
-                {
-                    String m = String.format("Unknown type! Field type: %s Json entry: %s Data class: %s Getter Method: %s", f.getType(), entry.getValue().toString(), clazz.getSimpleName(), getter.getName());
-                    Main.LOGGER.error(m);
-                    throw new Exception(m);
-                }
+                TypeHellhole.set(clazz.getDeclaredField(entry.getKey()), object, entry.getValue());
             }
         }
     }

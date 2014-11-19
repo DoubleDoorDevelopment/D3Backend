@@ -40,8 +40,10 @@
 
 package net.doubledoordev.backend.util;
 
+import com.google.gson.JsonElement;
 import net.doubledoordev.backend.Main;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -109,6 +111,35 @@ public class TypeHellhole
         catch (NoSuchMethodException e)
         {
             Main.LOGGER.error("TypeHellhole init went wrong...", e);
+        }
+    }
+
+    public static void set(Field field, Object object, JsonElement value) throws Exception
+    {
+        if (field.getType() == byte.class) field.setByte(object, value.getAsByte());
+        else if (field.getType() == short.class) field.setShort(object, value.getAsShort());
+        else if (field.getType() == int.class) field.setInt(object, value.getAsInt());
+        else if (field.getType() == long.class) field.setLong(object, value.getAsLong());
+        else if (field.getType() == float.class) field.setFloat(object, value.getAsFloat());
+        else if (field.getType() == double.class) field.setDouble(object, value.getAsDouble());
+        else if (field.getType() == boolean.class) field.setBoolean(object, value.getAsBoolean());
+        else if (field.getType() == char.class) field.setChar(object, value.getAsCharacter());
+            //
+        else if (field.getType() == Byte.class) field.set(object, value.getAsByte());
+        else if (field.getType() == Short.class) field.set(object, value.getAsShort());
+        else if (field.getType() == Integer.class) field.set(object, value.getAsInt());
+        else if (field.getType() == Long.class) field.set(object, value.getAsLong());
+        else if (field.getType() == Float.class) field.set(object, value.getAsFloat());
+        else if (field.getType() == Double.class) field.set(object, value.getAsDouble());
+        else if (field.getType() == Boolean.class) field.set(object, value.getAsBoolean());
+        else if (field.getType() == Character.class) field.set(object, value.getAsCharacter());
+            //
+        else if (field.getType() == String.class) field.set(object, value.getAsString());
+        else
+        {
+            String m = String.format("Unknown type! Field type: %s Json value: %s Data class: %s", field.getType(), value.toString(), object.getClass().getSimpleName());
+            Main.LOGGER.error(m);
+            throw new Exception(m);
         }
     }
 }

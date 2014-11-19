@@ -75,6 +75,16 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
     }
 
+    public static void sendUpdateToAll(Server server)
+    {
+        APPLICATION.doSendUpdateToAll(server);
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
+    }
+
     @Override
     public void onConnect(WebSocket socket)
     {
@@ -99,11 +109,6 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
         doSendUpdateToAll(server);
     }
 
-    public static void sendUpdateToAll(Server server)
-    {
-        APPLICATION.doSendUpdateToAll(server);
-    }
-
     private void doSendUpdateToAll(Server server)
     {
         for (WebSocket socket : getWebSockets())
@@ -123,10 +128,5 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
         }
 
         return object;
-    }
-
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 }

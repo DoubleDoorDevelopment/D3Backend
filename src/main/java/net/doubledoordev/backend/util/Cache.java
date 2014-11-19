@@ -45,7 +45,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
-import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;

@@ -43,7 +43,6 @@ package net.doubledoordev.backend.web.socket;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Helper;
@@ -65,11 +64,16 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class ServerControlSocketApplication extends ServerWebSocketApplication
 {
-    private static final  ServerControlSocketApplication APPLICATION = new ServerControlSocketApplication();
-    private static final  String                         URL_PATTERN = "/servercmd/*";
+    private static final ServerControlSocketApplication APPLICATION = new ServerControlSocketApplication();
+    private static final String                         URL_PATTERN = "/servercmd/*";
 
     private ServerControlSocketApplication()
     {
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
     @Override
@@ -99,10 +103,5 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
             WebSocketHelper.sendError(socket, e);
             socket.close();
         }
-    }
-
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 }

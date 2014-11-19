@@ -51,8 +51,12 @@ public interface IMethodCaller
     User getUser();
 
     void sendOK();
+
     void sendMessage(String message);
+
     void sendProgress(float progress);
+
     void sendError(String message);
+
     void sendDone();
 }

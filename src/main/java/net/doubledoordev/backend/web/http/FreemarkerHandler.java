@@ -74,9 +74,9 @@ import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
  */
 public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPageGenerator
 {
-    private static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
-    public static long lastRequest = 0L;
-    private final Configuration freemarker = new Configuration();
+    private static final ImmutableList<String> ADMINPAGES  = ImmutableList.of("console", "backendConsoleText");
+    public static        long                  lastRequest = 0L;
+    private final        Configuration         freemarker  = new Configuration();
 
     public FreemarkerHandler(Class clazz, String path) throws TemplateModelException
     {

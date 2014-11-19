@@ -42,7 +42,6 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.annotations.Expose;
-import net.doubledoordev.backend.Main;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -148,7 +147,7 @@ public class RestartingInfo
     {
         NONE(-1, null), NOW(0, NONE), M1(1, NOW), M2(2, M1), M3(3, M2), M4(4, M3), M5(5, M4), M10(10, M5), M15(15, M10);
 
-        public final int timeLeft;
+        public final int          timeLeft;
         public final ScheduleStep nextStep;
 
         ScheduleStep(int timeLeft, ScheduleStep nextStep)

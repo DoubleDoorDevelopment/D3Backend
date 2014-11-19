@@ -43,7 +43,6 @@ package net.doubledoordev.backend.web.socket;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
@@ -53,7 +52,6 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.TimerTask;
 
@@ -77,6 +75,23 @@ public class FileManagerSocketApplication extends ServerWebSocketApplication
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
         }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+    }
+
+    public static void sendFile(String path, String text)
+    {
+        for (WebSocket socket1 : APPLICATION.getWebSockets())
+        {
+            FileManager fileManager = (FileManager) ((DefaultWebSocket) socket1).getUpgradeRequest().getAttribute(FILE_MANAGER);
+            if (fileManager.getFile().getAbsolutePath().equals(path))
+            {
+                WebSocketHelper.sendData(socket1, text);
+            }
+        }
+    }
+
+    public static void register()
+    {
+        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
     @Override
@@ -115,22 +130,5 @@ public class FileManagerSocketApplication extends ServerWebSocketApplication
             e.printStackTrace();
             WebSocketHelper.sendError(socket, e);
         }
-    }
-
-    public static void sendFile(String path, String text)
-    {
-        for (WebSocket socket1 : APPLICATION.getWebSockets())
-        {
-            FileManager fileManager = (FileManager) ((DefaultWebSocket) socket1).getUpgradeRequest().getAttribute(FILE_MANAGER);
-            if (fileManager.getFile().getAbsolutePath().equals(path))
-            {
-                WebSocketHelper.sendData(socket1, text);
-            }
-        }
-    }
-
-    public static void register()
-    {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 }
