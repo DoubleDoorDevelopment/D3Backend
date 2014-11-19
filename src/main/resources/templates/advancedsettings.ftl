@@ -73,18 +73,22 @@
                     <input id="JvmData_jarName" class="form-control" aria-describedby="helpBlock" type="text" placeholder="minecraft_server.jar">
                 </div>
                 <div class="form-group">
-                    <label for="JvmData_ramMin">JVM RAM</label>
+                    <label for="JvmData_ramMin">Server RAM</label>
                     <div class="input-group">
                         <div class="input-group-addon">Min: </div>
                         <input id="JvmData_ramMin" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
                         <div class="input-group-addon">MB</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-group">
                         <div class="input-group-addon">Max: </div>
                         <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
                         <div class="input-group-addon">MB</div>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="JvmData_permGen">JVM permgen</label>
+                    <label for="JvmData_permGen">Server permgen</label>
                     <div class="input-group col-sm-6 col-sm-offset-3">
                         <input id="JvmData_permGen" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
                         <div class="input-group-addon">MB</div>

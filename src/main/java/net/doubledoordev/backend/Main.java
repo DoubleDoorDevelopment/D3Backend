@@ -148,6 +148,7 @@ public class Main
         ServerconsoleSocketApplication.register();
         ConsoleSocketApplication.register();
         AdvancedSettingsSocketApplication.register();
+        UsersSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("unsecured-listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, SETTINGS.portHTTP);
         //networkListener.setSecure(true);
