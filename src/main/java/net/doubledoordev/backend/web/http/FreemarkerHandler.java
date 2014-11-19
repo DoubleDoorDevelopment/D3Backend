@@ -44,6 +44,7 @@ package net.doubledoordev.backend.web.http;
 import com.google.common.collect.ImmutableList;
 import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.*;
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
@@ -51,6 +52,7 @@ import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.http.Method;
 import org.glassfish.grizzly.http.server.ErrorPageGenerator;
 import org.glassfish.grizzly.http.server.Request;
@@ -65,6 +67,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Settings.SETTINGS;
 import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
 
 /**
@@ -96,6 +99,17 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
     @Override
     protected boolean handle(String uri, Request request, Response response) throws Exception
     {
+        if (request.getServerPort() == Settings.SETTINGS.portHTTP && Strings.isNotBlank(SETTINGS.certificatePath))
+        {
+            StringBuilder redirect = new StringBuilder();
+            redirect.append("https://").append(request.getServerName());
+            if (SETTINGS.portHTTPS != 443) redirect.append(':').append(SETTINGS.portHTTPS);
+            redirect.append(request.getRequest().getRequestURI());
+            if (request.getRequest().getQueryString() != null) redirect.append('?').append(request.getRequest().getQueryString());
+            response.sendRedirect(redirect.toString());
+            return true;
+        }
+
         lastRequest = System.currentTimeMillis();
         if (request.getSession(false) != null) request.getSession();
 

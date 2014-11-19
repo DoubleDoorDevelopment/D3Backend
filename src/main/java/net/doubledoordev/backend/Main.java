@@ -48,19 +48,19 @@ import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.web.http.FreemarkerHandler;
 import net.doubledoordev.backend.web.http.ServerFileHandler;
 import net.doubledoordev.backend.web.socket.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
-import org.glassfish.grizzly.http.server.ServerConfiguration;
+import org.glassfish.grizzly.http.server.*;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Properties;
@@ -100,17 +100,13 @@ public class Main
 
     }
 
-    private static SSLEngineConfigurator createSslConfiguration()
+    private static SSLEngineConfigurator createSslConfiguration() throws IOException
     {
         // Initialize SSLContext configuration
         SSLContextConfigurator sslContextConfig = new SSLContextConfigurator();
-
-        ClassLoader cl = Server.class.getClassLoader();
-        // Set key store
-        URL keystoreUrl = cl.getResource(SETTINGS.certificatePath);
-        if (keystoreUrl != null)
+        if (Strings.isNotBlank(SETTINGS.certificatePath))
         {
-            sslContextConfig.setKeyStoreFile(keystoreUrl.getFile());
+            sslContextConfig.setKeyStoreBytes(FileUtils.readFileToByteArray(new File(SETTINGS.certificatePath)));
             sslContextConfig.setKeyStorePass(SETTINGS.certificatePass);
         }
 
@@ -150,9 +146,13 @@ public class Main
         AdvancedSettingsSocketApplication.register();
         UsersSocketApplication.register();
 
-        final NetworkListener networkListener = new NetworkListener("unsecured-listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, SETTINGS.portHTTP);
-        //networkListener.setSecure(true);
-        //networkListener.setSSLEngineConfig(createSslConfiguration());
+        final NetworkListener networkListener = new NetworkListener("listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, Strings.isNotBlank(SETTINGS.certificatePath) ? SETTINGS.portHTTPS : SETTINGS.portHTTP);
+        if (Strings.isNotBlank(SETTINGS.certificatePath))
+        {
+            networkListener.setSecure(true);
+            networkListener.setSSLEngineConfig(createSslConfiguration());
+            webserver.addListener(new NetworkListener("redirect-listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, SETTINGS.portHTTP));
+        }
         webserver.addListener(networkListener);
         networkListener.registerAddOn(new WebSocketAddOn());
         webserver.start();
