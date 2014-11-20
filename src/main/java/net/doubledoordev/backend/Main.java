@@ -79,6 +79,7 @@ public class Main
     public static final String build, version;
     public static String adminKey;
     public static boolean running = true;
+    public static boolean debug = false;
 
     static
     {
@@ -120,6 +121,11 @@ public class Main
         Field charset = Charset.class.getDeclaredField("defaultCharset");
         charset.setAccessible(true);
         charset.set(null, null);
+
+        for (String arg : args)
+        {
+            if (arg.equalsIgnoreCase("debug")) debug = true;
+        }
 
         LOGGER.info("Making necessary folders...");
         mkdirs();
@@ -228,5 +234,6 @@ public class Main
             }
         }
         LOGGER.info("Bye!");
+        Runtime.getRuntime().exit(0);
     }
 }
