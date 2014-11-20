@@ -435,7 +435,6 @@ public class Server
      */
     public void setProperty(IMethodCaller caller, String key, String value) throws IOException
     {
-        if (getOnline()) throw new ServerOnlineException();
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
         properties.put(key, value);
         normalizeProperties();

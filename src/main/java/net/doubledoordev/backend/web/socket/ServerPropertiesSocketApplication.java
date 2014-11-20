@@ -102,7 +102,7 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
         {
             server.setProperty(new WebSocketCaller(socket), split[0], split[1]);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             WebSocketHelper.sendError(socket, e);
         }
