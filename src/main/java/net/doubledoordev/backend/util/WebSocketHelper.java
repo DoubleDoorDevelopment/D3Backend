@@ -141,8 +141,7 @@ public class WebSocketHelper
         {
             error.append('\n').append(e.getClass().getSimpleName());
             if (e.getMessage() != null) error.append(": ").append(e.getMessage());
-        }
-        while ((e = e.getCause()) != null);
+        } while ((e = e.getCause()) != null);
         WebSocketHelper.sendError(socket, error.substring(1));
         socket.close();
     }

@@ -58,7 +58,7 @@ public class PortRange
     public int getNextAvailablePort(int ignored) throws OutOfPortsException
     {
         HashSet<Integer> usedPorts = new HashSet<>();
-        for (Server server : Settings.SETTINGS.servers.values())
+        for (Server server : Settings.SETTINGS.getServers())
         {
             usedPorts.add(server.getServerPort());
         }

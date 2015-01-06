@@ -61,6 +61,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class Settings
 {
     public static final Settings SETTINGS;
+
     static
     {
         try
@@ -73,30 +74,31 @@ public class Settings
             throw new RuntimeException(e);
         }
     }
+
     public Map<String, Server> servers = new HashMap<>();
-    public Map<String, User>   users   = new HashMap<>();
+    public Map<String, User> users = new HashMap<>();
     @Expose
-    public String hostname;
+    public String hostname = "";
     @Expose
-    public int          portHTTP         = 80;
+    public int portHTTP = 80;
     @Expose
-    public int          portHTTPS        = 443;
+    public int portHTTPS = 443;
     @Expose
-    public boolean      useJava8         = false;
+    public boolean useJava8 = false;
     @Expose
-    public boolean      fixedPorts       = false;
+    public boolean fixedPorts = false;
     @Expose
-    public boolean      fixedIP          = false;
+    public boolean fixedIP = false;
     @Expose
-    public PortRange    portRange        = new PortRange();
+    public PortRange portRange = new PortRange();
     @Expose
-    public int          defaultDiskspace = -1;
+    public int defaultDiskspace = -1;
     @Expose
-    public List<String> anonPages        = Arrays.asList("index", "login", "register");
+    public List<String> anonPages = Arrays.asList("index", "login", "register");
     @Expose
-    public String       certificatePath  = "";
+    public String certificatePath = "";
     @Expose
-    public String       certificatePass  = "";
+    public String certificatePass = "";
 
     private Settings() throws IOException
     {

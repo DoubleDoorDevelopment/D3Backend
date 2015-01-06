@@ -18,49 +18,49 @@ import java.util.prefs.Preferences;
 
 public class WinRegistry
 {
-    public static final  int                          HKEY_LOCAL_MACHINE = 0x80000002;
-    public static final  int                          KEY_WOW64_32KEY    = 0x0200;
-    public static final  int                          KEY_WOW64_64KEY    = 0x0100;
-    private static final int                          HKEY_CURRENT_USER  = 0x80000001;
-    private static final int                          REG_SUCCESS        = 0;
-    private static final int                          KEY_READ           = 0x20019;
-    private static final Preferences                  userRoot           = Preferences.userRoot();
-    private static final Preferences                  systemRoot         = Preferences.systemRoot();
-    private static final Class<? extends Preferences> userClass          = userRoot.getClass();
-    private static       Method                       regOpenKey         = null;
-    private static       Method                       regCloseKey        = null;
-    private static       Method                       regQueryValueEx    = null;
-    private static       Method                       regEnumValue       = null;
-    private static       Method                       regQueryInfoKey    = null;
-    private static       Method                       regEnumKeyEx       = null;
-    private static       Method                       regCreateKeyEx     = null;
-    private static       Method                       regSetValueEx      = null;
-    private static       Method                       regDeleteKey       = null;
-    private static       Method                       regDeleteValue     = null;
+    public static final int HKEY_LOCAL_MACHINE = 0x80000002;
+    public static final int KEY_WOW64_32KEY = 0x0200;
+    public static final int KEY_WOW64_64KEY = 0x0100;
+    private static final int HKEY_CURRENT_USER = 0x80000001;
+    private static final int REG_SUCCESS = 0;
+    private static final int KEY_READ = 0x20019;
+    private static final Preferences userRoot = Preferences.userRoot();
+    private static final Preferences systemRoot = Preferences.systemRoot();
+    private static final Class<? extends Preferences> userClass = userRoot.getClass();
+    private static Method regOpenKey = null;
+    private static Method regCloseKey = null;
+    private static Method regQueryValueEx = null;
+    private static Method regEnumValue = null;
+    private static Method regQueryInfoKey = null;
+    private static Method regEnumKeyEx = null;
+    private static Method regCreateKeyEx = null;
+    private static Method regSetValueEx = null;
+    private static Method regDeleteKey = null;
+    private static Method regDeleteValue = null;
 
     static
     {
         try
         {
-            regOpenKey = userClass.getDeclaredMethod("WindowsRegOpenKey", new Class[]{int.class, byte[].class, int.class});
+            regOpenKey = userClass.getDeclaredMethod("WindowsRegOpenKey", int.class, byte[].class, int.class);
             regOpenKey.setAccessible(true);
-            regCloseKey = userClass.getDeclaredMethod("WindowsRegCloseKey", new Class[]{int.class});
+            regCloseKey = userClass.getDeclaredMethod("WindowsRegCloseKey", int.class);
             regCloseKey.setAccessible(true);
-            regQueryValueEx = userClass.getDeclaredMethod("WindowsRegQueryValueEx", new Class[]{int.class, byte[].class});
+            regQueryValueEx = userClass.getDeclaredMethod("WindowsRegQueryValueEx", int.class, byte[].class);
             regQueryValueEx.setAccessible(true);
-            regEnumValue = userClass.getDeclaredMethod("WindowsRegEnumValue", new Class[]{int.class, int.class, int.class});
+            regEnumValue = userClass.getDeclaredMethod("WindowsRegEnumValue", int.class, int.class, int.class);
             regEnumValue.setAccessible(true);
-            regQueryInfoKey = userClass.getDeclaredMethod("WindowsRegQueryInfoKey1", new Class[]{int.class});
+            regQueryInfoKey = userClass.getDeclaredMethod("WindowsRegQueryInfoKey1", int.class);
             regQueryInfoKey.setAccessible(true);
-            regEnumKeyEx = userClass.getDeclaredMethod("WindowsRegEnumKeyEx", new Class[]{int.class, int.class, int.class});
+            regEnumKeyEx = userClass.getDeclaredMethod("WindowsRegEnumKeyEx", int.class, int.class, int.class);
             regEnumKeyEx.setAccessible(true);
-            regCreateKeyEx = userClass.getDeclaredMethod("WindowsRegCreateKeyEx", new Class[]{int.class, byte[].class});
+            regCreateKeyEx = userClass.getDeclaredMethod("WindowsRegCreateKeyEx", int.class, byte[].class);
             regCreateKeyEx.setAccessible(true);
-            regSetValueEx = userClass.getDeclaredMethod("WindowsRegSetValueEx", new Class[]{int.class, byte[].class, byte[].class});
+            regSetValueEx = userClass.getDeclaredMethod("WindowsRegSetValueEx", int.class, byte[].class, byte[].class);
             regSetValueEx.setAccessible(true);
-            regDeleteValue = userClass.getDeclaredMethod("WindowsRegDeleteValue", new Class[]{int.class, byte[].class});
+            regDeleteValue = userClass.getDeclaredMethod("WindowsRegDeleteValue", int.class, byte[].class);
             regDeleteValue.setAccessible(true);
-            regDeleteKey = userClass.getDeclaredMethod("WindowsRegDeleteKey", new Class[]{int.class, byte[].class});
+            regDeleteKey = userClass.getDeclaredMethod("WindowsRegDeleteKey", int.class, byte[].class);
             regDeleteKey.setAccessible(true);
         }
         catch (Exception e)

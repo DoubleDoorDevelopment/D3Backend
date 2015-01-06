@@ -1,5 +1,6 @@
 <div class="panel-body">
     <p>This file has no live updating.</p>
+
     <form class="form-inline" role="form" onsubmit="makeNew(); return false;">
         <div class="form-group">
             <label class="sr-only" for="newUsername">Username</label>
@@ -41,7 +42,8 @@
     <script type="text/javascript">
         var json = ${fm.getFileContents()};
         var opList = document.getElementById("opList");
-        json.forEach(function (object) {
+        json.forEach(function (object)
+        {
             opList.innerHTML +=
                     "<tr id=\"" + object['name'] + "\">" +
                     "<td>" + object['name'] + "</td>" +
@@ -50,28 +52,32 @@
                     "<td>" + object['reason'] + "</td>" +
                     "<td>" + object['created'] + "</td>" +
                     "<td>" + object['expires'] + "</td>" +
-            <#if !readonly>
+                    <#if !readonly>
                     "<td>" +
                     "<div class=\"btn-group\">" +
                     "<button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
                     "<button type=\"button\" onclick=\"makeEditable(\'" + object['name'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
                     "</div>" +
                     "</td>"+
-            </#if>
+                    </#if>
                     "</tr>";
         });
 
-        function removeUser(username) {
+        function removeUser(username)
+        {
             var element = document.getElementById(username);
             if (element != null) opList.removeChild(element);
-            for (var i = json.length - 1; i >= 0; i--) {
-                if (json[i]["name"] === username) {
+            for (var i = json.length - 1; i >= 0; i--)
+            {
+                if (json[i]["name"] === username)
+                {
                     json.splice(i, 1);
                 }
             }
         }
 
-        function makeNew() {
+        function makeNew()
+        {
             var xmlhttp = new XMLHttpRequest();
             var username = document.getElementById("newUsername").value;
             var source = document.getElementById("newSource").value;
@@ -79,16 +85,20 @@
             var created = document.getElementById("newCreated").value;
             var expires = document.getElementById("newExpires").value;
 
-            xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4) {
-                    if (xmlhttp.status == 200) {
+            xmlhttp.onreadystatechange = function ()
+            {
+                if (xmlhttp.readyState == 4)
+                {
+                    if (xmlhttp.status == 200)
+                    {
                         var myArr = JSON.parse(xmlhttp.responseText);
-                        if (myArr.hasOwnProperty("id")) {
-                            removeUser(username)
+                        if (myArr.hasOwnProperty("id"))
+                        {
+                            removeUser(username);
 
                             var uuid = myArr["id"];
 
-                            uuid = [uuid.slice(0, 8), "-", uuid.slice(8, 12), "-", uuid.slice(12, 16), "-", uuid.slice(16, 20), "-", uuid.slice(20)].join('')
+                            uuid = [uuid.slice(0, 8), "-", uuid.slice(8, 12), "-", uuid.slice(12, 16), "-", uuid.slice(16, 20), "-", uuid.slice(20)].join('');
 
                             json.push({"name": username, "uuid": uuid, "source": source, "reason": reason, "created": created, "expires": expires});
                             opList.innerHTML +=
@@ -99,14 +109,14 @@
                                     "<td>" + reason + "</td>" +
                                     "<td>" + created + "</td>" +
                                     "<td>" + expires + "</td>" +
-                            <#if !readonly>
+                                    <#if !readonly>
                                     "<td>" +
                                     "<div class=\"btn-group\">" +
                                     "<button type=\"button\" onclick=\"removeUser(\'" + username + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
                                     "<button type=\"button\" onclick=\"makeEditable(\'" + username + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
                                     "</div>" +
                                     "</td>" +
-                            </#if>
+                                    </#if>
                                     "</tr>";
 
                             document.getElementById("newUsername").value = "";
@@ -121,16 +131,19 @@
                     }
                     alert("Input invalid.");
                 }
-            }
+            };
             xmlhttp.open("GET", "https://api.mojang.com/users/profiles/minecraft/" + username, true);
             xmlhttp.send();
         }
 
-        function makeEditable(username) {
+        function makeEditable(username)
+        {
             var element = document.getElementById(username);
             if (element != null) opList.removeChild(element);
-            for (var i = json.length - 1; i >= 0; i--) {
-                if (json[i]["name"] === username) {
+            for (var i = json.length - 1; i >= 0; i--)
+            {
+                if (json[i]["name"] === username)
+                {
                     document.getElementById("newUsername").value = json[i]["name"];
                     document.getElementById("newSource").value = json[i]["source"];
                     document.getElementById("newReason").value = json[i]["reason"];
@@ -145,8 +158,14 @@
         }
 
         var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
-        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        websocket.onerror = function (evt)
+        {
+            alert("The websocket errored. Refresh the page!")
+        };
+        websocket.onclose = function (evt)
+        {
+            alert("The websocket closed. Refresh the page!")
+        };
         websocket.onmessage = function (evt)
         {
             var temp = JSON.parse(evt.data);
@@ -155,16 +174,19 @@
                 editor.setValue(temp.data);
                 editor.clearSelection();
             }
-            else alert(temp.message);
-        }
+            else
+            {
+                alert(temp.message);
+            }
+        };
         function send()
         {
-            websocket.send(JSON.stringify({ method : "set", args: [JSON.stringify(json)]}));
+            websocket.send(JSON.stringify({method: "set", args: [JSON.stringify(json)]}));
         }
     </script>
-    <#if !readonly>
+<#if !readonly>
     <button type="button" class="btn btn-primary btn-block" onclick="send()">Save</button>
-    <#else>
+<#else>
     <p>File is readonly.</p>
-    </#if>
+</#if>
 </div>

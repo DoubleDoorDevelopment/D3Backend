@@ -54,21 +54,21 @@ import java.util.Date;
 public class RestartingInfo
 {
     @Expose
-    public boolean autoStart              = false;
+    public boolean autoStart = false;
     @Expose
-    public int     globalTimeout          = 24;
+    public int globalTimeout = 24;
     @Expose
-    public int     whenEmptyTimeout       = 30;
+    public int whenEmptyTimeout = 30;
     @Expose
-    public boolean enableRestartSchedule  = false;
+    public boolean enableRestartSchedule = false;
     @Expose
-    public int     restartScheduleHours   = 0;
+    public int restartScheduleHours = 0;
     @Expose
-    public int     restartScheduleMinutes = 0;
+    public int restartScheduleMinutes = 0;
     @Expose
-    public String  restartScheduleMessage = "Server reboot in %time minutes!";
+    public String restartScheduleMessage = "Server reboot in %time minutes!";
 
-    private boolean      restartNextRun  = false;
+    private boolean restartNextRun = false;
     private ScheduleStep runningSchedule = ScheduleStep.NONE;
     private Date lastRestart, emptyDate;
 
@@ -147,7 +147,7 @@ public class RestartingInfo
     {
         NONE(-1, null), NOW(0, NONE), M1(1, NOW), M2(2, M1), M3(3, M2), M4(4, M3), M5(5, M4), M10(10, M5), M15(15, M10);
 
-        public final int          timeLeft;
+        public final int timeLeft;
         public final ScheduleStep nextStep;
 
         ScheduleStep(int timeLeft, ScheduleStep nextStep)

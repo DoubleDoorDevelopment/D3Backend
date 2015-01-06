@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#assign restartInfo = server.getRestartingInfo()>
 <h1>Advanced Settings
-    <small> <a href="/server?server=${server.ID}">${server.ID}</a>   <span id="online"></span></small>
+    <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
 </h1>
 <div class="row">
     <div class="col-sm-6">
@@ -11,6 +11,7 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>Last autorestart: ${restartInfo.getLastRestart("YYYY-MM-dd hh:mm:ss")}</p>
+
                 <div class="form-group">
                     <label>
                         <input id="RestartingInfo_autoStart" type="checkbox"> Autostart
@@ -19,16 +20,20 @@
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_globalTimeout">Global Restart Timout</label>
+
                     <div class="input-group">
                         <input id="RestartingInfo_globalTimeout" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+
                         <div class="input-group-addon">hours</div>
                     </div>
                     <span for="RestartingInfo_globalTimeout" class="help-block">Minimun time inbetween automated backups.</span>
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_whenEmptyTimeout">Timout when empty</label>
+
                     <div class="input-group">
                         <input id="RestartingInfo_whenEmptyTimeout" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+
                         <div class="input-group-addon">minutes</div>
                     </div>
                     <span for="RestartingInfo_whenEmptyTimeout" class="help-block">If not -1, the server will restart x minutes after the last person leaves.</span>
@@ -41,8 +46,10 @@
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_restartScheduleHours">Reboot schedule time</label>
+
                     <div class="input-group col-sm-6 col-sm-offset-3">
                         <input id="RestartingInfo_restartScheduleHours" class="form-control" aria-describedby="helpBlock" type="number" min="0" max="23" placeholder="00">
+
                         <div class="input-group-addon">h</div>
                         <input id="RestartingInfo_restartScheduleMinutes" class="form-control" aria-describedby="helpBlock" type="number" min="0" max="59" placeholder="00">
                     </div>
@@ -50,8 +57,10 @@
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_restartScheduleMessage">Reboot schedule time</label>
+
                     <div class="input-group">
                         <input id="RestartingInfo_restartScheduleMessage" class="form-control" aria-describedby="helpBlock" type="text" placeholder="00:00">
+
                         <div class="input-group-addon">%time = time left in min</div>
                     </div>
                     <span for="RestartingInfo_restartScheduleMessage" class="help-block">This message gets send at: T- 15, 10, 5, 4, 3, 2, 1, 0 min.</span>
@@ -70,27 +79,36 @@
             <div class="panel-body" style="text-align: center;">
                 <div class="form-group">
                     <label for="JvmData_jarName">Server jar name</label>
-                    <input id="JvmData_jarName" class="form-control" aria-describedby="helpBlock" type="text" placeholder="minecraft_server.jar">
+                    <select id="JvmData_jarName" class="form-control" aria-describedby="helpBlock">
+                    <#list server.getPossibleJarnames() as jarName>
+                        <option value="${jarName}">${jarName}</option>
+                    </#list>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="JvmData_ramMin">Server RAM</label>
+
                     <div class="input-group">
-                        <div class="input-group-addon">Min: </div>
+                        <div class="input-group-addon">Min:</div>
                         <input id="JvmData_ramMin" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+
                         <div class="input-group-addon">MB</div>
                     </div>
                 </div>
                 <div class="form-group">
                     <div class="input-group">
-                        <div class="input-group-addon">Max: </div>
+                        <div class="input-group-addon">Max:</div>
                         <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+
                         <div class="input-group-addon">MB</div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="JvmData_permGen">Server permgen</label>
+
                     <div class="input-group col-sm-6 col-sm-offset-3">
                         <input id="JvmData_permGen" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+
                         <div class="input-group-addon">MB</div>
                     </div>
                 </div>
@@ -112,7 +130,8 @@
 <script>
     var firstRun = true;
     var allkeys = {};
-    function updateInfo (data) {
+    function updateInfo(data)
+    {
         console.log(data);
         for (key1 in data)
         {
@@ -128,8 +147,14 @@
                 var dom = document.getElementById(key1 + "_" + key2);
                 if (dom != null)
                 {
-                    if (dom.type === "checkbox") dom.checked = data[key1][key2];
-                    else dom.value = data[key1][key2];
+                    if (dom.type === "checkbox")
+                    {
+                        dom.checked = data[key1][key2];
+                    }
+                    else
+                    {
+                        dom.value = data[key1][key2];
+                    }
                 }
             }
         }
@@ -140,11 +165,23 @@
     websocket.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
-        if (temp.status === "ok") updateInfo(temp.data);
-        else alert(temp.message);
-    }
-    websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-    websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        if (temp.status === "ok")
+        {
+            updateInfo(temp.data);
+        }
+        else
+        {
+            alert(temp.message);
+        }
+    };
+    websocket.onerror = function (evt)
+    {
+        alert("The websocket errored. Refresh the page!")
+    };
+    websocket.onclose = function (evt)
+    {
+        alert("The websocket closed. Refresh the page!")
+    };
 
     function send(key1)
     {
@@ -155,8 +192,14 @@
             var name = key1 + "_" + allkeys[key1][key2];
             var dom = document.getElementById(name);
             if (dom == null) continue;
-            if (dom.type === "checkbox") data[key1][allkeys[key1][key2]] = dom.checked;
-            else data[key1][allkeys[key1][key2]] = dom.value;
+            if (dom.type === "checkbox")
+            {
+                data[key1][allkeys[key1][key2]] = dom.checked;
+            }
+            else
+            {
+                data[key1][allkeys[key1][key2]] = dom.value;
+            }
         }
         websocket.send(JSON.stringify(data));
     }

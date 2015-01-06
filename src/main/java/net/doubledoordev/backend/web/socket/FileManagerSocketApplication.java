@@ -63,7 +63,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class FileManagerSocketApplication extends ServerWebSocketApplication
 {
     private static final FileManagerSocketApplication APPLICATION = new FileManagerSocketApplication();
-    private static final String                       URL_PATTERN = "/filemanager/*";
+    private static final String URL_PATTERN = "/filemanager/*";
 
     private FileManagerSocketApplication()
     {

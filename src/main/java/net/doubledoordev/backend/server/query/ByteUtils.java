@@ -173,13 +173,7 @@ public class ByteUtils
     public static byte[] intToBytes(int in)
     {
         byte[] b;
-        b = new byte[]
-                {
-                        (byte) (in >>> 24 & 0xFF),
-                        (byte) (in >>> 16 & 0xFF),
-                        (byte) (in >>> 8 & 0xFF),
-                        (byte) (in & 0xFF)
-                };
+        b = new byte[]{(byte) (in >>> 24 & 0xFF), (byte) (in >>> 16 & 0xFF), (byte) (in >>> 8 & 0xFF), (byte) (in & 0xFF)};
         return b;
     }
 

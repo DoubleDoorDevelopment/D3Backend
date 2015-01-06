@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.server;
 
+import com.flowpowered.nbt.Tag;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
@@ -50,7 +51,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.http.util.MimeType;
-import org.spout.nbt.Tag;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,8 +68,8 @@ import java.util.LinkedList;
 public class FileManager
 {
     private final Server server;
-    private final File   serverFolder;
-    private final File   file;
+    private final File serverFolder;
+    private final File file;
 
     public FileManager(Server server, String fileString)
     {

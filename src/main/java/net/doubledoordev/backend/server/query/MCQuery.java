@@ -54,10 +54,10 @@ import static net.doubledoordev.backend.util.Constants.LOCALHOST;
 public class MCQuery
 {
     final static byte HANDSHAKE = 9;
-    final static byte STAT      = 0;
+    final static byte STAT = 0;
 
     String serverAddress = LOCALHOST;
-    int    queryPort     = 25565; // the default minecraft query port
+    int queryPort = 25565; // the default minecraft query port
 
     int localPort = 25566; // the local port we're connected to the server on
 

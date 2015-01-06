@@ -60,7 +60,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class ConsoleSocketApplication extends WebSocketApplication
 {
     private static final ConsoleSocketApplication APPLICATION = new ConsoleSocketApplication();
-    private static final String                   URL_PATTERN = "/console";
+    private static final String URL_PATTERN = "/console";
 
     private ConsoleSocketApplication()
     {

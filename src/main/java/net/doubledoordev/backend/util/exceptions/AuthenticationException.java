@@ -95,8 +95,7 @@ public class AuthenticationException extends RuntimeException
      * @param enableSuppression  Whether or not suppression is enabled or disabled.
      * @param writableStackTrace Whether or not the stack trace should be writable.
      */
-    public AuthenticationException(final String message, final Throwable cause, final boolean enableSuppression,
-                                   final boolean writableStackTrace)
+    public AuthenticationException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace)
     {
         super(message, cause, enableSuppression, writableStackTrace);
     }

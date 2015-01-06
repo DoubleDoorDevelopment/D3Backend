@@ -57,7 +57,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class ServerconsoleSocketApplication extends ServerWebSocketApplication
 {
     private static final ServerconsoleSocketApplication APPLICATION = new ServerconsoleSocketApplication();
-    private static final String                         URL_PATTERN = "/serverconsole/*";
+    private static final String URL_PATTERN = "/serverconsole/*";
 
     private ServerconsoleSocketApplication()
     {

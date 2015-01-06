@@ -59,10 +59,10 @@ public class Download implements Runnable
     // Max size of download buffer.
     private static final int MAX_BUFFER_SIZE = 1024;
     private final File target;// target file
-    private final URL  url; // download URL
+    private final URL url; // download URL
     private String message = "OK";
-    private long   size; // size of download in bytes
-    private long   downloaded; // number of bytes downloaded
+    private long size; // size of download in bytes
+    private long downloaded; // number of bytes downloaded
     private Status status; // current status of download
 
     // Constructor for Download.
@@ -187,8 +187,7 @@ public class Download implements Runnable
 
                 // Read from server into buffer.
                 int read = stream.read(buffer);
-                if (read == -1)
-                    break;
+                if (read == -1) break;
 
                 // Write buffer to file.
                 file.write(buffer, 0, read);

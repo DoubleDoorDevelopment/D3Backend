@@ -67,7 +67,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class UsersSocketApplication extends WebSocketApplication
 {
     private static final UsersSocketApplication APPLICATION = new UsersSocketApplication();
-    private static final String                 URL_PATTERN = "/users/*";
+    private static final String URL_PATTERN = "/users/*";
 
     private UsersSocketApplication()
     {

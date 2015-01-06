@@ -47,7 +47,7 @@ import java.util.ArrayList;
  */
 public class QueryResponse
 {
-    static byte NULL  = 00;
+    static byte NULL = 00;
     static byte SPACE = 20;
 
     private boolean fullstat;
@@ -55,13 +55,13 @@ public class QueryResponse
     //for simple stat
     private String motd, gameMode, mapName;
     private int onlinePlayers, maxPlayers;
-    private short  port;
+    private short port;
     private String hostname;
 
     //for full stat only
-    private String            gameID;
-    private String            version;
-    private String            plugins;
+    private String gameID;
+    private String version;
+    private String plugins;
     private ArrayList<String> playerList;
 
     public QueryResponse(byte[] data, boolean fullstat)
@@ -71,7 +71,7 @@ public class QueryResponse
         data = ByteUtils.trim(data);
         byte[][] temp = ByteUtils.split(data);
 
-//		if(temp.length == 6) //short stat
+        //		if(temp.length == 6) //short stat
         if (!fullstat)
         {
             motd = new String(ByteUtils.subarray(temp[0], 1, temp[0].length - 1));

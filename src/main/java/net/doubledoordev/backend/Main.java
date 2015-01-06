@@ -52,7 +52,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
-import org.glassfish.grizzly.http.server.*;
+import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.websockets.WebSocketAddOn;
@@ -60,8 +63,6 @@ import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Properties;
 import java.util.UUID;
@@ -74,8 +75,8 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class Main
 {
-    public static final long   STARTTIME = System.currentTimeMillis();
-    public static final Logger LOGGER    = LogManager.getLogger(Main.class.getSimpleName());
+    public static final long STARTTIME = System.currentTimeMillis();
+    public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
     public static final String build, version;
     public static String adminKey;
     public static boolean running = true;

@@ -1,4 +1,5 @@
-ace.define("ace/snippets/io", ["require", "exports", "module"], function (e, t, n) {
+ace.define("ace/snippets/io", ["require", "exports", "module"], function (e, t, n)
+{
     "use strict";
     t.snippets = [
         {content: "assertEquals(${1:expected}, ${2:expr})", name: "assertEquals", scope: "io", tabTrigger: "ae"},
@@ -12,4 +13,4 @@ ace.define("ace/snippets/io", ["require", "exports", "module"], function (e, t, 
         {content: "test${1:SomeFeature} := method(\n	$0\n)", name: "testMethod", scope: "io", tabTrigger: "ts"},
         {content: "${1:Something}Test := ${2:UnitTest} clone do(\n	$0\n)", name: "UnitTest", scope: "io", tabTrigger: "ut"}
     ], t.scope = "io"
-})
+});

@@ -1,21 +1,21 @@
 <#include "header.ftl">
 <#if message??>
-    <div class="alert alert-danger" role="alert">${message}</div>
+<div class="alert alert-danger" role="alert">${message}</div>
 </#if>
 <form class="form-horizontal" name="form" role="form" method="post" onsubmit="return validateForm()">
-    <#if user.isAdmin()>
-        <div class="form-group">
-            <label for="owner" class="col-sm-2 control-label">Owner</label>
+<#if user.isAdmin()>
+    <div class="form-group">
+        <label for="owner" class="col-sm-2 control-label">Owner</label>
 
-            <div class="col-sm-10">
-                <select name="owner" id="owner" class="form-control">
-                    <#list Settings.users as user1>
-                        <option <#if user1 == user>selected="selected"</#if>>${user1.username}</option>
-                    </#list>
-                </select>
-            </div>
+        <div class="col-sm-10">
+            <select name="owner" id="owner" class="form-control">
+                <#list Settings.users as user1>
+                    <option <#if user1 == user>selected="selected"</#if>>${user1.username}</option>
+                </#list>
+            </select>
         </div>
-    </#if>
+    </div>
+</#if>
     <div class="form-group" id="name-div">
         <label for="name" class="col-sm-2 control-label">Server Name</label>
 
@@ -24,49 +24,38 @@
             <span class="help-block" id="name-help">"${user.username}-" will be used as a prefix automatically.</span>
         </div>
     </div>
-    <#if !Settings.fixedPorts>
-        <div class="form-group">
-            <label for="serverport" class="col-sm-2 control-label">Server Port</label>
+<#if !Settings.fixedPorts>
+    <div class="form-group">
+        <label for="serverport" class="col-sm-2 control-label">Server Port</label>
 
-            <div class="col-sm-10">
-                <#assign serverport = Settings.portRange.getNextAvailablePort()>
-                <input type="number" min="1" max="65535" class="form-control" id="serverport" name="serverport"
-                       value="${serverport?c}" required>
-            </div>
+        <div class="col-sm-10">
+            <#assign serverport = Settings.portRange.getNextAvailablePort()>
+            <input type="number" min="1" max="65535" class="form-control" id="serverport" name="serverport" value="${serverport?c}" required>
         </div>
-        <div class="form-group">
-            <label for="rconport" class="col-sm-2 control-label">RCon Port</label>
+    </div>
+</#if>
+<#if !Settings.fixedIP>
+    <div class="form-group">
+        <label for="ip" class="col-sm-2 control-label">Hostname / IP</label>
 
-            <div class="col-sm-10">
-                <input type="number" min="1" max="65535" class="form-control" id="rconport" name="rconport"
-                       value="${Settings.portRange.getNextAvailablePort(serverport)?c}" required>
-            </div>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" id="ip" name="ip" placeholder="Binds to all ips by default">
         </div>
-    </#if>
-    <#if !Settings.fixedIP>
-        <div class="form-group">
-            <label for="ip" class="col-sm-2 control-label">Hostname / IP</label>
-
-            <div class="col-sm-10">
-                <input type="text" class="form-control" id="ip" name="ip" placeholder="localhost">
-            </div>
-        </div>
-    </#if>
-    <#assign maxRam = user.getMaxRamLeft()>
+    </div>
+</#if>
+<#assign maxRam = user.getMaxRamLeft()>
     <div class="form-group">
         <label for="RAMmin" class="col-sm-2 control-label">RAM min (in MB)</label>
 
         <div class="col-sm-10">
-            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if>
-                   class="form-control" id="RAMmin" name="RAMmin" required>
+            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if> class="form-control" id="RAMmin" name="RAMmin" required>
         </div>
     </div>
     <div class="form-group">
         <label for="RAMmax" class="col-sm-2 control-label">RAM max (in MB)</label>
 
         <div class="col-sm-10">
-            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if>
-                   class="form-control" id="RAMmax" name="RAMmax" required>
+            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if> class="form-control" id="RAMmax" name="RAMmax" required>
         </div>
     </div>
     <div class="form-group">
@@ -97,13 +86,13 @@
             <input type="text" class="form-control" id="jarname" name="jarname" value="minecraft_server.jar">
         </div>
     </div>
-    <div class="form-group">
-        <label for="rconpass" class="col-sm-2 control-label">RCon password</label>
+<#--<div class="form-group">-->
+<#--<label for="rconpass" class="col-sm-2 control-label">RCon password</label>-->
 
-        <div class="col-sm-10">
-            <input type="text" class="form-control" id="rconpass" name="rconpass" value="${Helper.randomString(10)}">
-        </div>
-    </div>
+<#--<div class="col-sm-10">-->
+<#--<input type="text" class="form-control" id="rconpass" name="rconpass" value="${Helper.randomString(10)}">-->
+<#--</div>-->
+<#--</div>-->
     <div class="form-group">
         <label for="admins" class="col-sm-2 control-label">Admins</label>
 
@@ -136,19 +125,23 @@
     </div>
 </form>
 <script>
-    function checkName() {
+    function checkName()
+    {
         var name = document.getElementById("name").value;
-        while (!name.match(/^[\w]+$/)) {
+        while (!name.match(/^[\w]+$/))
+        {
             name = prompt('Your server ID contains non allowed characters.\nPlease remove all spaces and special characters.', name);
             if (name == null) break;
         }
 
-        if (name == null || !name.match(/^[\w]+$/)) {
+        if (name == null || !name.match(/^[\w]+$/))
+        {
             document.getElementById("submit").disabled = true;
             document.getElementById("name-div").className = "form-group has-error";
 
         }
-        else {
+        else
+        {
             document.getElementById("name").value = name;
             document.getElementById("submit").disabled = false;
             document.getElementById("name-div").className = "form-group";

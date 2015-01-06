@@ -20,11 +20,11 @@
                 <p>
                     Server owner is <span id="serverOwner"></span>.<br>
                     Server port status: <span id="serverPortAvailable"></span><br>
-                    <hr>
-                    Diskspace in use:<br>
-                    by server: <span id="diskspace_server"></span>MB<br>
-                    by backups: <span id="diskspace_backup"></span>MB<br>
-                    total: <span id="diskspace_total"></span>MB
+                <hr>
+                Diskspace in use:<br>
+                by server: <span id="diskspace_server"></span>MB<br>
+                by backups: <span id="diskspace_backup"></span>MB<br>
+                total: <span id="diskspace_total"></span>MB
                 </p>
                 <table class="table table-hover table-condensed">
                     <thead>
@@ -35,10 +35,10 @@
                     </thead>
                     <tbody>
                     <#list ["onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
-                        <tr>
-                            <td style="text-align: right;">${key}</td>
-                            <td style="text-align: left;" id="${key}"></td>
-                        </tr>
+                    <tr>
+                        <td style="text-align: right;">${key}</td>
+                        <td style="text-align: left;" id="${key}"></td>
+                    </tr>
                     </#list>
                     </tbody>
                 </table>
@@ -52,7 +52,7 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <div class="btn-group">
-                    <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID}' >File Manager</a>
+                    <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID}'>File Manager</a>
                     <a type="button" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">server.properties</a>
                     <a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID}">World Manager</a>
                 </div>
@@ -60,19 +60,27 @@
                 <a type="button" class="btn btn-warning" href="/advancedsettings?server=${server.ID}">Advanced Settings</a>
                 <hr>
                 <div class="btn-group">
-                    <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('servercmd/${server.ID}', 'setOwner', [name]);}"<#else>disabled</#if> class="btn btn-danger">Change owner</button>
-                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID}', 'delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">Delete server</button>
+                    <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('servercmd/${server.ID}', 'setOwner', [name]);}"<#else>disabled</#if> class="btn btn-danger">
+                        Change owner
+                    </button>
+                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID}', 'delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">
+                        Delete server
+                    </button>
                 </div>
                 <hr>
-                <h4>Co-owners <#if isOwner><small style="cursor: pointer;" onclick="var name = prompt('Username of the future co-owner?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addCoowner', [name])}"><i class="fa fa-plus"></i></small></#if></h4>
+                <h4>Co-owners <#if isOwner>
+                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future co-owner?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addCoowner', [name])}"><i class="fa fa-plus"></i>
+                    </small></#if></h4>
                 <ul class="list-unstyled" id="coOwnersList">
-                    <#list server.getCoOwners() as name>
-                        <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID}', 'removeCoowner', ['${name}'])" class="fa fa-times"></i></#if></li>
-                    </#list>
+                <#list server.getCoOwners() as name>
+                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID}', 'removeCoowner', ['${name}'])" class="fa fa-times"></i></#if></li>
+                </#list>
                 </ul>
                 <p class="text-muted">Usernames on the backend. Can do everything except modify co-owners, change owner and delete the server.</p>
                 <hr>
-                <h4>Admins <#if isCoOwner><small style="cursor: pointer;" onclick="var name = prompt('Username of the future admin?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addAdmin' + [name])}"><i class="fa fa-plus"></i></small></#if></h4>
+                <h4>Admins <#if isCoOwner>
+                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future admin?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addAdmin' + [name])}"><i class="fa fa-plus"></i></small></#if>
+                </h4>
                 <ul class="list-unstyled" id="adminsList">
                 <#list server.getAdmins() as name>
                     <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID}', 'removeAdmin', ['${name}'])" class="fa fa-times"></i></#if></li>
@@ -96,7 +104,9 @@
                 </#list>
                 </select>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value; call('servercmd/${server.ID}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">Change MC jar</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value; call('servercmd/${server.ID}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                    Change MC jar
+                </button>
             </div>
         </div>
     </div>
@@ -112,7 +122,9 @@
                 </#list>
                 </select>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value; call('servercmd/${server.ID}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">Install forge</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value; call('servercmd/${server.ID}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                    Install forge
+                </button>
             </div>
         </div>
     </div>
@@ -127,7 +139,9 @@
                     <input id="modpackPurge" type="checkbox" checked> Purge the server
                 </label>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; call('servercmd/${server.ID}', 'downloadModpack', [document.getElementById('modpackURL').value, document.getElementById('modpackPurge').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">Upload modpack</button>
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; call('servercmd/${server.ID}', 'downloadModpack', [document.getElementById('modpackURL').value, document.getElementById('modpackPurge').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                    Upload modpack
+                </button>
             </div>
         </div>
     </div>
@@ -164,14 +178,16 @@
     }
 </style>
 <script>
-    function openPopup($url) {
+    function openPopup($url)
+    {
         window.open(window.location.origin + $url, '_new', 'height=500,width=800');
     }
 
     modal = $('#modal');
     needsShowing = true;
     firstData = true;
-    function progressBar(data) {
+    function progressBar(data)
+    {
         var fl = parseFloat(data);
         if (needsShowing)
         {
@@ -203,14 +219,24 @@
         }
     }
 
-    function updateInfo (data) {
-        document.getElementById("startServerBtn").onclick = !data.online ? function() {call('servercmd/${server.ID}', "startServer")} : null;
+    function updateInfo(data)
+    {
+        document.getElementById("startServerBtn").onclick = !data.online ? function ()
+        {
+            call('servercmd/${server.ID}', "startServer")
+        } : null;
         document.getElementById("startServerBtn").disabled = data.online;
 
-        document.getElementById("stopServerBtn").onclick = data.online ? function() {call('servercmd/${server.ID}', "stopServer", [prompt('Message?', 'Server is stopping.')])} : null;
+        document.getElementById("stopServerBtn").onclick = data.online ? function ()
+        {
+            call('servercmd/${server.ID}', "stopServer", [prompt('Message?', 'Server is stopping.')])
+        } : null;
         document.getElementById("stopServerBtn").disabled = !data.online;
 
-        document.getElementById("killServerBtn").onclick = data.online ? function() {if (confirm('Are you sure?')) call('servercmd/${server.ID}', "forceStopServer")} : null;
+        document.getElementById("killServerBtn").onclick = data.online ? function ()
+        {
+            if (confirm('Are you sure?')) call('servercmd/${server.ID}', "forceStopServer")
+        } : null;
         document.getElementById("killServerBtn").disabled = !data.online;
 
         document.getElementById("onlinePlayers").innerHTML = data.onlinePlayers;
@@ -235,20 +261,28 @@
         document.getElementById("online").className = "label label-" + (data.online ? "success" : "danger");
 
         document.getElementById("coOwnersList").innerHTML = "";
-        data.coOwners.forEach(function(entry) {
+        data.coOwners.forEach(function (entry)
+        {
             document.getElementById("coOwnersList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
 
         document.getElementById("adminsList").innerHTML = "";
-        data.admins.forEach(function(entry) {
+        data.admins.forEach(function (entry)
+        {
             document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
     }
     websocketMonitor.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
-        if (temp.status === "ok") updateInfo(temp.data);
-        else alert(temp.message);
+        if (temp.status === "ok")
+        {
+            updateInfo(temp.data);
+        }
+        else
+        {
+            alert(temp.message);
+        }
     }
 </script>
 <#include "footer.ftl">

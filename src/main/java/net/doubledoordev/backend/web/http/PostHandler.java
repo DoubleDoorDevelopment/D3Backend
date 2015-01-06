@@ -72,31 +72,31 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class PostHandler
 {
-    public static final  PostHandler POST_HANDLER    = new PostHandler();
+    public static final PostHandler POST_HANDLER = new PostHandler();
     /*
      * FORM field names
      */
-    private static final String      OWNER           = "owner";
-    private static final String      NAME            = "name";
-    private static final String      USERNAME        = "username";
-    private static final String      PASSWORD        = "password";
-    private static final String      OLD_PASSWORD    = "oldPassword";
-    private static final String      NEW_PASSWORD    = "newPassword";
-    private static final String      ARE_YOU_HUMAN   = "areyouhuman";
-    private static final String      RAM_MIN         = "RAMmin";
-    private static final String      RAM_MAX         = "RAMmax";
-    private static final String      PERMGEN         = "PermGen";
-    private static final String      EXTRA_JAVA_PARM = "extraJavaParameters";
-    private static final String      EXTRA_MC_PARM   = "extraMCParameters";
-    private static final String      ADMINS          = "admins";
-    private static final String      COOWNERS        = "coOwners";
-    private static final String      JARNAME         = "jarname";
-    private static final String      RCON_PASS       = "rconpass";
-    private static final String      RCON_PORT       = "rconport";
-    private static final String      SERVER_PORT     = "serverport";
-    private static final String      IP              = "ip";
-    private static final String      AUTOSTART       = "autostart";
-    private static final String      LOGOUT          = "logout";
+    private static final String OWNER = "owner";
+    private static final String NAME = "name";
+    private static final String USERNAME = "username";
+    private static final String PASSWORD = "password";
+    private static final String OLD_PASSWORD = "oldPassword";
+    private static final String NEW_PASSWORD = "newPassword";
+    private static final String ARE_YOU_HUMAN = "areyouhuman";
+    private static final String RAM_MIN = "RAMmin";
+    private static final String RAM_MAX = "RAMmax";
+    private static final String PERMGEN = "PermGen";
+    private static final String EXTRA_JAVA_PARM = "extraJavaParameters";
+    private static final String EXTRA_MC_PARM = "extraMCParameters";
+    private static final String ADMINS = "admins";
+    private static final String COOWNERS = "coOwners";
+    private static final String JARNAME = "jarname";
+    private static final String RCON_PASS = "rconpass";
+    private static final String RCON_PORT = "rconport";
+    private static final String SERVER_PORT = "serverport";
+    private static final String IP = "ip";
+    private static final String AUTOSTART = "autostart";
+    private static final String LOGOUT = "logout";
 
     private PostHandler()
     {
@@ -123,7 +123,7 @@ public class PostHandler
         return uri;
     }
 
-    private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response)
+    private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response) throws IOException
     {
         User user = (User) data.get(USER);
         UserMethodCaller caller = new UserMethodCaller(user);
@@ -163,17 +163,15 @@ public class PostHandler
         if (parameters.getParameter(COOWNERS).trim().length() != 0) for (String name : Arrays.asList(parameters.getParameter(COOWNERS).trim().split("\n"))) server.addCoowner(caller, name);
 
         server.getJvmData().jarName = parameters.getParameter(JARNAME);
-        server.setRconPswd(caller, parameters.getParameter(RCON_PASS));
         try
         {
             server.setServerPort(caller, Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort() : Integer.parseInt(parameters.getParameter(SERVER_PORT)));
-            server.setRconPort(caller, Settings.SETTINGS.fixedPorts ? Settings.SETTINGS.portRange.getNextAvailablePort(server.getServerPort()) : Integer.parseInt(parameters.getParameter(RCON_PORT)));
         }
         catch (OutOfPortsException e)
         {
             throw new PostException("The backend ran out of ports to assign.");
         }
-        server.setIP(caller, parameters.getParameter(IP));
+        if (names.contains(IP)) server.setIP(caller, parameters.getParameter(IP));
         server.getRestartingInfo().autoStart = names.contains(AUTOSTART) && parameters.getParameter(AUTOSTART).equals("on");
 
         server.init();
@@ -184,8 +182,7 @@ public class PostHandler
 
         try
         {
-            FileUtils.writeStringToFile(new File(server.getFolder(), "eula.txt"),
-                    "#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.\n" +
+            FileUtils.writeStringToFile(new File(server.getFolder(), "eula.txt"), "#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.\n" +
                             "#That means that there is no need for extra halting of the server startup sequence with this stupid file.\n" +
                             "#" + new Date().toString() + "\n" +
                             "eula=true\n");
@@ -228,6 +225,9 @@ public class PostHandler
                     user.setGroup(Group.ADMIN);
                     Main.adminKey = null;
                     Main.LOGGER.warn("Admin key claimed. You cannot use it anymore!");
+                    user.setMaxRam(-1);
+                    user.setMaxDiskspace(-1);
+                    user.setMaxServers(-1);
                 }
                 Settings.SETTINGS.users.put(user.getUsername().toLowerCase(), user);
                 request.getSession().setAttribute(USER, user);

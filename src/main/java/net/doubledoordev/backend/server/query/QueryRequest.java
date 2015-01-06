@@ -50,11 +50,11 @@ import java.io.IOException;
 public class QueryRequest
 {
     static byte[] MAGIC = {(byte) 0xFE, (byte) 0xFD};
-    byte   type;
-    int    sessionID;
+    byte type;
+    int sessionID;
     byte[] payload;
     private ByteArrayOutputStream byteStream;
-    private DataOutputStream      dataStream;
+    private DataOutputStream dataStream;
 
     public QueryRequest()
     {

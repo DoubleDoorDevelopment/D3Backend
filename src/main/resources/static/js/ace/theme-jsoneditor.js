@@ -28,7 +28,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-define('ace/theme/jsoneditor', ['require', 'exports', 'module' , 'ace/lib/dom'], function (require, exports, module) {
+define('ace/theme/jsoneditor', ['require', 'exports', 'module', 'ace/lib/dom'], function (require, exports, module)
+{
 
     exports.isDark = false;
     exports.cssClass = "ace-jsoneditor";

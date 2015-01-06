@@ -65,7 +65,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class ServerControlSocketApplication extends ServerWebSocketApplication
 {
     private static final ServerControlSocketApplication APPLICATION = new ServerControlSocketApplication();
-    private static final String                         URL_PATTERN = "/servercmd/*";
+    private static final String URL_PATTERN = "/servercmd/*";
 
     private ServerControlSocketApplication()
     {

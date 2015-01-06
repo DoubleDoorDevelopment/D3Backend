@@ -56,6 +56,7 @@ import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 
 import java.io.*;
 import java.net.URL;
@@ -75,52 +76,48 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class Server
 {
     public static final String SERVER_PROPERTIES = "server.properties";
-    public static final String SERVER_PORT       = "server-port";
-    public static final String QUERY_PORT        = "query.port";
-    public static final String QUERY_ENABLE      = "enable-query";
-    public static final String SERVER_IP         = "server-ip";
+    public static final String SERVER_PORT = "server-port";
+    public static final String QUERY_PORT = "query.port";
+    public static final String QUERY_ENABLE = "enable-query";
+    public static final String SERVER_IP = "server-ip";
     @Expose
-    private final Map<Integer, Dimension> dimensionMap   = new HashMap<>();
+    private final Map<Integer, Dimension> dimensionMap = new HashMap<>();
     /**
      * Diskspace var + timer to avoid long page load times.
      */
-    public        int[]                   size           = new int[3];
-    public  QueryResponse cachedResponse;
+    public int[] size = new int[3];
+    public QueryResponse cachedResponse;
     /*
      * START exposed Json data
      */
     @Expose
     private String ID;
     @Expose
-    private       Integer                 serverPort     = 25565;
+    private Integer serverPort = 25565;
     @Expose
-    private       Integer                 rconPort       = 25575;
+    private String ip = "";
     @Expose
-    private       String                  ip             = "";
+    private String owner = "";
     @Expose
-    private       String                  rconPswd       = Helper.randomString(10);
+    private List<String> admins = new ArrayList<>();
     @Expose
-    private       String                  owner          = "";
-    @Expose
-    private       List<String>            admins         = new ArrayList<>();
-    @Expose
-    private       List<String>            coOwners       = new ArrayList<>();
+    private List<String> coOwners = new ArrayList<>();
     /*
      * END exposed Json data
      */
     @Expose
-    private       RestartingInfo          restartingInfo = new RestartingInfo();
+    private RestartingInfo restartingInfo = new RestartingInfo();
     @Expose
-    private       JvmData                 jvmData        = new JvmData();
+    private JvmData jvmData = new JvmData();
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
      */
-    private Logger        logger;
-    private File          folder;
-    private File          propertiesFile;
-    private long       propertiesFileLastModified = 0L;
-    private Properties properties                 = new Properties();
+    private Logger logger;
+    private File folder;
+    private File propertiesFile;
+    private long propertiesFileLastModified = 0L;
+    private Properties properties = new Properties();
     /**
      * MCQuery and QueryResponse instances + timer to avoid long page load times.
      */
@@ -175,7 +172,15 @@ public class Server
         catch (IOException ignored)
         {
         }
-        getProperties();
+        try
+        {
+            getProperties();
+            saveProperties();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
     }
 
     /*
@@ -186,11 +191,6 @@ public class Server
     public String getIp()
     {
         return ip;
-    }
-
-    public String getRconPswd()
-    {
-        return rconPswd;
     }
 
     public boolean isDownloading()
@@ -286,14 +286,14 @@ public class Server
     {
         StringBuilder builder = new StringBuilder(25);
         if (ip != null && ip.trim().length() != 0) builder.append(ip);
-        else builder.append(Settings.SETTINGS.hostname);
+        else if (Strings.isNotBlank(Settings.SETTINGS.hostname)) builder.append(Settings.SETTINGS.hostname);
         builder.append(':').append(serverPort);
         return builder.toString();
     }
 
     public int getServerPort()
     {
-        return Integer.parseInt(properties.containsKey(SERVER_PORT) ? getProperty(SERVER_PORT) : "-1");
+        return serverPort;
     }
 
     public int getOnlinePlayers()
@@ -421,6 +421,14 @@ public class Server
         return jvmData;
     }
 
+    public Collection<String> getPossibleJarnames()
+    {
+        ArrayList<String> names = new ArrayList<>();
+        names.addAll(Arrays.asList(folder.list(ACCEPT_FORGE_FILTER)));
+        names.addAll(Arrays.asList(folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)));
+        return names;
+    }
+
     /*
      * ========================================================================================
      * SETTERS
@@ -449,28 +457,18 @@ public class Server
         update();
     }
 
-    public void setRconPswd(IMethodCaller caller, String rconPswd)
-    {
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.rconPswd = rconPswd;
-    }
-
-    public void setServerPort(IMethodCaller caller, int serverPort)
+    public void setServerPort(IMethodCaller caller, int serverPort) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
         this.serverPort = serverPort;
+        normalizeProperties();
     }
 
-    public void setRconPort(IMethodCaller caller, int rconPort)
-    {
-        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
-        this.rconPort = rconPort;
-    }
-
-    public void setIP(IMethodCaller caller, String IP)
+    public void setIP(IMethodCaller caller, String IP) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
         this.ip = IP;
+        normalizeProperties();
     }
 
     /*
@@ -617,7 +615,7 @@ public class Server
                         e.printStackTrace();
                     }
 
-                    for (String name : folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)) getJvmData().jarName = name;
+                    for (String name : folder.list(ACCEPT_FORGE_FILTER)) getJvmData().jarName = name;
 
                     forge.delete();
 
@@ -799,6 +797,7 @@ public class Server
         Properties properties = getProperties();
         properties.store(outputStream, "Modified by the backend");
         propertiesFileLastModified = propertiesFile.lastModified();
+        outputStream.close();
     }
 
     /**
@@ -819,6 +818,7 @@ public class Server
         saveProperties();
         starting = true;
         final Server instance = this;
+        for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM options contain a blocked option: " + blocked);
 
         new Thread(new Runnable()
         {
@@ -873,6 +873,7 @@ public class Server
                                 {
                                     printLine(line);
                                 }
+                                printLine("----=====##### SERVER PROCESS TERMINATED #####=====-----");
                                 instance.update();
                             }
                             catch (IOException e)
@@ -916,14 +917,14 @@ public class Server
         try
         {
             renewQuery();
-            printLine("----=====##### STOPPING SERVER WITH RCON #####=====-----");
+            printLine("----=====##### STOPPING SERVER WITH WITH KICK #####=====-----");
             for (String user : getPlayerList()) sendCmd(String.format("kick %s %s", user, message));
             sendCmd("stop");
             return true;
         }
         catch (Exception e)
         {
-            printLine("----=====##### STOPPING SERVER VIA STREAM #####=====-----");
+            printLine("----=====##### STOPPING SERVER #####=====-----");
             PrintWriter printWriter = new PrintWriter(process.getOutputStream());
             printWriter.println("stop");
             printWriter.flush();
@@ -1008,6 +1009,10 @@ public class Server
 
     private void normalizeProperties()
     {
+        if (!properties.containsKey(SERVER_IP)) properties.setProperty(SERVER_IP, ip);
+        if (!properties.containsKey(SERVER_PORT)) properties.setProperty(SERVER_PORT, String.valueOf(serverPort));
+        if (!properties.containsKey(QUERY_PORT)) properties.setProperty(QUERY_PORT, String.valueOf(serverPort));
+
         if (Settings.SETTINGS.fixedPorts)
         {
             properties.setProperty(SERVER_PORT, String.valueOf(serverPort));

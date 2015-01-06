@@ -17,37 +17,49 @@
         }
     </style>
     <div id="jsoneditor"></div>
-    <#if !readonly>
+<#if !readonly>
     <button type="button" id="savebtn" class="btn btn-primary btn-block" onclick="send()">Save</button>
-    <#else>
+<#else>
     <p>File is readonly.</p>
-    </#if>
+</#if>
     <script type="text/javascript">
         var container = document.getElementById('jsoneditor');
 
         var options = {
             mode: 'code',
             modes: ['code', 'tree'], // allowed modes
-            error: function (err) {
+            error: function (err)
+            {
                 alert(err.toString());
             }
         };
 
         var json = ${fm.getFileContents()!"null"};
 
-        if (json == null) {
+        if (json == null)
+        {
             alert("Data file might be currupt. It can't be read by our parser.");
             document.getElementById("savebtn").disabled = true;
             document.getElementById("jsoneditor").innerHTML = "Error. File corrupt?";
         }
-        else editor = new JSONEditor(container, options, json);
+        else
+        {
+            editor = new JSONEditor(container, options, json);
+        }
 
         var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
-        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        websocket.onerror = function (evt)
+        {
+            alert("The websocket errored. Refresh the page!")
+        };
+        websocket.onclose = function (evt)
+        {
+            alert("The websocket closed. Refresh the page!")
+        };
         function send()
         {
-            websocket.send(websocket.send(JSON.stringify({ method : "set", args: [JSON.stringify(editor.get())]})););
+            websocket.send(websocket.send(JSON.stringify({method: "set", args: [JSON.stringify(editor.get())]}));
+        )
         }
         websocket.onmessage = function (evt)
         {
@@ -56,7 +68,10 @@
             {
                 editor.set(JSON.parse(temp.data));
             }
-            else alert(temp.message);
+            else
+            {
+                alert(temp.message);
+            }
         }
     </script>
 </div>

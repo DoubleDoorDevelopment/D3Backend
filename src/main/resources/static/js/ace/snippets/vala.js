@@ -1,4 +1,5 @@
-ace.define("ace/snippets/vala", ["require", "exports", "module"], function (e, t, n) {
+ace.define("ace/snippets/vala", ["require", "exports", "module"], function (e, t, n)
+{
     "use strict";
     t.snippets = [
         {content: "case ${1:condition}:\n	$0\n	break;\n", name: "case", scope: "vala", tabTrigger: "case"},
@@ -33,4 +34,4 @@ ace.define("ace/snippets/vala", ["require", "exports", "module"], function (e, t
         {content: '"""$0""";', name: 'Verbatim string (""")', scope: "vala", tabTrigger: "verbatim"},
         {content: "while ($1) {\n	$0\n}", name: "while", scope: "vala", tabTrigger: "while"}
     ], t.scope = ""
-})
+});

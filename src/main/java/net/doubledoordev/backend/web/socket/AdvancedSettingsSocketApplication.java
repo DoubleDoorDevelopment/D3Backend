@@ -68,7 +68,8 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class AdvancedSettingsSocketApplication extends ServerWebSocketApplication
 {
-    public static final  HashMap<String, Data>             DATA_TYPES  = new HashMap<>();
+    public static final HashMap<String, Data> DATA_TYPES = new HashMap<>();
+
     static
     {
         try
@@ -81,8 +82,9 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
             throw new RuntimeException(e);
         }
     }
+
     private static final AdvancedSettingsSocketApplication APPLICATION = new AdvancedSettingsSocketApplication();
-    private static final String                            URL_PATTERN = "/advancedsettings/*";
+    private static final String URL_PATTERN = "/advancedsettings/*";
 
     private AdvancedSettingsSocketApplication()
     {
@@ -182,7 +184,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
 
     public static class Data
     {
-        public final Class  clazz;
+        public final Class clazz;
         public final Method getter;
 
         public Data(Class clazz, String getterName) throws NoSuchMethodException

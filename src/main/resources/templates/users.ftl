@@ -40,14 +40,17 @@
     </tbody>
 </table>
 <script>
-    function makeid() {
+    function makeid()
+    {
         var text = "";
         var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         for (var i = 0; i < 25; i++)
+        {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
 
-        prompt("Copy the next line, it is the new password.\nDon't bother changing it, that won't affect anything.", text)
+        prompt("Copy the next line, it is the new password.\nDon't bother changing it, that won't affect anything.", text);
 
         return text;
     }

@@ -40,6 +40,9 @@
 
 package net.doubledoordev.backend.util;
 
+import com.flowpowered.nbt.Tag;
+import com.flowpowered.nbt.stream.NBTInputStream;
+import com.flowpowered.nbt.stream.NBTOutputStream;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
 import net.doubledoordev.backend.Main;
@@ -48,9 +51,6 @@ import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.websockets.WebSocket;
-import org.spout.nbt.Tag;
-import org.spout.nbt.stream.NBTInputStream;
-import org.spout.nbt.stream.NBTOutputStream;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -74,9 +74,9 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 @SuppressWarnings("UnusedDeclaration")
 public class Helper
 {
-    public static final  Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
-    private static final SimpleDateFormat    dateFormat         = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
-    private static final char[]              symbols            = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private Helper()
     {
@@ -305,10 +305,10 @@ public class Helper
         if (SETTINGS.fixedPorts)
         {
             array.add(new JsonPrimitive(Server.SERVER_PORT));
-            array.add(new JsonPrimitive(Server.QUERY_PORT));
         }
         if (SETTINGS.fixedIP) array.add(new JsonPrimitive(Server.SERVER_IP));
 
+        array.add(new JsonPrimitive(Server.QUERY_PORT));
         array.add(new JsonPrimitive(Server.QUERY_ENABLE));
 
         return array.toString();

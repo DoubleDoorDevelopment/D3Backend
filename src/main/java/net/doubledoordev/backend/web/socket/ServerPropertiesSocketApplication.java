@@ -50,7 +50,6 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.io.IOException;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
@@ -61,7 +60,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 public class ServerPropertiesSocketApplication extends ServerWebSocketApplication
 {
     private static final ServerPropertiesSocketApplication APPLICATION = new ServerPropertiesSocketApplication();
-    private static final String                            URL_PATTERN = "/serverproperties/*";
+    private static final String URL_PATTERN = "/serverproperties/*";
 
     private ServerPropertiesSocketApplication()
     {

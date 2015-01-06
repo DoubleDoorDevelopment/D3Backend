@@ -48,50 +48,80 @@
     <!-- Le styles -->
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico" />
+    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico"/>
     <style>
         body {
             padding-top: 70px;
         }
 
-        .hiddenlink a:link { color: #000000; text-decoration: none}
-        .hiddenlink a:visited { color: #000000; text-decoration: none}
-        .hiddenlink a:hover { color: #3366CC; text-decoration: underline}
-        .hiddenlink a:active { color: #000000; text-decoration: none}
+        .hiddenlink a:link {
+            color: #000000;
+            text-decoration: none
+        }
+
+        .hiddenlink a:visited {
+            color: #000000;
+            text-decoration: none
+        }
+
+        .hiddenlink a:hover {
+            color: #3366CC;
+            text-decoration: underline
+        }
+
+        .hiddenlink a:active {
+            color: #000000;
+            text-decoration: none
+        }
     </style>
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script>
-        function wsurl(s) {
+        function wsurl(s)
+        {
             var l = window.location;
             return (l.protocol === "https:" ? "wss://" : "ws://") + l.hostname + ":" + l.port + "/socket/" + s;
         }
 
-        function openPopup(url) {
+        function openPopup(url)
+        {
             window.open(window.location.origin + url, '_new', 'height=500,width=800');
         }
 
-        function call(url, method, args, func) {
+        function call(url, method, args, func)
+        {
             var cmdwebsocket = new WebSocket(wsurl(url));
-            cmdwebsocket.onopen = function (evt) {
-                cmdwebsocket.send(JSON.stringify({ method : method , args: args}));
-            }
-            cmdwebsocket.onmessage = function (evt) {
+            cmdwebsocket.onopen = function (evt)
+            {
+                cmdwebsocket.send(JSON.stringify({method: method, args: args}));
+            };
+            cmdwebsocket.onmessage = function (evt)
+            {
                 var temp = JSON.parse(evt.data);
                 if (typeof func === 'undefined')
                 {
                     if (temp.status !== "ok") alert(temp.message);
                 }
-                else func(temp.data);
+                else
+                {
+                    func(temp.data);
+                }
             };
-            cmdwebsocket.onerror = function (evt) {
+            cmdwebsocket.onerror = function (evt)
+            {
                 alert("The call socket connction errored. Try again.");
             };
         }
         <#if server??>
         var websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
-        websocketMonitor.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-        websocketMonitor.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        websocketMonitor.onerror = function (evt)
+        {
+            alert("The websocket errored. Refresh the page!")
+        };
+        websocketMonitor.onclose = function (evt)
+        {
+            alert("The websocket closed. Refresh the page!")
+        };
         </#if>
     </script>
 </head>

@@ -1,4 +1,5 @@
-ace.define("ace/ext/themelist", ["require", "exports", "module", "ace/lib/fixoldbrowsers"], function (e, t, n) {
+ace.define("ace/ext/themelist", ["require", "exports", "module", "ace/lib/fixoldbrowsers"], function (e, t, n)
+{
     "use strict";
     e("ace/lib/fixoldbrowsers");
     var r = [
@@ -35,13 +36,16 @@ ace.define("ace/ext/themelist", ["require", "exports", "module", "ace/lib/fixold
         ["Twilight", "twilight", "dark"],
         ["Vibrant Ink", "vibrant_ink", "dark"]
     ];
-    t.themesByName = {}, t.themes = r.map(function (e) {
+    t.themesByName = {}, t.themes = r.map(function (e)
+    {
         var n = e[1] || e[0].replace(/ /g, "_").toLowerCase(), r = {caption: e[0], theme: "ace/theme/" + n, isDark: e[2] == "dark", name: n};
         return t.themesByName[n] = r, r
     })
 });
-(function () {
-    ace.require(["ace/ext/themelist"], function () {
+(function ()
+{
+    ace.require(["ace/ext/themelist"], function ()
+    {
     });
 })();
             

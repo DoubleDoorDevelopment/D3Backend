@@ -65,16 +65,15 @@ import static net.doubledoordev.backend.util.Constants.*;
  */
 public class Cache extends TimerTask
 {
-    private static final int                           FORGE_MAP_CAPACITY        = 2000;
-    private static final LinkedHashMap<String, String> FORGE_NAME_VERSION_MAP    = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
-    private static final Runnable                      FORGE_VERSIONS_DOWNLOADER = new Runnable()
+    private static final int FORGE_MAP_CAPACITY = 2000;
+    private static final LinkedHashMap<String, String> FORGE_NAME_VERSION_MAP = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
+    private static final Runnable FORGE_VERSIONS_DOWNLOADER = new Runnable()
     {
         private boolean hasInstaller(JsonObject object)
         {
             for (JsonElement files : object.getAsJsonArray("files"))
                 for (JsonElement element : files.getAsJsonArray())
-                    if (element.getAsString().equals("installer"))
-                        return true;
+                    if (element.getAsString().equals("installer")) return true;
             return false;
         }
 
@@ -162,8 +161,8 @@ public class Cache extends TimerTask
             }
         }
     };
-    private static final ArrayList<String>             CASHED_MC_VERSIONS        = new ArrayList<>();
-    private static final Runnable                      MC_VERSIONS_DOWNLOADER    = new Runnable()
+    private static final ArrayList<String> CASHED_MC_VERSIONS = new ArrayList<>();
+    private static final Runnable MC_VERSIONS_DOWNLOADER = new Runnable()
     {
         @Override
         public void run()
@@ -180,9 +179,7 @@ public class Cache extends TimerTask
                     for (JsonElement element : versionList.getAsJsonArray("versions"))
                     {
                         JsonObject o = element.getAsJsonObject();
-                        if (o.get("type").getAsString().equals("release") || o.get("type").getAsString().equals("snapshot"))
-                            if (!CASHED_MC_VERSIONS.contains(o.get("id").getAsString()))
-                                CASHED_MC_VERSIONS.add(o.get("id").getAsString());
+                        if (o.get("type").getAsString().equals("release") || o.get("type").getAsString().equals("snapshot")) if (!CASHED_MC_VERSIONS.contains(o.get("id").getAsString())) CASHED_MC_VERSIONS.add(o.get("id").getAsString());
                     }
                 }
             }
@@ -191,7 +188,7 @@ public class Cache extends TimerTask
             }
         }
     };
-    private static final Runnable                      SIZE_COUNTER              = new Runnable()
+    private static final Runnable SIZE_COUNTER = new Runnable()
     {
         @Override
         public void run()
@@ -219,21 +216,21 @@ public class Cache extends TimerTask
     /**
      * Forge version related things
      */
-    private static       long                          lastForgeVersions         = 0L;
+    private static long lastForgeVersions = 0L;
     /**
      * MC version related things
      */
-    private static       long                          lastMCVersions            = 0L;
+    private static long lastMCVersions = 0L;
     /**
      * Size counter related things
      */
-    private static       long                          lastSize                  = 0L;
+    private static long lastSize = 0L;
     /**
      *
      */
-    private static       boolean                       hasUpdate                 = false;
-    private static       String                        updatedVersion            = "";
-    private static final Runnable                      UPDATE_CHECKER            = new Runnable()
+    private static boolean hasUpdate = false;
+    private static String updatedVersion = "";
+    private static final Runnable UPDATE_CHECKER = new Runnable()
     {
         @Override
         public void run()

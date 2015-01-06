@@ -3,7 +3,9 @@
 <#assign allowModify = server.canUserControl(user) >
 <#assign isCoOwner = server.isCoOwner(user) >
 ${wm.update()}
-<h1>World Manager    <small> <a href="/server?server=${server.ID}">${server.ID}</a>   <span id="online"></span></small></h1>
+<h1>World Manager
+    <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
+</h1>
 <div class="panel panel-info">
     <div class="panel-heading">
         <h3 class="panel-title" style="text-align: center;">World information</h3>

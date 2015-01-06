@@ -68,9 +68,9 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 public class ServerMonitorSocketApplication extends WebSocketApplication
 {
     private static final ServerMonitorSocketApplication ALL_SERVERS_APPLICATION = new ServerMonitorSocketApplication(true);
-    private static final ServerMonitorSocketApplication ONE_SERVER_APPLICATION  = new ServerMonitorSocketApplication(false);
-    private static final String                         ALL_SERVERS_URL_PATTERN = "/serverlist";
-    private static final String                         ONE_SERVER_URL_PATTERN  = "/servermonitor/*";
+    private static final ServerMonitorSocketApplication ONE_SERVER_APPLICATION = new ServerMonitorSocketApplication(false);
+    private static final String ALL_SERVERS_URL_PATTERN = "/serverlist";
+    private static final String ONE_SERVER_URL_PATTERN = "/servermonitor/*";
     private final boolean allServers;
 
     private ServerMonitorSocketApplication(boolean allServers)

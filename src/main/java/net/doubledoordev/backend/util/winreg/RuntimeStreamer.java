@@ -21,7 +21,7 @@ import java.io.InputStreamReader;
 class RuntimeStreamer extends Thread
 {
     InputStream is;
-    String      lines;
+    String lines;
 
     RuntimeStreamer(InputStream is)
     {

@@ -1,6 +1,6 @@
 <#include "header.ftl">
 <h1>File Manager
-    <small> <a href="/server?server=${server.ID}">${server.ID}</a>   <span id="online"></span></small>
+    <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
 </h1>
 <#if !fm.file.exists()>
 <div class="panel panel-danger">

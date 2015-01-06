@@ -73,8 +73,8 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
  */
 public class CommandHandler implements Runnable
 {
-    public static final CommandHandler INSTANCE  = new CommandHandler();
-    public static final Logger         CMDLOGGER = LogManager.getLogger("cmd");
+    public static final CommandHandler INSTANCE = new CommandHandler();
+    public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
     public final Dispatcher dispatcher;
 
     private CommandHandler()
@@ -82,12 +82,7 @@ public class CommandHandler implements Runnable
         ParametricBuilder parametricBuilder = new ParametricBuilder();
         parametricBuilder.addBinding(new Bindings());
 
-        dispatcher = new CommandGraph()
-                .builder(parametricBuilder)
-                .commands()
-                .registerMethods(this)
-                .graph()
-                .getDispatcher();
+        dispatcher = new CommandGraph().builder(parametricBuilder).commands().registerMethods(this).graph().getDispatcher();
     }
 
     public static void init()

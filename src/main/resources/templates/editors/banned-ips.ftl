@@ -1,5 +1,6 @@
 <div class="panel-body">
     <p>This file has no live updating.</p>
+
     <form class="form-inline" role="form" onsubmit="makeNew(); return false;">
         <div class="form-group">
             <label class="sr-only" for="newip">IP</label>
@@ -40,7 +41,8 @@
     <script type="text/javascript">
         var json = ${fm.getFileContents()};
         var opList = document.getElementById("opList");
-        json.forEach(function (object) {
+        json.forEach(function (object)
+        {
             opList.innerHTML +=
                     "<tr id=\"" + object['ip'] + "\">" +
                     "<td>" + object['ip'] + "</td>" +
@@ -48,28 +50,32 @@
                     "<td>" + object['reason'] + "</td>" +
                     "<td>" + object['created'] + "</td>" +
                     "<td>" + object['expires'] + "</td>" +
-            <#if !readonly>
+                    <#if !readonly>
                     "<td>" +
                     "<div class=\"btn-group\">" +
                     "<button type=\"button\" onclick=\"removeUser(\'" + object['ip'] + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
                     "<button type=\"button\" onclick=\"makeEditable(\'" + object['ip'] + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
                     "</div>" +
                     "</td>"+
-            </#if>
+                    </#if>
                     "</tr>";
         });
 
-        function removeUser(username) {
+        function removeUser(username)
+        {
             var element = document.getElementById(username);
             if (element != null) opList.removeChild(element);
-            for (var i = json.length - 1; i >= 0; i--) {
-                if (json[i]["ip"] === username) {
+            for (var i = json.length - 1; i >= 0; i--)
+            {
+                if (json[i]["ip"] === username)
+                {
                     json.splice(i, 1);
                 }
             }
         }
 
-        function makeNew() {
+        function makeNew()
+        {
             var xmlhttp = new XMLHttpRequest();
             var ip = document.getElementById("newip").value;
             var source = document.getElementById("newSource").value;
@@ -85,14 +91,14 @@
                     "<td>" + reason + "</td>" +
                     "<td>" + created + "</td>" +
                     "<td>" + expires + "</td>" +
-            <#if !readonly>
+                    <#if !readonly>
                     "<td>" +
                     "<div class=\"btn-group\">" +
                     "<button type=\"button\" onclick=\"removeUser(\'" + ip + "\')\" class=\"btn btn-danger btn-xs\">Del</button>" +
                     "<button type=\"button\" onclick=\"makeEditable(\'" + ip + "\')\" class=\"btn btn-warning btn-xs\">Edit</button>" +
                     "</div>" +
                     "</td>" +
-            </#if>
+                    </#if>
                     "</tr>";
 
             document.getElementById("newip").value = "";
@@ -104,11 +110,14 @@
             document.getElementById("addBtn").innerHTML = "Add";
         }
 
-        function makeEditable(username) {
+        function makeEditable(username)
+        {
             var element = document.getElementById(username);
             if (element != null) opList.removeChild(element);
-            for (var i = json.length - 1; i >= 0; i--) {
-                if (json[i]["ip"] === username) {
+            for (var i = json.length - 1; i >= 0; i--)
+            {
+                if (json[i]["ip"] === username)
+                {
                     document.getElementById("newip").value = json[i]["ip"];
                     document.getElementById("newSource").value = json[i]["source"];
                     document.getElementById("newReason").value = json[i]["reason"];
@@ -123,8 +132,14 @@
         }
 
         var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
-        websocket.onerror =  function (evt) { alert("The websocket errored. Refresh the page!") }
-        websocket.onclose =  function (evt) { alert("The websocket closed. Refresh the page!") }
+        websocket.onerror = function (evt)
+        {
+            alert("The websocket errored. Refresh the page!")
+        };
+        websocket.onclose = function (evt)
+        {
+            alert("The websocket closed. Refresh the page!")
+        };
         websocket.onmessage = function (evt)
         {
             var temp = JSON.parse(evt.data);
@@ -133,16 +148,19 @@
                 editor.setValue(temp.data);
                 editor.clearSelection();
             }
-            else alert(temp.message);
-        }
+            else
+            {
+                alert(temp.message);
+            }
+        };
         function send()
         {
-            websocket.send(JSON.stringify({ method : "set", args: [JSON.stringify(json)]}));
+            websocket.send(JSON.stringify({method: "set", args: [JSON.stringify(json)]}));
         }
     </script>
-    <#if !readonly>
+<#if !readonly>
     <button type="button" class="btn btn-primary btn-block" onclick="send()">Save</button>
-    <#else>
+<#else>
     <p>File is readonly.</p>
-    </#if>
+</#if>
 </div>

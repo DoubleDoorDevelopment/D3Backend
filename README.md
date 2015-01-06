@@ -24,14 +24,15 @@ Typos? [Go here.](https://github.com/DoubleDoorDevelopment/D3Backend/issues/10)
 ToDO
 ----
 
-[]  Implement email system
-[]  Autoinstaller for FTB, ...
-[]  Support our launcher with linkage and always up to date modlist/configs
-[]  Implement a server wrapper
-    - Shut the actual server down if empty, restart if someone connects.
-    - Keep clients connected during server restart
-[]  Multi 'node' support
-[]  Add a 'look and feel' config (change name, add bootstrap theme, ...)
+- [ ]  Implement email system
+- [ ]  Autoinstaller for FTB, ...
+- [ ]  Support our launcher with linkage and always up to date modlist/configs
+- [ ]  Implement a server wrapper
+    - [ ] Shut the actual server down if empty, restart if someone connects.
+    - [ ] Keep clients connected during server restart
+- [ ]  Multi 'node' support
+- [ ]  Add a 'look and feel' config (change name, add bootstrap theme, ...)
+- [ ]  In release: Use minified js and css
 
 HttpS
 -----
