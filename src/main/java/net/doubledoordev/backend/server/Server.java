@@ -820,6 +820,23 @@ public class Server
         final Server instance = this;
         for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM options contain a blocked option: " + blocked);
 
+        File eula = new File(getFolder(), "eula.txt");
+        if (!eula.exists())
+        {
+            try
+            {
+                FileUtils.writeStringToFile(eula, "#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.\n" +
+                        "#That means that there is no need for extra halting of the server startup sequence with this stupid file.\n" +
+                        "#" + new Date().toString() + "\n" +
+                        "eula=true\n");
+            }
+            catch (IOException e)
+            {
+                printLine("Error making the eula file....");
+                e.printStackTrace();
+            }
+        }
+
         new Thread(new Runnable()
         {
             @Override

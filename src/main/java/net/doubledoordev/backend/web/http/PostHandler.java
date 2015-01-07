@@ -182,18 +182,6 @@ public class PostHandler
 
         try
         {
-            FileUtils.writeStringToFile(new File(server.getFolder(), "eula.txt"), "#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.\n" +
-                            "#That means that there is no need for extra halting of the server startup sequence with this stupid file.\n" +
-                            "#" + new Date().toString() + "\n" +
-                            "eula=true\n");
-        }
-        catch (IOException e)
-        {
-            server.printLine("Error making the eula file....");
-            e.printStackTrace();
-        }
-        try
-        {
             response.sendRedirect(Constants.SERVER_URL + ID);
         }
         catch (IOException e)
