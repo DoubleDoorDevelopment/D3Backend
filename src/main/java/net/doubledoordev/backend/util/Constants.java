@@ -129,6 +129,7 @@ public class Constants
     public static final File CONFIG_FILE = new File(ROOT, "config.json");
     public static final File SERVERS_FILE = new File(ROOT, "servers.json");
     public static final File USERS_FILE = new File(ROOT, "users.json");
+    public static final File FORGE_FILE = new File(ROOT, "forge.json");
     public static final File SERVERS = new File(ROOT, "servers");
     public static final File BACKUPS = new File(ROOT, "backups");
     /*

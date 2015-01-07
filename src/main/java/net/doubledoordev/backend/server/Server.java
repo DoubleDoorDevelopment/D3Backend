@@ -890,7 +890,7 @@ public class Server
                                 {
                                     printLine(line);
                                 }
-                                printLine("----=====##### SERVER PROCESS TERMINATED #####=====-----");
+                                printLine("----=====##### SERVER PROCESS HAS ENDED #####=====-----");
                                 instance.update();
                             }
                             catch (IOException e)
@@ -899,7 +899,6 @@ public class Server
                             }
                         }
                     }, ID.concat("-streamEater")).start();
-
                     instance.update();
                 }
                 catch (IOException e)
@@ -1045,6 +1044,8 @@ public class Server
         else ip = properties.getProperty(SERVER_IP, ip);
 
         properties.put(QUERY_ENABLE, "true");
+        query = null;
+        renewQuery();
     }
 
     private void update()

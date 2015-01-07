@@ -45,6 +45,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -153,6 +154,7 @@ public class Cache extends TimerTask
                     {
                         if (!buildsWithoutInstaller.contains(entry.getValue())) FORGE_NAME_VERSION_MAP.put(entry.getKey(), buildVersionMap.get(entry.getValue()));
                     }
+                    FileUtils.writeStringToFile(FORGE_FILE, GSON.toJson(FORGE_NAME_VERSION_MAP));
                 }
                 Main.LOGGER.info("[Cache] Done refreshing Forge version cache.");
             }
@@ -301,6 +303,18 @@ public class Cache extends TimerTask
     {
         if (instance != null) return;
         instance = new Cache();
+        if (FORGE_FILE.exists())
+        {
+            try
+            {
+                //noinspection unchecked
+                FORGE_NAME_VERSION_MAP.putAll(GSON.fromJson(FileUtils.readFileToString(FORGE_FILE), Map.class));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
         TIMER.scheduleAtFixedRate(instance, 0, SHORT_CACHE_TIMEOUT);
     }
 
