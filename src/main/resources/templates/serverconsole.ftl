@@ -80,8 +80,10 @@
         }
         else
         {
-            autoScroll = textarea.scrollHeight <= textarea.scrollTop + 500;
-            textarea.value += temp.data + "\n";
+            autoScroll = textarea.scrollHeight <= textarea.scrollTop + textarea.clientHeight + 50;
+            var total = ((textarea.value ? textarea.value + "\n" : "") + temp.data).split("\n");
+            if (total.length > 1000) total = total.slice(total.length - 1000);
+            textarea.value = total.join("\n");
             if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
         }
     };

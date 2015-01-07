@@ -7,6 +7,7 @@
         var l = window.location;
         return (l.protocol === "https:" ? "wss://" : "ws://") + l.hostname + ":" + l.port + "/socket/" + s;
     }
+    var autoScroll = true;
     var textarea = document.getElementById('text');
     var websocket = new WebSocket(wsurl("console"));
     websocket.onerror = function (evt)
@@ -34,8 +35,11 @@
         }
         else
         {
-            textarea.value += htmlDecode(temp.data);
-            textarea.scrollTop = textarea.scrollHeight;
+            autoScroll = textarea.scrollHeight <= textarea.scrollTop + textarea.clientHeight + 50;
+            var total = ((textarea.value ? textarea.value : "") + htmlDecode(temp.data)).split("\n");
+            if (total.length > 1000) total = total.slice(total.length - 1000);
+            textarea.value = total.join("\n");
+            if (autoScroll) textarea.scrollTop = textarea.scrollHeight;
         }
     }
 </script>
