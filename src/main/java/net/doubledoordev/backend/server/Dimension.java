@@ -45,14 +45,14 @@ package net.doubledoordev.backend.server;
  */
 public class Dimension
 {
-    int dimid;
+    String dimid;
 
-    public Dimension(int dimid)
+    public Dimension(String dimid)
     {
         this.dimid = dimid;
     }
 
-    public int getDimid()
+    public String getDimid()
     {
         return dimid;
     }

@@ -6,6 +6,11 @@ ${wm.update()}
 <h1>World Manager
     <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
 </h1>
+<!-- TODO -->
+<p>
+    <b>None of the buttons on this page work as the socket connection handler hasn't been ported to the new version.</b><br>
+    Also, extra functionality is to be added.
+</p>
 <div class="panel panel-info">
     <div class="panel-heading">
         <h3 class="panel-title" style="text-align: center;">World information</h3>
@@ -39,7 +44,7 @@ ${wm.update()}
     <div class="col-sm-4">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title" style="text-align: center;">DIM${dimid}</h3>
+                <h3 class="panel-title" style="text-align: center;">${dimid}</h3>
                 <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
             </div>
             <div class="panel-body" style="text-align: center;">

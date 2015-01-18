@@ -51,17 +51,14 @@ import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
 import net.doubledoordev.backend.util.methodCaller.UserMethodCaller;
-import org.apache.commons.io.FileUtils;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.util.Parameters;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
 

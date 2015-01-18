@@ -76,11 +76,10 @@ public class WorldManager
         worldFolder = new File(server.getFolder(), getWorldName());
         if (!worldFolder.exists()) return;
         if (worldFolder.list().length == 0) return;
-        if (!server.getDimensionMap().containsKey(0)) server.getDimensionMap().put(0, new Dimension(0));
+        if (!server.getDimensionMap().containsKey(OVERWORLD)) server.getDimensionMap().put(OVERWORLD, new Dimension(OVERWORLD));
         for (String file : worldFolder.list(DIM_ONLY_FILTER))
         {
-            Integer dimid = Integer.parseInt(file.replace(DIM, ""));
-            if (!server.getDimensionMap().containsKey(dimid)) server.getDimensionMap().put(dimid, new Dimension(dimid));
+            if (!server.getDimensionMap().containsKey(file)) server.getDimensionMap().put(file, new Dimension(file));
         }
     }
 
@@ -101,20 +100,20 @@ public class WorldManager
         doBackup(new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_FILTER);
     }
 
-    public void makeBackup(int dimid) throws BackupException
+    public void makeBackup(String dimid) throws BackupException
     {
         if (!checkSpace()) throw new BackupException("Out of diskspace.");
-        doBackup(new File(new File(server.getBackupFolder(), DIM + dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid == 0 ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
+        doBackup(new File(new File(server.getBackupFolder(), dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid.equals(OVERWORLD) ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
     }
 
-    public File getFolder(int dimid)
+    public File getFolder(String dimid)
     {
-        return dimid == 0 ? worldFolder : new File(worldFolder, DIM + dimid);
+        return dimid.equals(OVERWORLD) ? worldFolder : new File(worldFolder, dimid);
     }
 
-    public void delete(int dimid) throws IOException
+    public void delete(String dimid) throws IOException
     {
-        for (File file : getFolder(dimid).listFiles(dimid == 0 ? NOT_DIM_FILTER : ACCEPT_ALL_FILTER))
+        for (File file : getFolder(dimid).listFiles(dimid.equals(OVERWORLD) ? NOT_DIM_FILTER : ACCEPT_ALL_FILTER))
         {
             if (file.isFile()) file.delete();
             else if (file.isDirectory()) FileUtils.deleteDirectory(file);
@@ -159,6 +158,7 @@ public class WorldManager
         if (server.getOnline())
         {
             server.sendCmd("save-on");
+            server.sendCmd("save-all");
         }
     }
 

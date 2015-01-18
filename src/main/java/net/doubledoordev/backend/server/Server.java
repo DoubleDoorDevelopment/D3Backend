@@ -81,7 +81,7 @@ public class Server
     public static final String QUERY_ENABLE = "enable-query";
     public static final String SERVER_IP = "server-ip";
     @Expose
-    private final Map<Integer, Dimension> dimensionMap = new HashMap<>();
+    private final Map<String, Dimension> dimensionMap = new HashMap<>();
     /**
      * Diskspace var + timer to avoid long page load times.
      */
@@ -393,7 +393,7 @@ public class Server
         return worldManager;
     }
 
-    public Map<Integer, Dimension> getDimensionMap()
+    public Map<String, Dimension> getDimensionMap()
     {
         return dimensionMap;
     }
@@ -423,9 +423,10 @@ public class Server
 
     public Collection<String> getPossibleJarnames()
     {
-        ArrayList<String> names = new ArrayList<>();
+        LinkedHashSet<String> names = new LinkedHashSet<>();
         names.addAll(Arrays.asList(folder.list(ACCEPT_FORGE_FILTER)));
         names.addAll(Arrays.asList(folder.list(ACCEPT_MINECRAFT_SERVER_FILTER)));
+        names.addAll(Arrays.asList(folder.list(ACCEPT_ALL_JAR_FILTER)));
         return names;
     }
 

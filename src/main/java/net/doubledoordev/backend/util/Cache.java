@@ -40,6 +40,7 @@
 
 package net.doubledoordev.backend.util;
 
+import com.google.common.collect.LinkedListMultimap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -78,19 +79,72 @@ public class Cache extends TimerTask
             return false;
         }
 
+        class ForgeBuild
+        {
+            boolean hasInstaller;
+            String branch;
+            Integer build;
+            String forgeVersion;
+            String mcVersion;
+            String id;
+
+            @Override
+            public String toString()
+            {
+                StringBuilder sb = new StringBuilder(forgeVersion).append(" (MC ").append(mcVersion).append(")");
+                if (branch != null) sb.append(" [").append(branch).append(']');
+                return sb.toString();
+            }
+        }
+
         @Override
         public void run()
         {
             try
             {
                 Main.LOGGER.info("[Cache] Refreshing Forge version cache....");
-                LinkedHashMap<String, Integer> nameBuildMap = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
-                HashMap<Integer, String> buildVersionMap = new HashMap<>(FORGE_MAP_CAPACITY);
+                LinkedHashMap<String, String> orderedNameMap = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
+                LinkedListMultimap<String, ForgeBuild> mcForgebuildMap = LinkedListMultimap.create(FORGE_MAP_CAPACITY);
+                HashMap<Integer, ForgeBuild> buildForgeMap = new HashMap<>(FORGE_MAP_CAPACITY);
                 JsonObject versionList = Constants.JSONPARSER.parse(IOUtils.toString(new URL(FORGE_VERIONS_URL).openStream())).getAsJsonObject();
                 JsonObject latest = versionList.getAsJsonObject("promos");
-                HashSet<Integer> buildsWithoutInstaller = new HashSet<>();
 
                 if (!Main.running) return;
+
+                for (Map.Entry<String, JsonElement> entry : versionList.getAsJsonObject("number").entrySet())
+                {
+                    JsonObject object = entry.getValue().getAsJsonObject();
+                    ForgeBuild forgeBuild = new ForgeBuild();
+                    forgeBuild.hasInstaller = hasInstaller(object);
+                    forgeBuild.branch = object.get("branch").isJsonNull() ? null : object.get("branch").getAsString();
+                    forgeBuild.build = object.get("build").getAsInt();
+                    forgeBuild.forgeVersion = object.get("version").getAsString();
+                    forgeBuild.mcVersion = object.get("mcversion").getAsString();
+                    StringBuilder sb = new StringBuilder(forgeBuild.mcVersion).append('-').append(forgeBuild.forgeVersion);
+                    if (forgeBuild.branch != null) sb.append('-').append(forgeBuild.branch);
+                    forgeBuild.id = sb.toString();
+
+                    if (forgeBuild.hasInstaller)
+                    {
+                        try
+                        {
+                            String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", forgeBuild.id);
+                            HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
+                            urlConnection.setRequestMethod("GET");
+                            urlConnection.setRequestProperty("User-Agent", USER_AGENT);
+                            urlConnection.connect();
+                            if (urlConnection.getResponseCode() != 200) forgeBuild.hasInstaller = false;
+                            urlConnection.disconnect();
+                        }
+                        catch (IOException ignored)
+                        {
+                            // timeout or something like that
+                        }
+                    }
+                    if (!Main.running) return;
+                    mcForgebuildMap.put(forgeBuild.mcVersion, forgeBuild);
+                    buildForgeMap.put(forgeBuild.build, forgeBuild);
+                }
 
                 {
                     LinkedList<String> list = new LinkedList<>();
@@ -102,58 +156,28 @@ public class Cache extends TimerTask
                     while (i.hasNext())
                     {
                         String key = i.next();
-                        nameBuildMap.put(String.format("%s (build %d)", key, latest.get(key).getAsInt()), latest.get(key).getAsInt());
+                        orderedNameMap.put(String.format("%s (build %d)", key, latest.get(key).getAsInt()), buildForgeMap.get(latest.get(key).getAsInt()).id);
                     }
                 }
 
-                String lastMc = "";
-                ArrayList<Map.Entry<String, JsonElement>> entries = new ArrayList<>(versionList.getAsJsonObject("number").entrySet());
-                for (int i = entries.size() - 1; i > 0; i--)
+                ArrayList<String> mcVersions = new ArrayList<>(mcForgebuildMap.keySet());
+                Collections.reverse(mcVersions);
+                for (String mcVersion : mcVersions)
                 {
-                    JsonObject object = entries.get(i).getValue().getAsJsonObject();
-                    String mc = object.get("mcversion").getAsString();
-                    String version = object.get("version").getAsString();
-                    int build = object.get("build").getAsInt();
-
-                    if (!lastMc.equals(mc) && hasInstaller(object))
+                    orderedNameMap.put(String.format("~~~~~~~~~~========== %s ==========~~~~~~~~~~", mcVersion), "");
+                    ArrayList<ForgeBuild> forgeBuilds = new ArrayList<>(mcForgebuildMap.get(mcVersion));
+                    Collections.reverse(forgeBuilds);
+                    for (ForgeBuild forgeBuild : forgeBuilds)
                     {
-                        nameBuildMap.put(String.format("~~~~~~~~~~========== %s ==========~~~~~~~~~~", mc), 0);
-                        lastMc = mc;
+                        if (!forgeBuild.hasInstaller) continue;
+                        orderedNameMap.put(forgeBuild.toString(), forgeBuild.id);
                     }
-
-                    nameBuildMap.put(String.format("%s (MC %s)", version, mc), build);
-                    buildVersionMap.put(build, String.format("%s-%s", mc, version));
-
-                    if (!hasInstaller(object)) buildsWithoutInstaller.add(build);
-                    else
-                    {
-                        try
-                        {
-                            String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", String.format("%s-%s", mc, version));
-                            HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
-                            urlConnection.setRequestMethod("GET");
-                            urlConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)");
-                            urlConnection.connect();
-                            if (urlConnection.getResponseCode() != 200) buildsWithoutInstaller.add(build);
-                        }
-                        catch (IOException ignored)
-                        {
-                            // timeout or something like that
-                        }
-                    }
-
-                    if (!Main.running) return;
                 }
-
-                Main.LOGGER.debug("[Cache] Excluded FORGE versions: " + buildsWithoutInstaller.toString());
 
                 synchronized (FORGE_NAME_VERSION_MAP)
                 {
                     FORGE_NAME_VERSION_MAP.clear();
-                    for (Map.Entry<String, Integer> entry : nameBuildMap.entrySet())
-                    {
-                        if (!buildsWithoutInstaller.contains(entry.getValue())) FORGE_NAME_VERSION_MAP.put(entry.getKey(), buildVersionMap.get(entry.getValue()));
-                    }
+                    FORGE_NAME_VERSION_MAP.putAll(orderedNameMap);
                     FileUtils.writeStringToFile(FORGE_FILE, GSON.toJson(FORGE_NAME_VERSION_MAP));
                 }
                 Main.LOGGER.info("[Cache] Done refreshing Forge version cache.");

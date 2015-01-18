@@ -46,6 +46,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import net.doubledoordev.backend.util.winreg.JavaFinder;
 import net.doubledoordev.backend.util.winreg.JavaInfo;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -62,7 +63,6 @@ import java.util.regex.Pattern;
  */
 public class Constants
 {
-
     /*
      * String constants
      */
@@ -80,6 +80,8 @@ public class Constants
     public static final String ERROR = "error";
     public static final String DATA = "data";
     public static final String DIM = "DIM";
+    public static final String OVERWORLD = "Overworld";
+    public static final String USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)";
     /*
      * FilenameFilter constants
      */
@@ -136,16 +138,24 @@ public class Constants
      * Time constants
      */
     public static final long SOCKET_PING_TIME = 1000 * 50; // 50 seconds
-    public static final long REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24;     // 24 hours
-    public static final long LONG_CACHE_TIMEOUT = 1000 * 60 * 60;          // 1 hour
-    public static final long MEDIUM_CACHE_TIMEOUT = 1000 * 60;               // 1 minute
-    public static final long SHORT_CACHE_TIMEOUT = 1000 * 10;               // 10 seconds
+    public static final long REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24; // 24 hours
+    public static final long LONG_CACHE_TIMEOUT = 1000 * 60 * 60; // 1 hour
+    public static final long MEDIUM_CACHE_TIMEOUT = 1000 * 60; // 1 minute
+    public static final long SHORT_CACHE_TIMEOUT = 1000 * 10; // 10 seconds
     /*
      * Pattern constants
      */
     public static final Pattern USERNAME_PATTERN = Pattern.compile("^[\\w-]+$");
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(?:\\.\\d+)+");
     public static final String SERVER_START_ARGS_BLACKLIST_PATTERNS[] = {"-Xms", "-Xmx", "-XX:MaxPermSize"};
+    public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = new FilenameFilter()
+    {
+        @Override
+        public boolean accept(File dir, String name)
+        {
+            return FilenameUtils.getExtension(name).equals(".jar");
+        }
+    };
     public final static FilenameFilter ACCEPT_ALL_FILTER = new FilenameFilter()
     {
         @Override
@@ -181,7 +191,7 @@ public class Constants
     /*
      * JSON constants
      */
-    public static final Gson GSON = getGSON();
+    public static final Gson GSON = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().disableHtmlEscaping().setPrettyPrinting().create();
     public static final JsonParser JSONPARSER = new JsonParser();
     /*
      * Joiner constants
@@ -240,10 +250,4 @@ public class Constants
         }
         return javaPath;
     }
-
-    private static Gson getGSON()
-    {
-        return new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
-    }
-
 }
