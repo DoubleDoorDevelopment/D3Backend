@@ -342,4 +342,9 @@ public class Helper
         }
         throw new NoSuchMethodException(methodName);
     }
+
+    public static String getVersionString()
+    {
+        return String.format("v%s - build #%s", Main.version, Main.build);
+    }
 }
