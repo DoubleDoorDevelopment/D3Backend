@@ -232,7 +232,7 @@ public class Helper
                 uc.setDefaultUseCaches(false);
                 uc.addRequestProperty("User-Agent", "minecraft");
                 InputStream in = uc.getInputStream();
-                name = JSONPARSER.parse(new InputStreamReader(in)).getAsJsonArray().get(0).getAsString();
+                name = JSONPARSER.parse(new InputStreamReader(in)).getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
                 in.close();
             }
             catch (Exception ignored)
