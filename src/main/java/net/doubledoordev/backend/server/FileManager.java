@@ -220,9 +220,17 @@ public class FileManager
                 return FileUtils.readFileToString(file);
             case "dat":
             case "dat_old":
+
                 Tag tag = Helper.readRawNBT(file, true);
                 if (tag == null) tag = Helper.readRawNBT(file, false);
-                if (tag != null) return JsonNBTHelper.parseNBT(tag).toString();
+                if (tag != null)
+                {
+                    return JsonNBTHelper.parseNBT(tag).toString();
+                }
+                else
+                {
+                    return FileUtils.readFileToString(file);
+                }
             case "jpg":
             case "png":
                 return String.format("data:%s;base64,%s", MimeType.get(getExtension()), Base64.encodeBase64String(FileUtils.readFileToByteArray(file)));

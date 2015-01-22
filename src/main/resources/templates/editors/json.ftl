@@ -58,8 +58,7 @@
         };
         function send()
         {
-            websocket.send(websocket.send(JSON.stringify({method: "set", args: [JSON.stringify(editor.get())]}));
-        )
+            websocket.send(JSON.stringify({method: "set", args: [JSON.stringify(editor.get())]}));
         }
         websocket.onmessage = function (evt)
         {

@@ -1,7 +1,7 @@
 [#ftl]
 [#-- @implicitly included --]
+[#-- @ftlvariable name="fm" type="net.doubledoordev.backend.server.FileManager" --]
 [#-- @ftlvariable name="user" type="net.doubledoordev.backend.permissions.User" --]
 [#-- @ftlvariable name="server" type="net.doubledoordev.backend.server.Server" --]
 [#-- @ftlvariable name="Helper" type="net.doubledoordev.backend.util.Helper" --]
 [#-- @ftlvariable name="Settings" type="net.doubledoordev.backend.util.Settings" --]
-[#-- @ftlvariable name="fm" type="net.doubledoordev.backend.server.FileManager" file="templates/filemanager.ftl" --]
