@@ -97,6 +97,13 @@ public class Main
         version = properties.getProperty("version");
     }
 
+    private static FreemarkerHandler freemarkerHandler;
+
+    public static FreemarkerHandler getFreemarkerHandler()
+    {
+        return freemarkerHandler;
+    }
+
     private Main()
     {
 
@@ -136,7 +143,7 @@ public class Main
         final ServerConfiguration config = webserver.getServerConfiguration();
 
         // Html stuff
-        FreemarkerHandler freemarkerHandler = new FreemarkerHandler(Main.class, TEMPLATES_PATH);
+        freemarkerHandler = new FreemarkerHandler(Main.class, TEMPLATES_PATH);
         config.addHttpHandler(freemarkerHandler);
         config.setDefaultErrorPageGenerator(freemarkerHandler);
         config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), STATIC_PATH), STATIC_PATH);

@@ -112,6 +112,12 @@
                 alert("The call socket connction errored. Try again.");
             };
         }
+
+        function reload()
+        {
+            setTimeout(function () { location.reload(true); }, 1);
+        }
+
         <#if server??>
         var websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
         websocketMonitor.onerror = function (evt)

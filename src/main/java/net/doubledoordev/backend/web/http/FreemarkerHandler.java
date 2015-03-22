@@ -77,9 +77,9 @@ import static net.doubledoordev.backend.web.http.PostHandler.POST_HANDLER;
  */
 public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPageGenerator
 {
-    private static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
+    public static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
     public static long lastRequest = 0L;
-    private final Configuration freemarker = new Configuration();
+    public final Configuration freemarker = new Configuration();
 
     public FreemarkerHandler(Class clazz, String path) throws TemplateModelException
     {
@@ -126,7 +126,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
             if (server != null && server.canUserControl((User) data.get(USER)))
             {
                 data.put(SERVER, server);
-                if (uri.equals("/filemanager")) data.put("fm", new FileManager((Server) data.get(SERVER), request.getParameter(FILE)));
+                if (uri.equals("/filemanager")) data.put("fm", new FileManager(server, request.getParameter(FILE)));
             }
         }
         else if (request.getMethod() == Method.POST)
@@ -137,6 +137,8 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         {
             response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
         }
+
+        if (uri == null) return true;
 
         /**
          * fix up the url to match template

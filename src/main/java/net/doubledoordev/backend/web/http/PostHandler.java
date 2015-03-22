@@ -41,9 +41,11 @@
 
 package net.doubledoordev.backend.web.http;
 
+import freemarker.template.TemplateException;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.PasswordHash;
@@ -51,16 +53,23 @@ import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
 import net.doubledoordev.backend.util.methodCaller.UserMethodCaller;
+import org.apache.logging.log4j.Level;
+import org.glassfish.grizzly.EmptyCompletionHandler;
+import org.glassfish.grizzly.http.multipart.MultipartScanner;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
+import org.glassfish.grizzly.http.util.HttpStatus;
 import org.glassfish.grizzly.http.util.Parameters;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Writer;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
@@ -111,6 +120,8 @@ public class PostHandler
                     return doRegister(uri, request, response);
                 case NEWSERVER_URL:
                     return doNewserver(data, uri, request, response);
+                case FILEMANAGER_URL:
+                    return doFilemanager(data, uri, request, response);
             }
         }
         catch (RuntimeException e)
@@ -118,6 +129,60 @@ public class PostHandler
             data.put(MESSAGE, e.getLocalizedMessage());
         }
         return uri;
+    }
+
+    private String doFilemanager(final HashMap<String, Object> data, final String uri, final Request request, final Response response) throws IOException
+    {
+        User user = (User) data.get(USER);
+
+        if (user == null) throw new PostException("Not logged in.");
+        final Server server = Settings.getServerByName(request.getParameter(SERVER));
+        if (server == null || !server.canUserControl(user)) throw new PostException("Server doesn't exist or user doesn't have permission to edit the server.");
+        data.put(SERVER, server);
+        final FileManager fileManager = new FileManager(server, request.getParameter(FILE));
+        data.put("fm", fileManager);
+
+        response.suspend();
+
+        final UploaderMultipartHandler uploader = new UploaderMultipartHandler(fileManager);
+        MultipartScanner.scan(request, uploader, new EmptyCompletionHandler<Request>()
+        {
+            @Override
+            public void completed(final Request newRequest)
+            {
+                Response response = newRequest.getResponse();
+                if (response.getResponse() == null) return;
+                try
+                {
+                    String uri_ = uri;
+                    /**
+                     * fix up the url to match template
+                     */
+                    if (uri_.endsWith(SLASH_STR)) uri_ += INDEX;
+                    if (uri_.startsWith(SLASH_STR)) uri_ = uri_.substring(1);
+
+                    if (!uri_.endsWith(Constants.TEMPLATE_EXTENSION)) uri_ += Constants.TEMPLATE_EXTENSION;
+
+                    Main.getFreemarkerHandler().freemarker.getTemplate(uri_).process(data, response.getWriter());
+                }
+                catch (IOException | TemplateException ignored)
+                {
+
+                }
+
+                response.resume();
+            }
+
+            @Override
+            public void failed(Throwable throwable)
+            {
+                Main.LOGGER.warn("Upload failed to {}", fileManager.getFile().getAbsolutePath());
+                throwable.printStackTrace();
+                response.resume();
+            }
+        });
+
+        return null;
     }
 
     private String doNewserver(HashMap<String, Object> data, String uri, Request request, Response response) throws IOException

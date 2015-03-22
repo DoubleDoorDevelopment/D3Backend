@@ -117,6 +117,7 @@ public class Constants
     public static final String LOGIN_URL = "/login";
     public static final String REGISTER_URL = "/register";
     public static final String NEWSERVER_URL = "/newserver";
+    public static final String FILEMANAGER_URL = "/filemanager";
     public static final String SERVER_URL = "/server?server=";
     public static final String FAVOTICON = "favicon.ico";
     public static final String MC_VERIONS_URL = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";

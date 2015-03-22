@@ -33,6 +33,11 @@
             modeSelector.value = extention;
             editor.getSession().setMode("ace/mode/" + extention);
         }
+        else if ("${fm.stripServer(fm.file)}".indexOf("computer") != -1)
+        {
+            modeSelector.value = "lua";
+            editor.getSession().setMode("ace/mode/lua");
+        }
         else
         {
             modeSelector.value = "text";
