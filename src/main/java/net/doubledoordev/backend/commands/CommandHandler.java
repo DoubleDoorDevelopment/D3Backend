@@ -59,7 +59,9 @@ import net.doubledoordev.backend.util.exceptions.BackupException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -93,16 +95,22 @@ public class CommandHandler implements Runnable
     @Override
     public void run()
     {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        Console console = System.console();
+        if (console == null)
+        {
+            //todo: open gui
+            JOptionPane.showMessageDialog(null, "You opened D3Backend without a console. Since we don't have a gui yet, and we need input for commands, this is not supported.\nUse a commandline enviroment to open the jar for now.");
+            System.exit(1);
+        }
         while (Main.running)
         {
             try
             {
-                String command = reader.readLine();
+                String command = console.readLine();
                 if (dispatcher.get(command.split(" ")[0]) != null) dispatcher.call(command, new CommandLocals(), new String[0]);
                 else throw new CommandNotFoundException(command);
             }
-            catch (CommandException | IOException | AuthorizationException e)
+            catch (CommandException | AuthorizationException e)
             {
                 CMDLOGGER.warn(e);
                 e.printStackTrace();
@@ -224,5 +232,21 @@ public class CommandHandler implements Runnable
             if (!server.getOnline()) continue;
             server.sendCmd(cmd);
         }
+    }
+
+    @Command(aliases = "update", desc = "Force an update on Forge or MC versions", usage = "<forge|mc>", min = 1)
+    public void updateCommand(String subcmd) throws CommandException
+    {
+        if (subcmd.equalsIgnoreCase("forge"))
+        {
+            Cache.forceUpdateForge();
+            CMDLOGGER.info("Force updating forge");
+        }
+        else if (subcmd.equalsIgnoreCase("mc"))
+        {
+            Cache.forceUpdateMC();
+            CMDLOGGER.info("Force updating MC versions");
+        }
+        else CMDLOGGER.info("Subcommand '{}' unknown.", subcmd);
     }
 }

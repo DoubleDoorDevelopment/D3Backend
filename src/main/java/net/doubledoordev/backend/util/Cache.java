@@ -367,4 +367,14 @@ public class Cache extends TimerTask
             }
         }, "cache-rConAndQuery").start();
     }
+
+    public static void forceUpdateForge()
+    {
+        new Thread(FORGE_VERSIONS_DOWNLOADER, "forced-forgeVersionDownloader").start();
+    }
+
+    public static void forceUpdateMC()
+    {
+        new Thread(MC_VERSIONS_DOWNLOADER, "forced-mcVersionDownloader").start();
+    }
 }
