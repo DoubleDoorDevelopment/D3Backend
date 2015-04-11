@@ -361,8 +361,15 @@ public class Cache extends TimerTask
             {
                 for (Server server : Settings.SETTINGS.servers.values())
                 {
-                    server.renewQuery();
-                    server.getRestartingInfo().run(server);
+                    try
+                    {
+                        server.renewQuery();
+                        server.getRestartingInfo().run(server);
+                    }
+                    catch (Exception e)
+                    {
+                        Main.LOGGER.error("Exception while doing queryRenew on server: " + server.getID(), e);
+                    }
                 }
             }
         }, "cache-rConAndQuery").start();
