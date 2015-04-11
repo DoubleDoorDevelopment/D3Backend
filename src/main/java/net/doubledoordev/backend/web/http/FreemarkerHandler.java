@@ -52,6 +52,7 @@ import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.logging.log4j.core.lookup.SystemPropertiesLookup;
 import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.http.Method;
 import org.glassfish.grizzly.http.server.ErrorPageGenerator;
@@ -117,6 +118,18 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         // Put all session data in map, take 1
         data.putAll(request.getSession().attributes());
 
+        Main.LOGGER.info("==============================");
+        Main.LOGGER.info("BEFORE: {}", uri);
+        for (String key : data.keySet())
+        {
+            Main.LOGGER.info("{}: {}", key, data.get(key));
+        }
+        Main.LOGGER.info("PARAMETERS");
+        for (String key : request.getParameterNames())
+        {
+            Main.LOGGER.info("{}: {}", key,  Constants.JOINER_COMMA_SPACE.join(request.getParameterValues(key)));
+        }
+
         /**
          * Data processing
          */
@@ -126,7 +139,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
             if (server != null && server.canUserControl((User) data.get(USER)))
             {
                 data.put(SERVER, server);
-                if (uri.equals("/filemanager")) data.put("fm", new FileManager(server, request.getParameter(FILE)));
+                if (uri.equals(FILEMANAGER_URL)) data.put("fm", new FileManager(server, request.getParameter(FILE)));
             }
         }
         else if (request.getMethod() == Method.POST)
@@ -137,6 +150,13 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         {
             response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
         }
+
+        Main.LOGGER.info("AFTER:");
+        for (String key : data.keySet())
+        {
+            Main.LOGGER.info("{}: {}", key, data.get(key));
+        }
+        Main.LOGGER.info("==============================");
 
         if (uri == null) return true;
 

@@ -223,7 +223,8 @@ public class Server
         {
             try
             {
-                properties.load(new StringReader(FileUtils.readFileToString(propertiesFile, "latin1")));
+                //properties.load(new StringReader(FileUtils.readFileToString(propertiesFile, "latin1")));
+                properties.load(new StringReader(FileUtils.readFileToString(propertiesFile)));
             }
             catch (IOException e)
             {

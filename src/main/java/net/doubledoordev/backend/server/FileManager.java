@@ -77,9 +77,9 @@ public class FileManager
         this.serverFolder = server.getFolder();
         File file = this.serverFolder;
 
-        if (Strings.isNotBlank(fileString) && !fileString.equals(serverFolder.getName()))
+        if (fileString != null && !fileString.trim().isEmpty() && !serverFolder.getName().equals(fileString))
         {
-            fileString = fileString.replace("..", "");
+            fileString = fileString.replace("/../", "").replace("\\..\\", "");
             try
             {
                 file = new File(this.serverFolder, fileString).getCanonicalFile();
@@ -90,6 +90,8 @@ public class FileManager
             }
         }
         this.file = file;
+
+        if (this.file == null) throw new NullPointerException("File was null! Server:" + server + " FileString: " + fileString);
     }
 
     public Server getServer()
