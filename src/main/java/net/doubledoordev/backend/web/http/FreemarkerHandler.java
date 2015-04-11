@@ -118,18 +118,6 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         // Put all session data in map, take 1
         data.putAll(request.getSession().attributes());
 
-        Main.LOGGER.info("==============================");
-        Main.LOGGER.info("BEFORE: {}", uri);
-        for (String key : data.keySet())
-        {
-            Main.LOGGER.info("{}: {}", key, data.get(key));
-        }
-        Main.LOGGER.info("PARAMETERS");
-        for (String key : request.getParameterNames())
-        {
-            Main.LOGGER.info("{}: {}", key,  Constants.JOINER_COMMA_SPACE.join(request.getParameterValues(key)));
-        }
-
         /**
          * Data processing
          */
@@ -150,13 +138,6 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         {
             response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
         }
-
-        Main.LOGGER.info("AFTER:");
-        for (String key : data.keySet())
-        {
-            Main.LOGGER.info("{}: {}", key, data.get(key));
-        }
-        Main.LOGGER.info("==============================");
 
         if (uri == null) return true;
 
