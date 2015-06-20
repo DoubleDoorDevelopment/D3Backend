@@ -142,7 +142,7 @@
                     <input id="modpackCurse" type="checkbox"> This is a curse modpack zip
                 </label>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; call('servercmd/${server.ID}', 'downloadModpack', [document.getElementById('modpackURL').value, document.getElementById('modpackPurge').value, document.getElementById('modpackCurse').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; call('servercmd/${server.ID}', 'downloadModpack', [document.getElementById('modpackURL').value, document.getElementById('modpackPurge').value === 'on', document.getElementById('modpackCurse').value === 'on'], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
                     Upload modpack
                 </button>
             </div>

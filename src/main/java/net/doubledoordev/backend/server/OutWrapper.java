@@ -18,6 +18,8 @@
 
 package net.doubledoordev.backend.server;
 
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+
 import java.io.PrintStream;
 
 /**
@@ -25,10 +27,13 @@ import java.io.PrintStream;
  */
 public class OutWrapper extends PrintStream
 {
-    final Server server;
-    public OutWrapper(Server server)
+    private final IMethodCaller methodCaller;
+    private final Server server;
+
+    public OutWrapper(PrintStream oldPrintWriter, IMethodCaller methodCaller, Server server)
     {
-        super(System.out);
+        super(oldPrintWriter);
+        this.methodCaller = methodCaller;
         this.server = server;
     }
 
@@ -36,59 +41,69 @@ public class OutWrapper extends PrintStream
     public void println()
     {
         server.printLine("");
+        methodCaller.sendMessage("");
     }
 
     @Override
     public void println(boolean x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(char x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(int x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(long x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(float x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(double x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(char[] x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 
     @Override
     public void println(String x)
     {
         server.printLine(x);
+        methodCaller.sendMessage(x);
     }
 
     @Override
     public void println(Object x)
     {
         server.printLine(String.valueOf(x));
+        methodCaller.sendMessage(String.valueOf(x));
     }
 }

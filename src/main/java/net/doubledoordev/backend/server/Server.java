@@ -708,11 +708,13 @@ public class Server
                         curseModpackDownloader.input = zip;
                         curseModpackDownloader.output = folder;
                         curseModpackDownloader.ignoreExistingMods = true;
+                        curseModpackDownloader.logger = new OutWrapper(System.out, methodCaller, instance);
 
-                        PrintStream oldOut = System.out;
-                        System.setOut(new OutWrapper(instance));
                         curseModpackDownloader.run();
-                        System.setOut(oldOut);
+
+                        zip.delete();
+
+                        printLine("Done extracting & installing zip.");
                     }
                     else
                     {
