@@ -113,10 +113,15 @@ public class Main
             if (arg.equalsIgnoreCase("debug")) debug = true;
         }
 
+        // todo: get JDK and classload tools.jar + native library; if not jdk: disable warmroast
         LOGGER.info("\n\n    D3Backend  Copyright (C) 2015  Dries007 & Double Door Development\n" +
                 "    This program comes with ABSOLUTELY NO WARRANTY;\n" +
                 "    This is free software, and you are welcome to redistribute it under certain conditions;\n" +
                 "    Type `license' for details.\n\n");
+
+        LOGGER.info("System Properties");
+        Properties properties = System.getProperties();
+        for (Object key : properties.keySet()) LOGGER.info("-   {} = {}", key, properties.get(key));
 
         LOGGER.info("Making necessary folders...");
         mkdirs();

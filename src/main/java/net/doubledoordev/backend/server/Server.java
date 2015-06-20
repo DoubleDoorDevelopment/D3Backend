@@ -19,6 +19,7 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.annotations.Expose;
+import com.sk89q.warmroast.RoastOptions;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -28,6 +29,7 @@ import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
+import net.doubledoordev.cmd.CurseModpackDownloader;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
@@ -37,6 +39,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -87,6 +90,8 @@ public class Server
     private RestartingInfo restartingInfo = new RestartingInfo();
     @Expose
     private JvmData jvmData = new JvmData();
+    @Expose
+    private RoastOptions roastOptions = new RoastOptions();
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
@@ -268,6 +273,22 @@ public class Server
         else if (Strings.isNotBlank(Settings.SETTINGS.hostname)) builder.append(Settings.SETTINGS.hostname);
         builder.append(':').append(serverPort);
         return builder.toString();
+    }
+
+    public int getPid()
+    {
+        if (process == null) return -1;
+        try
+        {
+            Class<?> ProcessImpl = process.getClass();
+            Field field = ProcessImpl.getDeclaredField("pid");
+            field.setAccessible(true);
+            return field.getInt(process);
+        }
+        catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e)
+        {
+            return -1;
+        }
     }
 
     public int getServerPort()
@@ -617,10 +638,11 @@ public class Server
         }, getID() + "-forge-installer").start();
     }
 
-    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge) throws IOException, ZipException
+    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge, final boolean cuseZip) throws IOException, ZipException
     {
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
+        final Server instance = this;
         new Thread(new Runnable()
         {
             @Override
@@ -679,32 +701,49 @@ public class Server
                         throw new Exception(download.getMessage());
                     }
 
-                    printLine("Downloading zip done, extracting...");
-
-                    ZipFile zipFile = new ZipFile(zip);
-                    zipFile.setRunInThread(true);
-                    zipFile.extractAll(folder.getCanonicalPath());
-                    lastTime = System.currentTimeMillis();
-                    lastInfo = 0;
-                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+                    if (cuseZip)
                     {
-                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
-                        {
-                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
-                            lastTime = System.currentTimeMillis();
+                        CurseModpackDownloader curseModpackDownloader = new CurseModpackDownloader();
+                        curseModpackDownloader.eula = true;
+                        curseModpackDownloader.server = true;
+                        curseModpackDownloader.input = zip;
+                        curseModpackDownloader.output = folder;
+                        curseModpackDownloader.ignoreExistingMods = true;
 
-                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                        PrintStream oldOut = System.out;
+                        System.setOut(new OutWrapper(instance));
+                        curseModpackDownloader.run();
+                        System.setOut(oldOut);
+                    }
+                    else
+                    {
+                        printLine("Downloading zip done, extracting...");
+
+                        ZipFile zipFile = new ZipFile(zip);
+                        zipFile.setRunInThread(true);
+                        zipFile.extractAll(folder.getCanonicalPath());
+                        lastTime = System.currentTimeMillis();
+                        lastInfo = 0;
+                        while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+                        {
+                            if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
+                            {
+                                lastInfo = zipFile.getProgressMonitor().getPercentDone();
+                                lastTime = System.currentTimeMillis();
+
+                                printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                            }
+
+                            Thread.sleep(10);
                         }
 
-                        Thread.sleep(10);
+                        methodCaller.sendProgress(100);
+                        methodCaller.sendDone();
+
+                        zip.delete();
+
+                        printLine("Done extracting zip.");
                     }
-
-                    methodCaller.sendProgress(100);
-                    methodCaller.sendDone();
-
-                    zip.delete();
-
-                    printLine("Done extracting zip.");
                 }
                 catch (Exception e)
                 {

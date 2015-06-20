@@ -63,7 +63,7 @@ public class OSUtils
         return (arch.endsWith("64") || (wow64Arch != null && wow64Arch.endsWith("64")));
     }
 
-    public static enum OS
+    public enum OS
     {
         WINDOWS, UNIX, MACOSX, OTHER,
     }
