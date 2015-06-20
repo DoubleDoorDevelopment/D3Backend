@@ -18,12 +18,14 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.common.base.Throwables;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
 import net.doubledoordev.backend.util.*;
 import net.doubledoordev.backend.util.exceptions.AuthenticationException;
+import net.doubledoordev.backend.util.exceptions.BackupException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
@@ -108,6 +110,7 @@ public class Server
      * The process the server will be running in
      */
     private Process process;
+    private long startTime;
     private boolean starting = false;
     private File backupFolder;
     private WorldManager worldManager = new WorldManager(this);
@@ -250,16 +253,17 @@ public class Server
      */
     public boolean getOnline()
     {
-        try
-        {
-            if (process == null) return false;
-            process.exitValue();
-            return false;
-        }
-        catch (IllegalThreadStateException e)
-        {
-            return true;
-        }
+        return process != null && process.isAlive();
+//        try
+//        {
+//            if (process == null) return false;
+//            process.exitValue();
+//            return false;
+//        }
+//        catch (IllegalThreadStateException e)
+//        {
+//            return true;
+//        }
     }
 
     /**
@@ -429,6 +433,11 @@ public class Server
         return names;
     }
 
+    public long getStartTime()
+    {
+        return startTime;
+    }
+
     /*
      * ========================================================================================
      * SETTERS
@@ -479,12 +488,13 @@ public class Server
     /**
      * Remove the old and download the new server jar file
      */
-    public void setVersion(final IMethodCaller methodCaller, final String version)
+    public void setVersion(final IMethodCaller methodCaller, final String version) throws BackupException
     {
         if (getOnline()) throw new ServerOnlineException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         final Server instance = this;
+
         new Thread(new Runnable()
         {
             @Override
@@ -493,6 +503,8 @@ public class Server
                 downloading = true;
                 try
                 {
+                    worldManager.doMakeAllOfTheBackup(methodCaller);
+
                     // delete old files
                     for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
                     for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
@@ -519,7 +531,7 @@ public class Server
                         Thread.sleep(10);
                     }
 
-                    methodCaller.sendProgress(0);
+                    //methodCaller.sendProgress(0);
 
                     while (download.getStatus() == Download.Status.Downloading)
                     {
@@ -528,7 +540,7 @@ public class Server
                             lastInfo = (int) download.getProgress();
                             lastTime = System.currentTimeMillis();
 
-                            methodCaller.sendProgress(download.getProgress());
+                            //methodCaller.sendProgress(download.getProgress());
                             printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
@@ -556,7 +568,7 @@ public class Server
     /**
      * Downloads and uses specific forge installer
      */
-    public void installForge(final IMethodCaller methodCaller, final String name)
+    public void installForge(final IMethodCaller methodCaller, final String name) throws BackupException
     {
         if (getOnline()) throw new ServerOnlineException();
         final String version = Helper.getForgeVersionForName(name);
@@ -564,6 +576,7 @@ public class Server
         if (downloading) throw new IllegalStateException("Already downloading something.");
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         final Server instance = this;
+
         new Thread(new Runnable()
         {
             @Override
@@ -572,6 +585,8 @@ public class Server
                 downloading = true;
                 try
                 {
+                    worldManager.doMakeAllOfTheBackup(methodCaller);
+
                     // delete old files
                     for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
                     for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
@@ -630,6 +645,7 @@ public class Server
                     printLine("Error installing a new forge version (version " + version + ")");
                     printLine(e.toString());
                     printLine("##################################################################");
+                    methodCaller.sendError(Throwables.getStackTraceAsString(e));
                     e.printStackTrace();
                 }
                 downloading = false;
@@ -637,11 +653,12 @@ public class Server
         }, getID() + "-forge-installer").start();
     }
 
-    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge, final boolean cuseZip) throws IOException, ZipException
+    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge, final boolean cuseZip) throws IOException, ZipException, BackupException
     {
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
         final Server instance = this;
+
         new Thread(new Runnable()
         {
             @Override
@@ -650,9 +667,17 @@ public class Server
                 try
                 {
                     downloading = true;
-                    if (purge) for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
-                        if (file.isFile()) file.delete();
-                        else FileUtils.deleteDirectory(file);
+
+                    worldManager.doMakeAllOfTheBackup(methodCaller);
+
+                    if (purge)
+                    {
+                        for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
+                        {
+                            if (file.isFile()) file.delete();
+                            else FileUtils.deleteDirectory(file);
+                        }
+                    }
                     if (!folder.exists()) folder.mkdirs();
 
                     final File zip = new File(folder, "modpack.zip");
@@ -678,7 +703,7 @@ public class Server
                         Thread.sleep(10);
                     }
 
-                    methodCaller.sendProgress(0);
+                    //methodCaller.sendProgress(0);
 
                     while (download.getStatus() == Download.Status.Downloading)
                     {
@@ -687,7 +712,7 @@ public class Server
                             lastInfo = (int) download.getProgress();
                             lastTime = System.currentTimeMillis();
 
-                            methodCaller.sendProgress(download.getProgress());
+                            //methodCaller.sendProgress(download.getProgress());
 
                             printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
@@ -738,20 +763,22 @@ public class Server
                             Thread.sleep(10);
                         }
 
-                        methodCaller.sendProgress(100);
-                        methodCaller.sendDone();
+                        //methodCaller.sendProgress(100);
 
                         zip.delete();
 
                         printLine("Done extracting zip.");
                     }
+
+                    methodCaller.sendDone();
                 }
                 catch (Exception e)
                 {
                     printLine("##################################################################");
-                    printLine("Error installing the modpack");
+                    printLine("Error installing a modpack");
                     printLine(e.toString());
                     printLine("##################################################################");
+                    methodCaller.sendError(Throwables.getStackTraceAsString(e));
                     e.printStackTrace();
                 }
                 downloading = false;
@@ -896,6 +923,7 @@ public class Server
                     pb.redirectErrorStream(true);
                     if (!new File(folder, getJvmData().jarName).exists()) return; // for reasons of WTF?
                     process = pb.start();
+                    startTime = System.currentTimeMillis();
                     new Thread(new Runnable()
                     {
                         @Override
@@ -952,6 +980,7 @@ public class Server
         if (!getOnline()) return false;
         try
         {
+            sendChat(message);
             renewQuery();
             printLine("----=====##### STOPPING SERVER WITH WITH KICK #####=====-----");
             for (String user : getPlayerList()) sendCmd(String.format("kick %s %s", user, message));
@@ -961,9 +990,7 @@ public class Server
         catch (Exception e)
         {
             printLine("----=====##### STOPPING SERVER #####=====-----");
-            PrintWriter printWriter = new PrintWriter(process.getOutputStream());
-            printWriter.println("stop");
-            printWriter.flush();
+            sendCmd("stop");
             return false;
         }
     }
@@ -1028,6 +1055,14 @@ public class Server
         {
             throw new RuntimeException(e);
         }
+    }
+
+    public void sendChat(String message)
+    {
+        PrintWriter printWriter = new PrintWriter(process.getOutputStream());
+        printWriter.print("say ");//send command /say <message>
+        printWriter.println(message);
+        printWriter.flush();
     }
 
     public void sendCmd(String s)

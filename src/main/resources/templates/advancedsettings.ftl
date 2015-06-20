@@ -132,7 +132,6 @@
     var allkeys = {};
     function updateInfo(data)
     {
-        console.log(data);
         for (key1 in data)
         {
             if (!data.hasOwnProperty(key1)) continue;

@@ -14,13 +14,16 @@
  *
  *     You should have received a copy of the GNU Affero General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 package net.doubledoordev.backend.web.socket;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.WebSocketHelper;
@@ -29,24 +32,30 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
- * Short term sockets
- * Get 1 command, and send 1 response back.
- *
  * @author Dries007
  */
-public class ServerControlSocketApplication extends ServerWebSocketApplication
+public class FileMonitorSocketApplication extends ServerWebSocketApplication
 {
-    private static final ServerControlSocketApplication APPLICATION = new ServerControlSocketApplication();
-    private static final String URL_PATTERN = "/servercmd/*";
+    private static final FileMonitorSocketApplication APPLICATION = new FileMonitorSocketApplication();
+    private static final String URL_PATTERN = "/filemonitor/*";
 
-    private ServerControlSocketApplication()
+    private FileMonitorSocketApplication()
     {
+        TIMER.scheduleAtFixedRate(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
+            }
+        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
     }
 
     public static void register()
@@ -54,11 +63,33 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
         WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
+    public static void update(JsonArray rootNode, File folder)
+    {
+        if (rootNode == null) return;
+        for (WebSocket socket1 : APPLICATION.getWebSockets())
+        {
+            FileManager fileManager = (FileManager) ((DefaultWebSocket) socket1).getUpgradeRequest().getAttribute(FILE_MANAGER);
+            if (fileManager.getFile().equals(folder))
+            {
+                WebSocketHelper.sendData(socket1, rootNode);
+            }
+        }
+    }
+
+    @Override
+    public void onConnect(WebSocket socket)
+    {
+        super.onConnect(socket);
+        String[] split = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo().substring(1).split("/", 2);
+        FileManager fileManager = new FileManager((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER), split[1]);
+        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(FILE_MANAGER, fileManager);
+    }
+
     @Override
     public void onMessage(WebSocket socket, String text)
     {
-        Server server = (Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER);
-        if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        FileManager fileManager = (FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER);
+        if (!fileManager.getServer().isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
         {
             WebSocketHelper.sendError(socket, "You have no rights to this server.");
             socket.close();
@@ -70,17 +101,17 @@ public class ServerControlSocketApplication extends ServerWebSocketApplication
             String name = object.get("method").getAsString();
             ArrayList<String> args = new ArrayList<>();
             if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
-            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, server, name, args);
+            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, fileManager, name, args);
             if (methodCaller == null)
             {
                 WebSocketHelper.sendOk(socket);
                 socket.close();
             }
         }
-        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+        catch (Exception e)
         {
+            e.printStackTrace();
             WebSocketHelper.sendError(socket, e);
-            socket.close();
         }
     }
 }

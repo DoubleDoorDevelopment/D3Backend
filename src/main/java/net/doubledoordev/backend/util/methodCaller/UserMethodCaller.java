@@ -50,11 +50,11 @@ public class UserMethodCaller implements IMethodCaller
 
     }
 
-    @Override
-    public void sendProgress(float progress)
-    {
-
-    }
+//    @Override
+//    public void sendProgress(float progress)
+//    {
+//
+//    }
 
     @Override
     public void sendError(String message)

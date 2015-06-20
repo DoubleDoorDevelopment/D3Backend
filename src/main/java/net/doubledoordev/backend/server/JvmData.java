@@ -23,7 +23,6 @@ import com.google.gson.annotations.Expose;
 /**
  * @author Dries007
  */
-@SuppressWarnings("UnusedDeclaration")
 public class JvmData
 {
     @Expose

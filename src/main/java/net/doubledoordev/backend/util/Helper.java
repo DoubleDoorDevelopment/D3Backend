@@ -53,7 +53,8 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 public class Helper
 {
     public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private static final SimpleDateFormat BAN_SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private Helper()
@@ -132,7 +133,7 @@ public class Helper
 
     public static String getNowInBanFormat()
     {
-        return dateFormat.format(new Date());
+        return BAN_SIMPLE_DATE_FORMAT.format(new Date());
     }
 
     public static Tag<?> readRawNBT(File file, boolean compressed)
@@ -250,10 +251,10 @@ public class Helper
     /**
      * Default arguments: "%2d days, ", "%2d hours, ", "%2d min and", "%2 sec"
      */
-    public static String getOnlineTime(String dayString, String hoursString, String minuteString, String secondsString)
+    public static String getOnlineTime(long startTime, String dayString, String hoursString, String minuteString, String secondsString)
     {
         StringBuilder sb = new StringBuilder(30);
-        long time = System.currentTimeMillis() - Main.STARTTIME;
+        long time = System.currentTimeMillis() - startTime;
         boolean alwaysShowNext = false;
         if (Strings.isNotBlank(dayString) && time > 1000 * 60 * 60 * 24)
         {
@@ -276,6 +277,11 @@ public class Helper
         return sb.toString();
     }
 
+    public static String getOnlineTime(String dayString, String hoursString, String minuteString, String secondsString)
+    {
+        return getOnlineTime(Main.STARTTIME, dayString, hoursString, minuteString, secondsString);
+    }
+
     public static String getReadOnlyProperties()
     {
         JsonArray array = new JsonArray();
@@ -292,7 +298,7 @@ public class Helper
         return array.toString();
     }
 
-    public static boolean invokeWithRefectionMagic(WebSocket caller, Object instance, String methodName, ArrayList<String> args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
+    public static IMethodCaller invokeWithRefectionMagic(WebSocket caller, Object instance, String methodName, ArrayList<String> args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException
     {
         for (java.lang.reflect.Method method : instance.getClass().getDeclaredMethods())
         {
@@ -310,7 +316,7 @@ public class Helper
                         parms[i] = TypeHellhole.convert(method.getParameterTypes()[i], args.get(i - (userMethodCaller ? 1 : 0)));
                     }
                     method.invoke(instance, parms);
-                    return userMethodCaller;
+                    return userMethodCaller ? (IMethodCaller) parms[0] : null;
                 }
                 catch (ClassCastException ignored)
                 {
@@ -324,5 +330,10 @@ public class Helper
     public static String getVersionString()
     {
         return String.format("v%s - build #%s", Main.version, Main.build);
+    }
+
+    public static String formatDate(long time)
+    {
+        return SIMPLE_DATE_FORMAT.format(time);
     }
 }

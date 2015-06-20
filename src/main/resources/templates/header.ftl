@@ -95,18 +95,6 @@
         {
             setTimeout(function () { location.reload(true); }, 1);
         }
-
-        <#if server??>
-        var websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
-        websocketMonitor.onerror = function (evt)
-        {
-            alert("The websocket errored. Refresh the page!")
-        };
-        websocketMonitor.onclose = function (evt)
-        {
-            alert("The websocket closed. Refresh the page!")
-        };
-        </#if>
     </script>
 </head>
 <body>

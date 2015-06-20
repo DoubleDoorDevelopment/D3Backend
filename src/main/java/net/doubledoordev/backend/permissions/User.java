@@ -178,4 +178,5 @@ public class User
         Settings.SETTINGS.users.remove(this.getUsername().toLowerCase());
         Settings.save();
     }
+
 }

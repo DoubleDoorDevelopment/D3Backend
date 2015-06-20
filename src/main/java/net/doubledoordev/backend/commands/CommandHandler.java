@@ -30,14 +30,19 @@ import com.sk89q.intake.parametric.annotation.Switch;
 import com.sk89q.intake.parametric.annotation.Text;
 import com.sk89q.intake.util.auth.AuthorizationException;
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.permissions.Group;
+import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Cache;
-import net.doubledoordev.backend.util.exceptions.BackupException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.swing.*;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.Console;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
@@ -51,6 +56,46 @@ public class CommandHandler implements Runnable
 {
     public static final CommandHandler INSTANCE = new CommandHandler();
     public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
+    public static final User CMDUSER = new User("CMD", "_noPass_")
+    {
+        //@formatter:off
+        @Override public boolean verify(String password) { return false; }
+        @Override public boolean updatePassword(String oldPass, String newPass) { return false; }
+        @Override public void setPass(String newPass) {}
+        @Override public String getUsername() { return "CMD"; }
+        @Override public String getPasshash() { return "_noPass_"; }
+        @Override public Group getGroup() { return Group.ADMIN; }
+        @Override public void setGroup(Group group) {}
+        @Override public void setGroup(String group) {}
+        @Override public int getMaxServers() { return -1; }
+        @Override public void setMaxServers(int maxServers) {}
+        @Override public int getMaxRam() { return -1; }
+        @Override public void setMaxRam(int maxRam) {}
+        @Override public int getMaxRamLeft() { return -1; }
+        @Override public int getServerCount() { return 0; }
+        @Override public int getMaxDiskspace() { return -1; }
+        @Override public void setMaxDiskspace(int maxDiskspace) {}
+        @Override public int getDiskspaceLeft() { return -1; }
+        @Override public boolean isAdmin() { return true; }
+        @Override public void delete() {}
+        //@formatter:on
+    };
+    public static final IMethodCaller CMDCALLER = new IMethodCaller()
+    {
+        @Override
+        public User getUser()
+        {
+            return CMDUSER;
+        }
+
+        //@formatter:off
+        @Override public void sendOK() {}
+        @Override public void sendMessage(String message) {}
+        //@Override public void sendProgress(float progress) {}
+        @Override public void sendError(String message) {}
+        @Override public void sendDone() {}
+        //@formatter:on
+    };
     public final Dispatcher dispatcher;
 
     private CommandHandler()
@@ -154,7 +199,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            server.sendCmd(String.format("/say %s", msg));
+            server.sendChat(msg);
         }
     }
 
@@ -163,16 +208,7 @@ public class CommandHandler implements Runnable
     {
         for (Server server : servers)
         {
-            try
-            {
-                server.getWorldManager().bypassLimits = true;
-                server.getWorldManager().makeAllOfTheBackup();
-            }
-            catch (BackupException e)
-            {
-                CMDLOGGER.warn("Error when making a backup of " + server.getID());
-                CMDLOGGER.warn(e);
-            }
+            server.getWorldManager().doMakeAllOfTheBackup(CMDCALLER);
         }
     }
 
@@ -250,19 +286,19 @@ public class CommandHandler implements Runnable
     {
         CMDLOGGER.info(
                 "    D3Backend\n" +
-                "    Copyright (C) 2015  Dries007 & Double Door Development\n" +
-                "\n" +
-                "    This program is free software: you can redistribute it and/or modify\n" +
-                "    it under the terms of the GNU Affero General Public License as published\n" +
-                "    by the Free Software Foundation, either version 3 of the License, or\n" +
-                "    (at your option) any later version.\n" +
-                "\n" +
-                "    This program is distributed in the hope that it will be useful,\n" +
-                "    but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
-                "    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
-                "    GNU Affero General Public License for more details.\n" +
-                "\n" +
-                "    You should have received a copy of the GNU Affero General Public License\n" +
-                "    along with this program.  If not, see <http://www.gnu.org/licenses/>.");
+                        "    Copyright (C) 2015  Dries007 & Double Door Development\n" +
+                        "\n" +
+                        "    This program is free software: you can redistribute it and/or modify\n" +
+                        "    it under the terms of the GNU Affero General Public License as published\n" +
+                        "    by the Free Software Foundation, either version 3 of the License, or\n" +
+                        "    (at your option) any later version.\n" +
+                        "\n" +
+                        "    This program is distributed in the hope that it will be useful,\n" +
+                        "    but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
+                        "    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
+                        "    GNU Affero General Public License for more details.\n" +
+                        "\n" +
+                        "    You should have received a copy of the GNU Affero General Public License\n" +
+                        "    along with this program.  If not, see <http://www.gnu.org/licenses/>.");
     }
 }

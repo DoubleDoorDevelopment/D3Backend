@@ -49,6 +49,7 @@ public class Constants
     public static final String WORLD = "world";
     public static final String SERVER = "server";
     public static final String FILE_MANAGER = "filemanager";
+    public static final String WORLD_MANAGER = "worldmanager";
     public static final String FILE = "file";
     public static final String INDEX = "index";
     public static final String USER = "user";

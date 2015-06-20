@@ -29,7 +29,6 @@ import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.logging.log4j.core.lookup.SystemPropertiesLookup;
 import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.http.Method;
 import org.glassfish.grizzly.http.server.ErrorPageGenerator;

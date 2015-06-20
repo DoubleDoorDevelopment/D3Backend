@@ -25,9 +25,9 @@ import java.util.Calendar;
 import java.util.Date;
 
 /**
+ * todo: fix timer (drifts and ends up being more like every 23.? h)
  * @author Dries007
  */
-@SuppressWarnings("UnusedDeclaration")
 public class RestartingInfo
 {
     @Expose
@@ -66,7 +66,7 @@ public class RestartingInfo
         }
 
         if (!server.getOnline()) return;
-        if (lastRestart != null && System.currentTimeMillis() - lastRestart.getTime() < globalTimeout * 3500000) return; // No 3600000! Because of correction factor
+        if (lastRestart != null && System.currentTimeMillis() - lastRestart.getTime() < globalTimeout * 3600000) return;
 
         // Empty check
         if (server.getPlayerList().size() == 0)
@@ -90,14 +90,14 @@ public class RestartingInfo
                     if (calendar.get(Calendar.HOUR_OF_DAY) == restartScheduleHours && calendar.get(Calendar.MINUTE) >= restartScheduleMinutes)
                     {
                         runningSchedule = ScheduleStep.M15;
-                        server.sendCmd("say " + restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
+                        server.sendChat(restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
                     }
                     break;
                 default:
                     calendar.add(Calendar.MINUTE, runningSchedule.timeLeft);
                     if (calendar.get(Calendar.HOUR_OF_DAY) == restartScheduleHours && calendar.get(Calendar.MINUTE) >= restartScheduleMinutes)
                     {
-                        server.sendCmd("say " + restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
+                        server.sendChat(restartScheduleMessage.replace("%time", Integer.toString(runningSchedule.timeLeft)));
                         runningSchedule = runningSchedule.nextStep;
                     }
                     break;

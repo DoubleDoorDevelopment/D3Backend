@@ -14,26 +14,23 @@
  *
  *     You should have received a copy of the GNU Affero General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 package net.doubledoordev.backend.web.socket;
 
-import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.doubledoordev.backend.permissions.User;
+import net.doubledoordev.backend.server.Server;
+import net.doubledoordev.backend.server.WorldManager;
 import net.doubledoordev.backend.util.Helper;
-import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
-import org.glassfish.grizzly.http.server.DefaultSessionManager;
-import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
-import org.glassfish.grizzly.websockets.WebSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.TimerTask;
 
@@ -42,12 +39,12 @@ import static net.doubledoordev.backend.util.Constants.*;
 /**
  * @author Dries007
  */
-public class UsersSocketApplication extends WebSocketApplication
+public class WorldManagerSocketApplication extends ServerWebSocketApplication
 {
-    private static final UsersSocketApplication APPLICATION = new UsersSocketApplication();
-    private static final String URL_PATTERN = "/users/*";
+    private static final WorldManagerSocketApplication APPLICATION = new WorldManagerSocketApplication();
+    private static final String URL_PATTERN = "/worldmanager/*";
 
-    private UsersSocketApplication()
+    private WorldManagerSocketApplication()
     {
         TIMER.scheduleAtFixedRate(new TimerTask()
         {
@@ -65,60 +62,40 @@ public class UsersSocketApplication extends WebSocketApplication
     }
 
     @Override
+    public void onConnect(WebSocket socket)
+    {
+        super.onConnect(socket);
+        WorldManager worldManager = ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).getWorldManager();
+        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(WORLD_MANAGER, worldManager);
+    }
+
+    @Override
     public void onMessage(WebSocket socket, String text)
     {
-        User user = (User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER);
+        WorldManager worldManager = (WorldManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(WORLD_MANAGER);
+        if (!worldManager.server.isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        {
+            WebSocketHelper.sendError(socket, "You have no rights to this server.");
+            socket.close();
+            return;
+        }
         try
         {
             JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
             String name = object.get("method").getAsString();
             ArrayList<String> args = new ArrayList<>();
             if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
-            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, user, name, args);
+            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, worldManager, name, args);
             if (methodCaller == null)
             {
                 WebSocketHelper.sendOk(socket);
                 socket.close();
             }
         }
-        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+        catch (Exception e)
         {
+            e.printStackTrace();
             WebSocketHelper.sendError(socket, e);
-            socket.close();
         }
-    }
-
-    @Override
-    public void onConnect(WebSocket socket)
-    {
-        Session session = DefaultSessionManager.instance().getSession(null, ((DefaultWebSocket) socket).getUpgradeRequest().getRequestedSessionId());
-        if (session == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid session.");
-            socket.close();
-            return;
-        }
-        if (!((User) session.getAttribute(USER)).isAdmin())
-        {
-            WebSocketHelper.sendError(socket, "You are no admin.");
-            socket.close();
-            return;
-        }
-        String[] username = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo().substring(1).split("/");
-        if (Strings.isNullOrEmpty(username[0]) || Strings.isNullOrEmpty(username[0]))
-        {
-            WebSocketHelper.sendError(socket, "No valid user.");
-            socket.close();
-            return;
-        }
-        User user = Settings.getUserByName(username[0]);
-        if (user == null)
-        {
-            WebSocketHelper.sendError(socket, "No valid user.");
-            socket.close();
-            return;
-        }
-        ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, user);
-        super.onConnect(socket);
     }
 }

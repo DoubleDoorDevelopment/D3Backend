@@ -19,15 +19,17 @@
 package net.doubledoordev.backend.server;
 
 import com.flowpowered.nbt.Tag;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.JsonNBTHelper;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.web.socket.FileManagerSocketApplication;
+import net.doubledoordev.backend.web.socket.FileMonitorSocketApplication;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.logging.log4j.util.Strings;
 import org.glassfish.grizzly.http.util.MimeType;
 
 import java.io.File;
@@ -42,7 +44,6 @@ import java.util.LinkedList;
  *
  * @author Dries007
  */
-@SuppressWarnings("UnusedDeclaration")
 public class FileManager
 {
     private final Server server;
@@ -87,7 +88,7 @@ public class FileManager
         return getExtension(file);
     }
 
-    public String getExtension(File file)
+    public static String getExtension(File file)
     {
         return FilenameUtils.getExtension(file.getName().toLowerCase());
     }
@@ -115,7 +116,7 @@ public class FileManager
         return file.toString().substring(serverFolder.toString().length() + 1).replace('\\', '/');
     }
 
-    public boolean canEdit(File file)
+    public static boolean canEdit(File file)
     {
         switch (getExtension(file))
         {
@@ -162,7 +163,7 @@ public class FileManager
         }
     }
 
-    public String getIcon(File file)
+    public static String getIcon(File file)
     {
         if (!file.canWrite()) return "lock";
         if (file.isDirectory()) return "folder";
@@ -228,36 +229,42 @@ public class FileManager
     public void rename(String newname)
     {
         file.renameTo(new File(file.getParentFile(), newname));
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
     public void makeWritable()
     {
         file.setWritable(true);
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
     public void delete() throws IOException
     {
         if (file.isDirectory()) FileUtils.deleteDirectory(file);
         else file.delete();
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
     public void newFile(String name) throws IOException
     {
         new File(file, name).createNewFile();
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
     }
 
     public void newFolder(String name)
     {
         new File(file, name).mkdir();
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
     }
 
     public void set(IMethodCaller caller, String text) throws IOException
     {
         FileUtils.writeStringToFile(file, text);
         FileManagerSocketApplication.sendFile(file.getAbsolutePath(), text);
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
-    public String getSize(File file)
+    public static String getSize(File file)
     {
         long sizeL = file.length();
         if (sizeL < 1000) return String.format("%d B", sizeL);
@@ -267,5 +274,31 @@ public class FileManager
         if (sizeD < 1000) return String.format("%.2f MB", sizeD);
         sizeD = sizeL / 1000000000D;
         return String.format("%.2f GB", sizeD);
+    }
+
+    public JsonArray getJson(File folder)
+    {
+        if (folder == null) return null;
+        File[] files = folder.listFiles();
+        if (files == null) return null;
+        JsonArray rootNode = new JsonArray();
+        for (File file : files)
+        {
+            JsonObject fileNode = new JsonObject();
+            fileNode.addProperty("icon", getIcon(file));
+            fileNode.addProperty("isFolder", file.isDirectory());
+            fileNode.addProperty("canEdit", canEdit(file));
+            fileNode.addProperty("canWrite", file.canWrite());
+            fileNode.addProperty("extension", FilenameUtils.getExtension(file.getName()));
+            fileNode.addProperty("name", file.getName());
+            fileNode.addProperty("url", stripServer(file));
+            String tooltip = Helper.getUsernameFromUUID(file.getName());
+            if (tooltip != null) fileNode.addProperty("tooltip", tooltip);
+            fileNode.addProperty("fileSize", file.isDirectory() ? "" : getSize(file));
+            fileNode.addProperty("lastModified", Helper.formatDate(file.lastModified()));
+
+            rootNode.add(fileNode);
+        }
+        return rootNode;
     }
 }

@@ -20,12 +20,12 @@ package net.doubledoordev.backend.web.socket;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.FileManager;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.WebSocketHelper;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
@@ -81,21 +81,20 @@ public class FileManagerSocketApplication extends ServerWebSocketApplication
         ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(FILE_MANAGER, fileManager);
     }
 
-    @Override
-    public void onMessage(WebSocket socket, byte[] bytes)
-    {
-        FileManager fileManager = (FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER);
-        if (!fileManager.getServer().isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
-        {
-            WebSocketHelper.sendError(socket, "You have no rights to this server.");
-            socket.close();
-            return;
-        }
-
-        Main.LOGGER.info("Binary data: ");
-        Main.LOGGER.info(new String(bytes));
-    }
-
+//    @Override
+//    public void onMessage(WebSocket socket, byte[] bytes)
+//    {
+//        FileManager fileManager = (FileManager) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(FILE_MANAGER);
+//        if (!fileManager.getServer().isCoOwner((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+//        {
+//            WebSocketHelper.sendError(socket, "You have no rights to this server.");
+//            socket.close();
+//            return;
+//        }
+//
+//        Main.LOGGER.info("Binary data: ");
+//        Main.LOGGER.info(new String(bytes));
+//    }
 
     @Override
     public void onMessage(WebSocket socket, String text)
@@ -113,7 +112,8 @@ public class FileManagerSocketApplication extends ServerWebSocketApplication
             String name = object.get("method").getAsString();
             ArrayList<String> args = new ArrayList<>();
             if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
-            if (!Helper.invokeWithRefectionMagic(socket, fileManager, name, args))
+            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, fileManager, name, args);
+            if (methodCaller == null)
             {
                 WebSocketHelper.sendOk(socket);
                 socket.close();

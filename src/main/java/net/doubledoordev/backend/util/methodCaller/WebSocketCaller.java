@@ -52,25 +52,25 @@ public class WebSocketCaller implements IMethodCaller
     @Override
     public void sendMessage(String message)
     {
-        WebSocketHelper.sendData(socket, message);
+        if (socket.isConnected()) WebSocketHelper.sendData(socket, message);
     }
 
-    @Override
-    public void sendProgress(float progress)
-    {
-        WebSocketHelper.sendData(socket, progress);
-    }
+//    @Override
+//    public void sendProgress(float progress)
+//    {
+//        WebSocketHelper.sendData(socket, progress);
+//    }
 
     @Override
     public void sendError(String message)
     {
-        WebSocketHelper.sendError(socket, message);
+        if (socket.isConnected()) WebSocketHelper.sendError(socket, message);
     }
 
     @Override
     public void sendDone()
     {
         WebSocketHelper.sendData(socket, "done");
-        socket.close();
+        if (socket.isConnected()) socket.close();
     }
 }

@@ -18,10 +18,13 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.common.base.Throwables;
 import net.doubledoordev.backend.util.exceptions.BackupException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -40,8 +43,7 @@ import static net.doubledoordev.backend.util.Constants.*;
 @SuppressWarnings("UnusedDeclaration")
 public class WorldManager
 {
-    final Server server;
-    public boolean bypassLimits = false;
+    public final Server server;
     File worldFolder;
 
     public WorldManager(Server server)
@@ -66,22 +68,40 @@ public class WorldManager
         return server.getProperties().getProperty("level-name", "world");
     }
 
-    public void makeWorldBackup() throws BackupException
+    public void makeWorldBackup(IMethodCaller methodCaller) throws BackupException
     {
         if (!checkSpace()) throw new BackupException("Out of diskspace.");
-        doBackup(new File(new File(server.getBackupFolder(), WORLD), BACKUP_SDF.format(new Date()) + ".zip"), new File(server.getFolder(), getWorldName()), ACCEPT_NONE_FILTER);
+        doMakeWorldBackup(methodCaller);
+        methodCaller.sendDone();
     }
 
-    public void makeAllOfTheBackup() throws BackupException
+    public void doMakeWorldBackup(IMethodCaller methodCaller)
     {
-        if (!checkSpace()) throw new BackupException("Out of diskspace.");
-        doBackup(new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_FILTER);
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), WORLD), BACKUP_SDF.format(new Date()) + ".zip"), new File(server.getFolder(), getWorldName()), ACCEPT_NONE_FILTER);
     }
 
-    public void makeBackup(String dimid) throws BackupException
+    public void makeAllOfTheBackup(IMethodCaller methodCaller) throws BackupException
     {
         if (!checkSpace()) throw new BackupException("Out of diskspace.");
-        doBackup(new File(new File(server.getBackupFolder(), dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid.equals(OVERWORLD) ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
+        doMakeAllOfTheBackup(methodCaller);
+        methodCaller.sendDone();
+    }
+
+    public void doMakeAllOfTheBackup(IMethodCaller methodCaller)
+    {
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_FILTER);
+    }
+
+    public void makeBackup(IMethodCaller methodCaller, String dimid) throws BackupException
+    {
+        if (!checkSpace()) throw new BackupException("Out of diskspace.");
+        doMakeBackup(methodCaller, dimid);
+        methodCaller.sendDone();
+    }
+
+    public void doMakeBackup(IMethodCaller methodCaller, String dimid)
+    {
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid.equals(OVERWORLD) ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
     }
 
     public File getFolder(String dimid)
@@ -98,13 +118,13 @@ public class WorldManager
         }
     }
 
-    public void doBackup(File zip, File folder, FilenameFilter filter)
+    public void doBackup(IMethodCaller methodCaller, File zip, File folder, FilenameFilter filter)
     {
         if (!folder.exists()) return; // Prevent derp
         LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getID(), folder.getPath(), zip.getPath()));
         if (server.getOnline())
         {
-            server.sendCmd("say Making backup....");
+            server.sendChat("Making backup....");
             server.sendCmd("save-off");
             server.sendCmd("save-all");
         }
@@ -118,19 +138,38 @@ public class WorldManager
 
             for (File delfolder : tmp.listFiles(filter)) FileUtils.deleteDirectory(delfolder);
 
+            server.printLine("Making backup zip...");
+            methodCaller.sendMessage("Making backup zip...");
+
             if (tmp.list().length != 0)
             {
                 ZipParameters parameters = new ZipParameters();
                 parameters.setIncludeRootFolder(false);
                 ZipFile zipFile = new ZipFile(zip);
+                zipFile.setRunInThread(true);
                 zipFile.createZipFileFromFolder(tmp, parameters, false, 0);
+
+                ProgressMonitor pm = zipFile.getProgressMonitor();
+                for (long lastUpdate = 0L; pm.getState() == 1; this.smallDelay())
+                {
+                    if (System.currentTimeMillis() - lastUpdate > 5000L)
+                    {
+                        server.printLine("Zipping... " + pm.getPercentDone() + "%");
+                        methodCaller.sendMessage("Zipping... " + pm.getPercentDone() + "%");
+                        lastUpdate = System.currentTimeMillis();
+                    }
+                }
             }
 
             if (tmp.exists()) FileUtils.deleteDirectory(tmp);
+
+            server.printLine("Zipping done.");
+            methodCaller.sendMessage("Zipping done.");
         }
         catch (IOException | ZipException e)
         {
-            if (server.getOnline()) server.sendCmd("say Error when making backup");
+            if (server.getOnline()) server.sendChat("Error when making backup");
+            methodCaller.sendError(Throwables.getStackTraceAsString(e));
             server.error(e);
         }
         if (server.getOnline())
@@ -140,9 +179,23 @@ public class WorldManager
         }
     }
 
+    private void smallDelay()
+    {
+        try
+        {
+            synchronized (this)
+            {
+                this.wait(100);
+            }
+        }
+        catch (InterruptedException ignored)
+        {
+
+        }
+    }
+
     private boolean checkSpace()
     {
-        if (bypassLimits) return !(bypassLimits = false);
         return server.getOwnerObject().getMaxDiskspace() == -1 || server.getOwnerObject().getDiskspaceLeft() <= 0;
     }
 }

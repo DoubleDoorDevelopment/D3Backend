@@ -31,7 +31,7 @@ public interface IMethodCaller
 
     void sendMessage(String message);
 
-    void sendProgress(float progress);
+    //void sendProgress(float progress);
 
     void sendError(String message);
 

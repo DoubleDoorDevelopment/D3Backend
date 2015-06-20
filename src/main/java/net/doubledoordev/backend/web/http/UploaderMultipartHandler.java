@@ -19,7 +19,6 @@
 package net.doubledoordev.backend.web.http;
 
 import net.doubledoordev.backend.server.FileManager;
-import org.apache.logging.log4j.Level;
 import org.glassfish.grizzly.ReadHandler;
 import org.glassfish.grizzly.http.io.NIOInputStream;
 import org.glassfish.grizzly.http.multipart.ContentDisposition;

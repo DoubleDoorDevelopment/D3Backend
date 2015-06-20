@@ -20,6 +20,7 @@
                 <p>
                     Server owner is <span id="serverOwner"></span>.<br>
                     Server port status: <span id="serverPortAvailable"></span><br>
+                    Server uptime: ${server.online?string(Helper.getOnlineTime(server.startTime, "%2d days, ", "%2d hours, ", "%2d min and ", "%2d sec"), "offline")}<br>
                 <hr>
                 Diskspace in use:<br>
                 by server: <span id="diskspace_server"></span>MB<br>
@@ -104,7 +105,7 @@
                 </#list>
                 </select>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value; call('servercmd/${server.ID}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                <button type="button" <#if isCoOwner && !server.online>onclick="changeMCJar()" <#else>disabled</#if> class="btn btn-warning">
                     Change MC jar
                 </button>
             </div>
@@ -122,7 +123,7 @@
                 </#list>
                 </select>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value; call('servercmd/${server.ID}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                <button type="button" <#if isCoOwner && !server.online>onclick="installForge()" <#else>disabled</#if> class="btn btn-warning">
                     Install forge
                 </button>
             </div>
@@ -136,13 +137,13 @@
             <div class="panel-body" style="text-align: center;">
                 <input id="modpackURL" class="form-control" placeholder="URL here">
                 <label for="modpackPurge">
-                    <input id="modpackPurge" type="checkbox" checked> Purge the server
+                    <input id="modpackPurge" type="checkbox"> Purge the server
                 </label>
                 <label for="modpackCurse">
                     <input id="modpackCurse" type="checkbox"> This is a curse modpack zip
                 </label>
                 <br>
-                <button type="button" <#if isCoOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will overide the minecraft jar!')) { document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value; call('servercmd/${server.ID}', 'downloadModpack', [document.getElementById('modpackURL').value, document.getElementById('modpackPurge').value === 'on', document.getElementById('modpackCurse').value === 'on'], progressBar); }" <#else>disabled</#if> class="btn btn-warning">
+                <button type="button" <#if isCoOwner && !server.online>onclick="packUpload()" <#else>disabled</#if> class="btn btn-warning">
                     Upload modpack
                 </button>
             </div>
@@ -158,6 +159,7 @@
                 <h4 class="modal-title" id="modalLabel">Operation in progress</h4>
             </div>
             <div class="modal-body" id="modal-body">
+                <pre id="modal-log"></pre>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -179,6 +181,13 @@
     .clickable {
         cursor: pointer;
     }
+
+    #modal-log {
+        overflow: auto;
+        max-height: 60vh;
+        word-wrap: normal;
+        white-space: pre;
+    }
 </style>
 <script>
     function openPopup($url)
@@ -186,40 +195,52 @@
         window.open(window.location.origin + $url, '_new', 'height=500,width=800');
     }
 
-    modal = $('#modal');
-    needsShowing = true;
-    firstData = true;
-    function progressBar(data)
+    function changeMCJar()
     {
-        var fl = parseFloat(data);
+        if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
+        {
+            document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value;
+            call('servercmd/${server.ID}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressModal);
+        }
+    }
+
+    function installForge()
+    {
+        if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
+        {
+            document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value;
+            call('servercmd/${server.ID}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressModal);
+        }
+    }
+
+    function packUpload()
+    {
+        if (confirm('Are you sure?\nThis will overide the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
+        {
+            document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value;
+            call('servercmd/${server.ID}', 'downloadModpack', [
+                document.getElementById('modpackURL').value,
+                document.getElementById('modpackPurge').checked,
+                document.getElementById('modpackCurse').checked], progressModal);
+        }
+    }
+
+    var modal = $('#modal');
+    var needsShowing = true;
+    function progressModal(data)
+    {
         if (needsShowing)
         {
             modal.modal("show");
+            document.getElementById("modal-log").innerHTML = "";
             needsShowing = false;
         }
         if (data === "done")
         {
             needsShowing = true;
-            firstData = true;
-            pb.css("width", "100%");
-            pb.attr("aria-valuenow", 100);
+            document.getElementById("modal-log").innerHTML += "-- ALL DONE --\n";
         }
-        if (!isNaN(fl))
-        {
-            if (firstData)
-            {
-                document.getElementById("modal-body").innerHTML += "<div class=\"progress progress-striped active\"><div class=\"progress-bar\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" id=\"progressBar\"></div></div>";
-                pb = $('#progressBar');
-                firstData = false;
-            }
-
-            pb.css("width", data + "%");
-            pb.attr("aria-valuenow", data);
-        }
-        else
-        {
-            document.getElementById("modal-body").innerHTML += data + "<br>";
-        }
+        document.getElementById("modal-log").innerHTML += data + "\n";
     }
 
     function updateInfo(data)
@@ -275,6 +296,15 @@
             document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
     }
+    websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
+    websocketMonitor.onerror = function (evt)
+    {
+        alert("The websocket errored. Refresh the page!")
+    };
+    websocketMonitor.onclose = function (evt)
+    {
+        alert("The websocket closed. Refresh the page!")
+    };
     websocketMonitor.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);
@@ -286,6 +316,6 @@
         {
             alert(temp.message);
         }
-    }
+    };
 </script>
 <#include "footer.ftl">

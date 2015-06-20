@@ -147,6 +147,8 @@ public class Main
         ConsoleSocketApplication.register();
         AdvancedSettingsSocketApplication.register();
         UsersSocketApplication.register();
+        FileMonitorSocketApplication.register();
+        WorldManagerSocketApplication.register();
 
         final NetworkListener networkListener = new NetworkListener("listener", Strings.isBlank(SETTINGS.hostname) ? NetworkListener.DEFAULT_NETWORK_HOST : SETTINGS.hostname, Strings.isNotBlank(SETTINGS.certificatePath) ? SETTINGS.portHTTPS : SETTINGS.portHTTP);
         if (Strings.isNotBlank(SETTINGS.certificatePath))

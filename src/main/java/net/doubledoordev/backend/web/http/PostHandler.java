@@ -30,23 +30,18 @@ import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
 import net.doubledoordev.backend.util.methodCaller.UserMethodCaller;
-import org.apache.logging.log4j.Level;
 import org.glassfish.grizzly.EmptyCompletionHandler;
 import org.glassfish.grizzly.http.multipart.MultipartScanner;
 import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
-import org.glassfish.grizzly.http.util.HttpStatus;
 import org.glassfish.grizzly.http.util.Parameters;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.Writer;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.doubledoordev.backend.util.Constants.*;
 

@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.TimerTask;
 
 /**
+ * todo: reimplement
  * @author Dries007
  */
 public class BackupTask extends TimerTask
@@ -44,7 +45,7 @@ public class BackupTask extends TimerTask
     {
         if (server.getOnline())
         {
-            server.sendCmd("say Making backup....");
+            server.sendChat("Making backup....");
             server.sendCmd("save-off");
             server.sendCmd("save-all");
 
@@ -57,7 +58,7 @@ public class BackupTask extends TimerTask
             }
             catch (ZipException e)
             {
-                server.sendCmd("say Error when making backup");
+                server.sendChat("Error when making backup");
                 server.printLine(e.toString());
             }
 
