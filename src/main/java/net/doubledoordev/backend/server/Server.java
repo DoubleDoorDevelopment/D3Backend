@@ -253,17 +253,16 @@ public class Server
      */
     public boolean getOnline()
     {
-        return process != null && process.isAlive();
-//        try
-//        {
-//            if (process == null) return false;
-//            process.exitValue();
-//            return false;
-//        }
-//        catch (IllegalThreadStateException e)
-//        {
-//            return true;
-//        }
+        try
+        {
+            if (process == null) return false;
+            process.exitValue();
+            return false;
+        }
+        catch (IllegalThreadStateException e)
+        {
+            return true;
+        }
     }
 
     /**
