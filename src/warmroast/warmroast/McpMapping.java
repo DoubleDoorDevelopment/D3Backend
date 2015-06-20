@@ -21,7 +21,6 @@ package com.sk89q.warmroast;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;

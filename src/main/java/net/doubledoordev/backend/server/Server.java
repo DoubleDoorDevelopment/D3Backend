@@ -19,7 +19,6 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.annotations.Expose;
-import com.sk89q.warmroast.RoastOptions;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -90,8 +89,8 @@ public class Server
     private RestartingInfo restartingInfo = new RestartingInfo();
     @Expose
     private JvmData jvmData = new JvmData();
-    @Expose
-    private RoastOptions roastOptions = new RoastOptions();
+    //@Expose
+    //private RoastOptions roastOptions = new RoastOptions();
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
