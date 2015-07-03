@@ -864,7 +864,8 @@ public class Server
         saveProperties();
         starting = true;
         final Server instance = this;
-        for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM options contain a blocked option: " + blocked);
+        for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
+        for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraMCParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
 
         File eula = new File(getFolder(), "eula.txt");
         if (!eula.exists())
@@ -905,11 +906,17 @@ public class Server
                         amount = getJvmData().permGen;
                         if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
                     }
-                    if (getJvmData().extraJavaParameters.trim().length() != 0) arguments.add(getJvmData().extraJavaParameters.trim());
+                    if (Strings.isNotBlank(getJvmData().extraJavaParameters))
+                    {
+                        for (String arg : getJvmData().extraJavaParameters.split(" ")) arguments.add(arg);
+                    }
                     arguments.add("-jar");
                     arguments.add(getJvmData().jarName);
                     arguments.add("nogui");
-                    if (getJvmData().extraMCParameters.trim().length() != 0) arguments.add(getJvmData().extraMCParameters.trim());
+                    if (Strings.isNotBlank(getJvmData().extraMCParameters))
+                    {
+                        for (String arg : getJvmData().extraMCParameters.split(" ")) arguments.add(arg);
+                    }
 
                     // Debug printout
                     printLine("Arguments: " + arguments.toString());

@@ -203,7 +203,7 @@ public class Cache extends TimerTask
                 try
                 {
                     SizeCounter sizeCounter = new SizeCounter();
-                    Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
+                    if (server.getFolder().exists()) Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
                     server.size[0] = sizeCounter.getSizeInMB();
                     sizeCounter = new SizeCounter();
                     if (server.getBackupFolder().exists()) Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
