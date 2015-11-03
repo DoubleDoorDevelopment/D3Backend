@@ -18,7 +18,6 @@
 
 package net.doubledoordev.backend.server;
 
-import com.google.common.base.Throwables;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
@@ -505,11 +504,11 @@ public class Server
                     worldManager.doMakeAllOfTheBackup(methodCaller);
 
                     // delete old files
-                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
-                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
+                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
+                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
 
                     File jarfile = new File(folder, getJvmData().jarName);
-                    if (jarfile.exists()) jarfile.delete();
+                    if (jarfile.exists()) FileUtils.forceDelete(jarfile);
                     File tempFile = new File(folder, getJvmData().jarName + ".tmp");
 
                     // Downloading new file
@@ -587,8 +586,8 @@ public class Server
                     worldManager.doMakeAllOfTheBackup(methodCaller);
 
                     // delete old files
-                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) file.delete();
-                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) file.delete();
+                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
+                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
 
                     // download new files
                     String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", version);
@@ -631,7 +630,7 @@ public class Server
 
                     for (String name : folder.list(ACCEPT_FORGE_FILTER)) getJvmData().jarName = name;
 
-                    forge.delete();
+                    FileUtils.forceDelete(forge);
 
                     methodCaller.sendDone();
                     printLine("Forge installer done.");
@@ -644,7 +643,7 @@ public class Server
                     printLine("Error installing a new forge version (version " + version + ")");
                     printLine(e.toString());
                     printLine("##################################################################");
-                    methodCaller.sendError(Throwables.getStackTraceAsString(e));
+                    methodCaller.sendError(Helper.getStackTrace(e));
                     e.printStackTrace();
                 }
                 downloading = false;
@@ -673,15 +672,14 @@ public class Server
                     {
                         for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
                         {
-                            if (file.isFile()) file.delete();
-                            else FileUtils.deleteDirectory(file);
+                            FileUtils.forceDelete(file);
                         }
                     }
                     if (!folder.exists()) folder.mkdirs();
 
                     final File zip = new File(folder, "modpack.zip");
 
-                    if (zip.exists()) zip.delete();
+                    if (zip.exists()) FileUtils.forceDelete(zip);
                     zip.createNewFile();
 
                     printLine("Downloading zip...");
@@ -736,7 +734,7 @@ public class Server
 
                         curseModpackDownloader.run();
 
-                        zip.delete();
+                        FileUtils.forceDelete(zip);
 
                         printLine("Done extracting & installing zip.");
                     }
@@ -764,7 +762,7 @@ public class Server
 
                         //methodCaller.sendProgress(100);
 
-                        zip.delete();
+                        FileUtils.forceDelete(zip);
 
                         printLine("Done extracting zip.");
                     }
@@ -777,7 +775,7 @@ public class Server
                     printLine("Error installing a modpack");
                     printLine(e.toString());
                     printLine("##################################################################");
-                    methodCaller.sendError(Throwables.getStackTraceAsString(e));
+                    methodCaller.sendError(Helper.getStackTrace(e));
                     e.printStackTrace();
                 }
                 downloading = false;

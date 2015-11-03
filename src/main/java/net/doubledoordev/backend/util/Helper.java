@@ -61,6 +61,14 @@ public class Helper
     {
     }
 
+    public static String getStackTrace(final Throwable throwable)
+    {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw, true);
+        throwable.printStackTrace(pw);
+        return sw.getBuffer().toString();
+    }
+
     /**
      * Checks to see if a port/hostname combo is available through opening a socked and closing it again
      *

@@ -126,7 +126,7 @@
                     {
                         var out = '<div class="btn-group">';
                         out += '<button type="button" onclick="rename(\'' + row.name + '\', \'' + row.url + '\')" class="btn btn-default btn-xs">Rename</button>';
-                        out += '<button type="button" onclick="del(\'' + row.name + '\')" class="btn btn-danger btn-xs">Delete</button>';
+                        out += '<button type="button" onclick="del(\'' + row.url + '\')" class="btn btn-danger btn-xs">Delete</button>';
 
                         if (row.extension === "jar" || row.extension === "zip")
                         {

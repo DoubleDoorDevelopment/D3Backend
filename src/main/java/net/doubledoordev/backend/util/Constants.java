@@ -103,7 +103,7 @@ public class Constants
     public static final String FORGE_VERIONS_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
     public static final String MC_SERVER_JAR_URL = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
     public static final String FORGE_INSTALLER_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
-    public static final String VERSION_CHECKER_URL = "http://jenkins.dries007.net/view/D3_misc/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
+    public static final String VERSION_CHECKER_URL = "https://jenkins.dries007.net/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
     /*
      * File constants
      */

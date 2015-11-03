@@ -235,33 +235,32 @@ public class FileManager
     public void makeWritable()
     {
         file.setWritable(true);
-        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
     }
 
     public void delete() throws IOException
     {
-        if (file.isDirectory()) FileUtils.deleteDirectory(file);
-        else file.delete();
+        FileUtils.forceDelete(file);
         FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
     public void newFile(String name) throws IOException
     {
-        new File(file, name).createNewFile();
-        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
+        FileUtils.touch(new File(file, name));
+        FileMonitorSocketApplication.update(getJson(file), file);
     }
 
-    public void newFolder(String name)
+    public void newFolder(String name) throws IOException
     {
-        new File(file, name).mkdir();
-        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
+        FileUtils.forceMkdir(new File(file, name));
+        FileMonitorSocketApplication.update(getJson(file), file);
     }
 
     public void set(IMethodCaller caller, String text) throws IOException
     {
         FileUtils.writeStringToFile(file, text);
         FileManagerSocketApplication.sendFile(file.getAbsolutePath(), text);
-        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
+        FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
     }
 
     public static String getSize(File file)
