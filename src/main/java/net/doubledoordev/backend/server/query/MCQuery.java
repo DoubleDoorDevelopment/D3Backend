@@ -18,6 +18,7 @@
 
 package net.doubledoordev.backend.server.query;
 
+import com.google.common.base.Charsets;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 
@@ -60,7 +61,7 @@ public class MCQuery
         byte[] input = ByteUtils.padArrayEnd(req.toBytes(), val);
         byte[] result = sendUDP(input);
 
-        token = Integer.parseInt(new String(result).trim());
+        token = Integer.parseInt(new String(result, Charsets.ISO_8859_1).trim());
     }
 
     /**
