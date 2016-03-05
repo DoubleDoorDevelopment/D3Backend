@@ -339,6 +339,7 @@ public class Cache extends TimerTask
             {
                 for (Server server : Settings.SETTINGS.servers.values())
                 {
+                    if (!server.getOnline()) continue;
                     try
                     {
                         server.renewQuery();
