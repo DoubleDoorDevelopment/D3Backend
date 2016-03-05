@@ -294,10 +294,7 @@ public class Helper
     {
         JsonArray array = new JsonArray();
 
-        if (SETTINGS.fixedPorts)
-        {
-            array.add(new JsonPrimitive(Server.SERVER_PORT));
-        }
+        if (SETTINGS.fixedPorts) array.add(new JsonPrimitive(Server.SERVER_PORT));
         if (SETTINGS.fixedIP) array.add(new JsonPrimitive(Server.SERVER_IP));
 
         array.add(new JsonPrimitive(Server.QUERY_PORT));
