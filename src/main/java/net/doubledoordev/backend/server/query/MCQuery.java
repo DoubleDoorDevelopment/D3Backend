@@ -125,7 +125,7 @@ public class MCQuery
         }
         catch (Exception e)
         {
-            Main.LOGGER.warn(e);
+            Main.LOGGER.catching(e);
             return null;
         }
     }
@@ -171,7 +171,7 @@ public class MCQuery
         }
         catch (Exception e) //any other exceptions that may occur
         {
-            e.printStackTrace();
+            Main.LOGGER.catching(e);
         }
 
         return null;

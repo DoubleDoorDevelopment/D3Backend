@@ -51,33 +51,33 @@ public class QueryResponse
         //		if(temp.length == 6) //short stat
         if (!fullstat)
         {
-            motd = new String(ByteUtils.subarray(temp[0], 1, temp[0].length - 1), Charsets.UTF_8);
-            gameMode = new String(temp[1], Charsets.UTF_8);
-            mapName = new String(temp[2], Charsets.UTF_8);
-            onlinePlayers = Integer.parseInt(new String(temp[3], Charsets.UTF_8));
-            maxPlayers = Integer.parseInt(new String(temp[4], Charsets.UTF_8));
+            motd = new String(ByteUtils.subarray(temp[0], 1, temp[0].length - 1), Charsets.ISO_8859_1);
+            gameMode = new String(temp[1], Charsets.ISO_8859_1);
+            mapName = new String(temp[2], Charsets.ISO_8859_1);
+            onlinePlayers = Integer.parseInt(new String(temp[3], Charsets.ISO_8859_1));
+            maxPlayers = Integer.parseInt(new String(temp[4], Charsets.ISO_8859_1));
             port = ByteUtils.bytesToShort(temp[5]);
-            hostname = new String(ByteUtils.subarray(temp[5], 2, temp[5].length - 1), Charsets.UTF_8);
+            hostname = new String(ByteUtils.subarray(temp[5], 2, temp[5].length - 1), Charsets.ISO_8859_1);
         }
         else //full stat
         {
-            motd = new String(temp[3], Charsets.UTF_8);
-            gameMode = new String(temp[5], Charsets.UTF_8);
-            mapName = new String(temp[13], Charsets.UTF_8);
-            onlinePlayers = Integer.parseInt(new String(temp[15], Charsets.UTF_8));
-            maxPlayers = Integer.parseInt(new String(temp[17], Charsets.UTF_8));
-            port = Short.parseShort(new String(temp[19], Charsets.UTF_8));
-            hostname = new String(temp[21], Charsets.UTF_8);
+            motd = new String(temp[3], Charsets.ISO_8859_1);
+            gameMode = new String(temp[5], Charsets.ISO_8859_1);
+            mapName = new String(temp[13], Charsets.ISO_8859_1);
+            onlinePlayers = Integer.parseInt(new String(temp[15], Charsets.ISO_8859_1));
+            maxPlayers = Integer.parseInt(new String(temp[17], Charsets.ISO_8859_1));
+            port = Short.parseShort(new String(temp[19], Charsets.ISO_8859_1));
+            hostname = new String(temp[21], Charsets.ISO_8859_1);
 
             //only available with full stat:
-            gameID = new String(temp[7], Charsets.UTF_8);
-            version = new String(temp[9], Charsets.UTF_8);
-            plugins = new String(temp[11], Charsets.UTF_8);
+            gameID = new String(temp[7], Charsets.ISO_8859_1);
+            version = new String(temp[9], Charsets.ISO_8859_1);
+            plugins = new String(temp[11], Charsets.ISO_8859_1);
 
             playerList = new ArrayList<>();
             for (int i = 25; i < temp.length; i++)
             {
-                playerList.add(new String(temp[i], Charsets.UTF_8));
+                playerList.add(new String(temp[i], Charsets.ISO_8859_1));
             }
         }
     }

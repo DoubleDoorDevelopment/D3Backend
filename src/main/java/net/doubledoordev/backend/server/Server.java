@@ -970,7 +970,7 @@ public class Server
 
     public void error(Throwable e)
     {
-        logger.error(e);
+        logger.catching(e);
         StringWriter error = new StringWriter();
         e.printStackTrace(new PrintWriter(error));
         ServerconsoleSocketApplication.sendLine(this, error.toString());
