@@ -61,7 +61,7 @@ public class MCQuery
         byte[] input = ByteUtils.padArrayEnd(req.toBytes(), val);
         byte[] result = sendUDP(input);
 
-        token = Integer.parseInt(new String(result, Charsets.ISO_8859_1).trim());
+        token = Integer.parseInt(new String(result, Charsets.UTF_8).trim());
     }
 
     /**
@@ -126,6 +126,7 @@ public class MCQuery
         }
         catch (Exception e)
         {
+            Main.LOGGER.error("Got error polling for {}:{}", serverAddress, queryPort);
             Main.LOGGER.catching(e);
             return null;
         }
