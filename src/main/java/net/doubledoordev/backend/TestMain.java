@@ -16,37 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.doubledoordev.backend.util.exceptions;
+package net.doubledoordev.backend;
 
-/**
- * Throws when server was offline.
- * Used in MCQuery.
- *
- * @author Dries007
- */
-public class ServerOfflineException extends Exception
+import net.doubledoordev.backend.server.query.MCQuery;
+import net.doubledoordev.backend.server.query.QueryResponse;
+
+public class TestMain
 {
-    public ServerOfflineException()
+    public static void main(String[] args) throws Exception
     {
-    }
-
-    public ServerOfflineException(String message)
-    {
-        super(message);
-    }
-
-    public ServerOfflineException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    public ServerOfflineException(Throwable cause)
-    {
-        super(cause);
-    }
-
-    public ServerOfflineException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
-    {
-        super(message, cause, enableSuppression, writableStackTrace);
+        MCQuery query = new MCQuery("vps2.dries007.net", 25505);
+        QueryResponse queryResponse;
+        while (true)
+        {
+            queryResponse = query.fullStat();
+            if (queryResponse != null) System.out.println(queryResponse.toString());
+            else System.out.println("null");
+            synchronized (Thread.currentThread())
+            {
+                Thread.currentThread().wait(100);
+            }
+        }
     }
 }

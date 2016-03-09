@@ -22,12 +22,12 @@ package com.sk89q.intake.parametric.handler;
 import com.sk89q.intake.Command;
 import com.sk89q.intake.CommandException;
 import com.sk89q.intake.SettableDescription;
+import com.sk89q.intake.context.CommandContext;
 import com.sk89q.intake.context.CommandLocals;
 import com.sk89q.intake.parametric.MissingParameterException;
-import com.sk89q.intake.parametric.UnconsumedParameterException;
-import com.sk89q.intake.context.CommandContext;
 import com.sk89q.intake.parametric.ParameterData;
 import com.sk89q.intake.parametric.ParameterException;
+import com.sk89q.intake.parametric.UnconsumedParameterException;
 import com.sk89q.intake.parametric.binding.BindingBehavior;
 
 import java.lang.reflect.Method;

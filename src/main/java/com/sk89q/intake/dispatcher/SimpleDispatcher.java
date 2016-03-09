@@ -20,26 +20,12 @@
 package com.sk89q.intake.dispatcher;
 
 import com.google.common.base.Joiner;
-import com.sk89q.intake.CommandCallable;
-import com.sk89q.intake.CommandException;
-import com.sk89q.intake.CommandMapping;
-import com.sk89q.intake.ImmutableCommandMapping;
-import com.sk89q.intake.InvalidUsageException;
-import com.sk89q.intake.InvocationCommandException;
-import com.sk89q.intake.SettableDescription;
-import com.sk89q.intake.SettableParameter;
+import com.sk89q.intake.*;
 import com.sk89q.intake.context.CommandContext;
 import com.sk89q.intake.context.CommandLocals;
 import com.sk89q.intake.util.auth.AuthorizationException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A simple implementation of {@link Dispatcher}.

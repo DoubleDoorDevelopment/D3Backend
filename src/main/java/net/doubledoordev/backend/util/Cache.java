@@ -1,19 +1,19 @@
 /*
- *     D3Backend
- *     Copyright (C) 2015  Dries007 & Double Door Development
+ * D3Backend
+ * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
  *
- *     This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU Affero General Public License as published
- *     by the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *     You should have received a copy of the GNU Affero General Public License
- *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package net.doubledoordev.backend.util;
@@ -325,12 +325,22 @@ public class Cache extends TimerTask
     {
         long now = System.currentTimeMillis();
 
-        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
-        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT) new Thread(UPDATE_CHECKER, "cache-updateChecking").start();
-        if (now - lastForgeVersions > LONG_CACHE_TIMEOUT) new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();
-        if (now - lastSize > MEDIUM_CACHE_TIMEOUT) new Thread(SIZE_COUNTER, "cache-sizeCounter").start();
-
-        lastMCVersions = lastForgeVersions = lastSize = now;
+        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT)
+        {
+            new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
+            new Thread(UPDATE_CHECKER, "cache-updateChecking").start();
+            lastMCVersions = now;
+        }
+        if (now - lastSize > MEDIUM_CACHE_TIMEOUT)
+        {
+            new Thread(SIZE_COUNTER, "cache-sizeCounter").start();
+            lastSize = now;
+        }
+        if (now - lastForgeVersions > LONG_CACHE_TIMEOUT)
+        {
+            new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();
+            lastForgeVersions = now;
+        }
 
         new Thread(new Runnable()
         {
@@ -339,11 +349,11 @@ public class Cache extends TimerTask
             {
                 for (Server server : Settings.SETTINGS.servers.values())
                 {
+                    server.getRestartingInfo().run(server);
                     if (!server.getOnline()) continue;
                     try
                     {
                         server.renewQuery();
-                        server.getRestartingInfo().run(server);
                     }
                     catch (Exception e)
                     {

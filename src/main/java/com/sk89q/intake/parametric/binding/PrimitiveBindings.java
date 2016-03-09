@@ -25,7 +25,6 @@ import com.sk89q.intake.parametric.annotation.Text;
 import com.sk89q.intake.parametric.annotation.Validate;
 import com.sk89q.intake.parametric.argument.ArgumentStack;
 
-
 import java.lang.annotation.Annotation;
 
 /**

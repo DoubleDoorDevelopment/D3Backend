@@ -21,7 +21,6 @@ package com.sk89q.intake.util;
 
 import com.sk89q.intake.CommandMapping;
 
-
 import java.util.Comparator;
 import java.util.regex.Pattern;
 

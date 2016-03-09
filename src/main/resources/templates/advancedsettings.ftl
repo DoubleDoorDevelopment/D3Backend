@@ -18,6 +18,7 @@
                     </label>
                     <span for="RestartingInfo_autoStart" class="help-block">Start the server when the backend starts.</span>
                 </div>
+                <!--
                 <div class="form-group">
                     <label for="RestartingInfo_globalTimeout">Global Restart Timout</label>
 
@@ -26,7 +27,7 @@
 
                         <div class="input-group-addon">hours</div>
                     </div>
-                    <span for="RestartingInfo_globalTimeout" class="help-block">Minimun time inbetween automated backups.</span>
+                    <span for="RestartingInfo_globalTimeout" class="help-block">Minimun time inbetween automated restarts.</span>
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_whenEmptyTimeout">Timout when empty</label>
@@ -38,6 +39,7 @@
                     </div>
                     <span for="RestartingInfo_whenEmptyTimeout" class="help-block">If not -1, the server will restart x minutes after the last person leaves.</span>
                 </div>
+                -->
                 <div class="form-group">
                     <label>
                         <input id="RestartingInfo_enableRestartSchedule" type="checkbox"> Use a reboot schedule

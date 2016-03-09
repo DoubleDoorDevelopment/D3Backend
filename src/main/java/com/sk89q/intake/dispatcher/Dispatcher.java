@@ -22,7 +22,6 @@ package com.sk89q.intake.dispatcher;
 import com.sk89q.intake.CommandCallable;
 import com.sk89q.intake.CommandMapping;
 
-
 import java.util.Collection;
 import java.util.Set;
 

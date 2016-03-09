@@ -19,8 +19,8 @@
 
 package com.sk89q.intake.parametric.argument;
 
-import com.sk89q.intake.parametric.MissingParameterException;
 import com.sk89q.intake.context.CommandContext;
+import com.sk89q.intake.parametric.MissingParameterException;
 import com.sk89q.intake.parametric.ParameterException;
 import com.sk89q.intake.util.StringUtils;
 

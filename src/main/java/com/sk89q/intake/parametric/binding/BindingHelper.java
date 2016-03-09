@@ -20,11 +20,11 @@
 package com.sk89q.intake.parametric.binding;
 
 import com.sk89q.intake.CommandException;
-import com.sk89q.intake.parametric.argument.ArgumentStack;
-import com.sk89q.intake.parametric.handler.ExceptionConverter;
 import com.sk89q.intake.parametric.ParameterData;
 import com.sk89q.intake.parametric.ParameterException;
 import com.sk89q.intake.parametric.ParametricBuilder;
+import com.sk89q.intake.parametric.argument.ArgumentStack;
+import com.sk89q.intake.parametric.handler.ExceptionConverter;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;

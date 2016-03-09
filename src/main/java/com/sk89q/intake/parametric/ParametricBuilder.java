@@ -40,7 +40,6 @@ import com.sk89q.intake.parametric.handler.InvokeListener;
 import com.sk89q.intake.util.auth.Authorizer;
 import com.sk89q.intake.util.auth.NullAuthorizer;
 
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
