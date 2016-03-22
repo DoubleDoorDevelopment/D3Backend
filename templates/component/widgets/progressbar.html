@@ -1,0 +1,19 @@
+<div>
+	{% set percent = (number / (max - min) * 100)|int %}
+	<p>
+		<strong>{{ message }}</strong>
+		<span class="pull-right text-muted">{{ percent }}%</span>
+	</p>
+	<div class="progress progress-striped active">
+		<div class="progress-bar progress-bar-info" role="progressbar"
+				aria-valuenow="{{ percent }}" aria-valuemin="{{ min }}" aria-valuemax="{{ max }}" style="width: {{ percent }}%">
+			<span class="sr-only">
+				{% if message %}
+					{{ message }}
+				{% else %}
+					{{ percent }}%
+				{% endif %}
+			</span>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,37 @@
+{% extends "base/Content.html" %}
+
+{% block page_title %}
+	Homepage
+{% endblock %}
+
+{% block content %}
+	
+	<h2 style="text-align: center;">Online for: <strong>{{ time_online }}</strong></h2>
+	
+	<center>
+	
+		{% with title="Servers online", total=servers_total, number=servers_online, unit="" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
+		
+		{% with title="Ram Usage", total=ram_total, number=ram_usage, unit="mB" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
+		
+		{% with title="Users online", total=users_total, number=users_online, unit="" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
+		
+		<div style="width: 30%; display: inline-block;">
+			{% with min=0, max=players_total, number=players_online, message=[players_online, " Players Online"]|join %}
+				{% include 'component/widgets/progressbar.html' %}
+			{% endwith %}
+		</div>
+	
+	</center>
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

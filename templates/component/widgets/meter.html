@@ -1,0 +1,10 @@
+<div class="clearfix" style="width: 250px; display: inline-block;">
+	<h3 style="text-align: center;">{{ title }} ({{ total }}{{ unit }})</h3>
+	<div class="c100 p{{ (number / total * 100)|int }} big">
+		<span>{{ number }}{{ unit }}</span>
+		<div class="slice">
+			<div class="bar"></div>
+			<div class="fill"></div>
+		</div>
+	</div>
+</div>

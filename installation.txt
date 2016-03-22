@@ -1,0 +1,17 @@
+sudo -i
+
+pip install flask
+apt-get install nodejs
+apt-get install npm
+npm install -g bower
+bower install startbootstrap-sb-admin-2
+
+exit
+
+
+
+http://dashing.io/#widgets
+
+https://wiki.factorio.com/index.php?title=Multiplayer
+https://github.com/Bisa/factorio-init
+https://github.com/narc0tiq/factorio-updater

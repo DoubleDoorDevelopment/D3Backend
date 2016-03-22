@@ -1,0 +1,13 @@
+{% set id="addServer" %}
+{% set title="Add Server" %}
+{% set action="addServer" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	<div class="form-group">
+		<label for="serverName">Server Name {% include "component/StarRed.html" %}</label>
+		<input name="serverName" placeholder="" type="text" class="form-control" required/>
+	</div>
+	
+{% endblock %}

@@ -1,0 +1,12 @@
+{% set id="addUser" %}
+{% set title="Add User" %}
+{% set action="addUser" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	<div class="form-group">
+		<label for="username">Username {% include "component/StarRed.html" %}</label>
+		<input name="username" placeholder="" type="text" class="form-control" required/>
+	</div>
+{% endblock %}

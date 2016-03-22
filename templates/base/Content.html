@@ -1,0 +1,26 @@
+{% extends "base/_scripts.html" %}
+
+{% block body %}
+	<div id="wrapper">
+		<!-- Start: Navigation Bar | This is the header bar across the top of the page-->
+		<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+			
+			{% include "base/_navbar.html" %}
+			{% include "base/_sidebar.html" %}
+			
+		</nav>
+	</div>
+
+	<div id="page-wrapper" style="padding-top: 27px;">
+		<div class="row">
+			
+			{% block pre_content %}{% endblock %}
+			
+			<div class="col-lg-12">
+				{% block content %}{% endblock %}
+				{% include "base/_footer.html" %}
+			</div>
+			
+		</div>
+	</div>
+{% endblock %}
