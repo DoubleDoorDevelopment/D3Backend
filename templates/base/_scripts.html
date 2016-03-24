@@ -4,9 +4,12 @@
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='bower_components/jquery/dist/jquery.min.js') }}"></script>
 	
-	<!--
-	<script src="{{ url_for('static', filename='js/jquery-1.12.0.min.js') }}"></script>
-	-->
+	<!-- Data Tables -->
+	<!---->
+	<script src="{{ url_for('static', filename='bower_components/datatables/media/js/jquery.dataTables.js') }}"></script>
+	<script src="{{ url_for('static', filename='bower_components/datatables/media/js/dataTables.bootstrap.js') }}"></script>
+	<script src="{{ url_for('static', filename='bower_components/datatables-responsive/js/dataTables.responsive.js') }}"></script>
+	<!---->
 	
 	<!-- Bootstrap Core JavaScript -->
 	<script src="{{ url_for('static', filename='bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
@@ -17,15 +20,23 @@
 	<!-- Morris Charts JavaScript -->
 	<script src="{{ url_for('static', filename='bower_components/raphael/raphael-min.js') }}"></script>
 	<script src="{{ url_for('static', filename='bower_components/morrisjs/morris.min.js') }}"></script>
+	
+	<!--
 	<script src="{{ url_for('static', filename='js/morris-data.js') }}"></script>
+	<!---->
 	
 	<!-- Custom Theme JavaScript -->
 	<script src="{{ url_for('static', filename='dist/js/sb-admin-2.js') }}"></script>
 	
-	{% include "component/modal/Login.html" %}
-	{% include "component/modal/AddServer.html" %}
-	{% include "component/modal/AddUser.html" %}
+	<!-- JQuery Scripts -->
+	<script src="{{ url_for('static', filename='bower_components/flot/jquery.flot.js') }}"></script>
+	<script src="{{ url_for('static', filename='bower_components/flot/jquery.flot.pie.js') }}"></script>
+
+	{% for modal in ['Login', 'CreateUser', 'AddServer', 'AddUser'] %}
+		{% include ["component/modal/", modal, ".html"]|join %}
+	{% endfor %}
 	
 	{% block scripts %}{% endblock %}
+	{% block scripts2 %}{% endblock %}
 
 {% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base/Table.html" %}
+
+{% block page_title %}
+	Users
+{% endblock %}
+
+{% block tableHeader %}
+	Users
+{% endblock %}
+
+{% block tableColumnsHeaders %}
+	<th>Username</th>
+	<th>Group</th>
+	<th></th>
+{% endblock %}
+
+{% block tableBody %}
+	{% if data is not none %}
+		{% for entry in data %}
+			<tr>
+				<td>{{ entry.Username }}</td>
+				<td>{{ entry.Group }}</td>
+				<td>
+					
+					{% with target="User", class="btn-sm", data=entry.Username %}
+						{% include 'component/button/Delete.html' %}
+					{% endwith %}
+					
+					{% with target="changePassword_Admin", data_id=entry.Username, class="btn-sm changePasswordAdminModal", type="modal" %}
+						{% with text="Change Password", btnClass=["btn btn-warning ", class]|join %}
+							{% include 'component/button/_button.html' %}
+						{% endwith %}
+					{% endwith %}
+					
+					
+				</td>
+			</tr>
+		{% endfor %}
+	{% endif %}
+{%endblock%}
+
+{% block baseModals %}{% endblock %}
+
+{% block scripts2 %}
+	{% include "component/modal/ChangePassword.html" %}
+	
+	
+{% endblock %}

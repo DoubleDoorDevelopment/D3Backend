@@ -21,7 +21,7 @@
 			<!-- Start: Body -->
 			<div class="modal-body">
 				<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
-					<input name="current" type="hidden" value="{{ current }}" class="form-control" />
+					{% include 'component/form/current.html' %}
 					
 					{% block form %}{% endblock %}
 					
@@ -46,3 +46,4 @@
 		</div>
 	</div>
 </div>
+{% block scripts %}{% endblock %}

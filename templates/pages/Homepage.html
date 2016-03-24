@@ -6,32 +6,102 @@
 
 {% block content %}
 	
-	<h2 style="text-align: center;">Online for: <strong>{{ time_online }}</strong></h2>
+	<h2 style="text-align: center;">Online for: <strong><span id="time"></span></strong></h2>
 	
 	<center>
-	
-		{% with title="Servers online", total=servers_total, number=servers_online, unit="" %}
-			{% include 'component/widgets/meter.html' %}
-		{% endwith %}
-		
-		{% with title="Ram Usage", total=ram_total, number=ram_usage, unit="mB" %}
-			{% include 'component/widgets/meter.html' %}
-		{% endwith %}
-		
-		{% with title="Users online", total=users_total, number=users_online, unit="" %}
-			{% include 'component/widgets/meter.html' %}
-		{% endwith %}
 		
 		<div style="width: 30%; display: inline-block;">
-			{% with min=0, max=players_total, number=players_online, message=[players_online, " Players Online"]|join %}
+			{% with id="onlinePlayers", message=[players_online, " Players Online"]|join %}
 				{% include 'component/widgets/progressbar.html' %}
 			{% endwith %}
 		</div>
+		
+		<br />
+	
+		{% with id="onlineServers", title="Servers online", unit="" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
+		
+		{% with id="ramUsage", title="Ram Usage", unit="GB" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
+		
+		{% with id="onlineUsers", title="Users online", unit="" %}
+			{% include 'component/widgets/meter.html' %}
+		{% endwith %}
 	
 	</center>
 
 {% endblock %}
 
 {% block scripts %}
+	{% if modal is not none %}
+		<script language="javascript">
+			$(window).load(function() {
+				$('#{{ modal }}Modal').modal('show');
+			});
+		</script>
+	{% endif %}
+	
+	<script text="text/javascript" language="javascript">
+		$(document).ready(function() {
+			var sourcePath = "file://{{ runDirectory }}";
+			
+			var updateMeter = function(div) {
+				var id = div.id;
+				$.getJSON("{{ url_for('index') }}_" + id, function(data) {
+					var total = data['total'];
+					var number = data['number'];
+					var percent = parseInt(number / total * 100);
+					
+					var totalSpan = $('span#' + id + 'Total');
+					var numberSpan = $('span#' + id + 'Number');
+					
+					totalSpan.html(total);
+					numberSpan.html(number);
+					div.className = "meter c100 big p" + percent;
+				});
+			};
+			var updateTime = function(span) {
+				$.getJSON("{{ url_for('getTimeOnline') }}", function(data) {
+					span.innerHTML = data['time'];
+				});
+			};
+			var updatePlayers = function() {
+				var id = "onlinePlayers";
+				$.getJSON("{{ url_for('getOnlinePlayers') }}", function(data) {
+					var total = data['total'];
+					var number = data['number'];
+					var percent = parseInt(number / total * 100);
+					
+					var percentSpan = $('span#' + id);
+					var divIDWidth = document.getElementById(id + "Width");
 
+					percentSpan.html(percent + "%");
+					divIDWidth.setAttribute("style", "width: " + percent + "%;");
+				});
+			};
+			
+			var checkMeters = function() {
+				updateMeter(document.getElementById("onlineServers"));
+				updateMeter(document.getElementById("onlineUsers"));
+			};
+			
+			updateTime(document.getElementById("time"));
+			updateMeter(document.getElementById("ramUsage"));
+			checkMeters();
+			updatePlayers();
+			
+			var checkWidgetsHalfSecond = setInterval(function() {
+				updateTime(document.getElementById("time"));
+				updateMeter(document.getElementById("ramUsage"));
+			}, 500);
+			var checkWidgets1Min = setInterval(function() {
+				updatePlayers();
+			}, 60000);
+			var checkWidgets5Min = setInterval(function() {
+				checkMeters();
+			}, 300000);
+		});
+	</script>
 {% endblock %}

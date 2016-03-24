@@ -1,0 +1,19 @@
+{% extends "base/Content.html" %}
+
+{% block page_title %}
+	{{ username }}
+{% endblock %}
+
+{% block content %}
+	
+	<h2 style="text-align: center;">{{ username }}</h2>
+	<hr>
+	
+	<center>
+		{% block userBlock %}{% endblock %}
+	</center>
+	
+	<br />
+	<br />
+	
+{% endblock %}

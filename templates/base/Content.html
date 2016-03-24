@@ -17,6 +17,10 @@
 			{% block pre_content %}{% endblock %}
 			
 			<div class="col-lg-12">
+				
+				{% include 'component/MessageInfo.html' %}
+				{% include 'component/MessageError.html' %}
+				
 				{% block content %}{% endblock %}
 				{% include "base/_footer.html" %}
 			</div>

@@ -6,7 +6,7 @@
 			{% if session.username %}
 				<li>
 					<a href="#" data-toggle="modal" data-target="#addServerModal">
-						<i class="fa fa-dashboard fa-fw"></i>
+						<i class="fa fa-plus fa-fw"></i>
 						Add Server
 					</a>
 				</li>
@@ -14,18 +14,22 @@
 				{% if session.isAdmin %}
 					<li>
 						<a href="#" data-toggle="modal" data-target="#addUserModal">
-							<i class="fa fa-dashboard fa-fw"></i>
+							<i class="fa fa-plus fa-fw"></i>
 							Add User
 						</a>
 					</li>
 				{% endif %}
 				
 				<li>
-					<a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Servers<span class="fa arrow"></span></a>
+					<a href="#"><i class="fa fa-cloud fa-fw"></i> Servers<span class="fa arrow"></span></a>
 					<ul class="nav nav-second-level">
-						{% if session.servers %}
-							
-						{% endif %}
+						{% for server in user_servers %}
+							<li>
+								<a href="{{ url_for('server', username=server.User.Username, serverName=server.Name) }}">
+									<i class="fa fa-dashboard fa-fw"></i>{{ server.Name }} :{{ server.Port }}
+								</a>
+							</li>
+						{% endfor %}
 					</ul>
 				</li>
 			{% endif %}

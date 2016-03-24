@@ -1,6 +1,6 @@
-{% set id="login" %}
-{% set title="Login" %}
-{% set action="login" %}
+{% set id="createUser" %}
+{% set title="Create Account" %}
+{% set action="createUser" %}
 
 {% extends 'component/modal/Base.html' %}
 
@@ -12,6 +12,10 @@
 	<div class="form-group">
 		<label for="password">Password {% include "component/StarRed.html" %}</label>
 		<input name="password" placeholder="" type="password" class="form-control" required/>
+	</div>
+	<div class="form-group">
+		<label for="verify">Verify Password {% include "component/StarRed.html" %}</label>
+		<input name="verify" placeholder="" type="password" class="form-control" required/>
 	</div>
 	{% include 'component/MessageError.html' %}
 {% endblock %}

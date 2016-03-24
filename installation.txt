@@ -1,14 +1,35 @@
 sudo -i
 
 pip install flask
+
 apt-get install nodejs
 apt-get install npm
 npm install -g bower
 bower install startbootstrap-sb-admin-2
 
+pip install peewee
+pip install mysql-python
+
+apt-get install mysql-server
+mysql -u root -p
+	no password
+use mysql;
+update user set password=PASSWORD('root') where User='root';
+flush privileges;
+quit;
+sudo mysql -p < schema.sql
+
+pip install psutil
+
 exit
 
+chmod +x checkRam.py
+nohup /path/to/checkRam.py &
+ps ax | grep checkRam.py
+kill -9 <pid>
 
+http://startbootstrap.com/template-overviews/sb-admin-2/
+http://blackrockdigital.github.io/startbootstrap-sb-admin-2/pages/index.html
 
 http://dashing.io/#widgets
 

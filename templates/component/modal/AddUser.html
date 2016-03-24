@@ -9,4 +9,22 @@
 		<label for="username">Username {% include "component/StarRed.html" %}</label>
 		<input name="username" placeholder="" type="text" class="form-control" required/>
 	</div>
+	
+	<div class="form-group">
+		<div style="display: inline-block; width: 49%;">
+			<label for="group">Group {% include "component/StarRed.html" %}</label>
+			<select name="group" class="form-control" required>
+				{% for group in user_groups %}
+					<option>{{ group }}</option>
+				{% endfor %}
+				<option>Other</option>
+			</select>
+		</div>
+		<div style="display: inline-block; width: 49%;">
+			<label for="group_other">Other</label>
+			<input name="group_other" placeholder="" type="text" class="form-control"/>
+		</div>
+	</div>
+	
+	
 {% endblock %}

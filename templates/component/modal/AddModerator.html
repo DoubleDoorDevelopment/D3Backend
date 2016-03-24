@@ -1,0 +1,25 @@
+{% set id="addModerator" %}
+{% set title="Add Moderator" %}
+{% set action="addModerator" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	
+	<input type="hidden" name="username" id="username" />
+	<input type="hidden" name="servername" id="servername" />
+	
+	<div class="form-group">
+		<label for="user">Backend User {% include 'component/StarRed.html' %}</label>
+		<input name="user" class="form-control" required/>
+	</div>
+	
+{% endblock %}
+{% block scripts %}
+	<script language="javascript">
+		$(document).on("click", "#addModerator", function() {
+			$(".modal-body #username").val($(this).data('username'));
+			$(".modal-body #servername").val($(this).data('servername'));
+		})
+	</script>
+{% endblock %}

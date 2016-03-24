@@ -1,0 +1,15 @@
+<div style="display: inline-block;">
+	{% if type == "form" %}
+		<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
+			{% include 'component/form/current.html' %}
+			<input name="data" type="hidden" value="{{ data }}" />
+			<button type="submit" class="{{ btnClass }}" {{ extra }}>
+				{{ text }}
+			</button>
+		</form>
+	{% elif type == "modal" %}
+		<button type="button" class="{{ btnClass }}" data-toggle="modal" data-target="#{{ target }}Modal" data-id="{{ data_id }}">
+			{{ text }}
+		</button>
+	{% endif %}
+</div>

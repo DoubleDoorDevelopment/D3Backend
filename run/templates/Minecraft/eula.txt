@@ -1,0 +1,2 @@
+#The server owner indicated to agree with the EULA when submitting the from that produced this server instance.
+eula=true

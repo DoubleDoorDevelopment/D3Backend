@@ -1,0 +1,46 @@
+{% extends "base/Table.html" %}
+
+{% block page_title %}
+	Servers
+{% endblock %}
+
+{% block tableHeader %}
+	Servers
+{% endblock %}
+
+{% block tableColumnsHeaders %}
+	<th>Server Name</th>
+	<th>Owner</th>
+	<th>Port</th>
+	<th>Purpose</th>
+	<th></th>
+{% endblock %}
+
+{% block tableBody %}
+	{% if data is not none %}
+		{% for entry in data %}
+			<tr>
+				<td>
+					<a href="{{ url_for('server', username=entry.User.Username, serverName=entry.Name) }}">{{ entry.Name }}</a>
+				</td>
+				<td>{{ entry.User.Username }}</td>
+				<td>{{ entry.Port }}</td>
+				<td>{{ entry.Purpose }}</td>
+				<td>
+					
+					<button type="button" class="btn btn-success">Start</button>
+					<button type="button" class="btn btn-warning">Stop</button>
+					<button type="button" class="btn btn-danger">Kill</button>
+					{% with target="Server", class="", data=entry.Name %}
+						{% include 'component/button/Delete.html' %}
+					{% endwith %}
+					
+				</td>
+			</tr>
+		{% endfor %}
+	{% endif %}
+{%endblock%}
+
+{% block baseModals %}{% endblock %}
+
+{% block postScripts %}{% endblock %}

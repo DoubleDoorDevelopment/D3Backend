@@ -5,9 +5,52 @@
 {% extends 'component/modal/Base.html' %}
 
 {% block form %}
+	
 	<div class="form-group">
-		<label for="serverName">Server Name {% include "component/StarRed.html" %}</label>
-		<input name="serverName" placeholder="" type="text" class="form-control" required/>
+		<label for="name">Server Name {% include "component/StarRed.html" %}</label>
+		<input name="name" placeholder="" type="text" class="form-control" required/>
 	</div>
 	
+	<div clas="form-group">
+		<label for="port">Port</label>
+		<input id="port" name="port" placeholder="0" type="text" class="form-control" />
+	</div>
+	
+	<br />
+	
+	<div class="form-group">
+		<label for="type">Type {% include "component/StarRed.html" %}</label>
+		<select id="type" name="type" class="form-control" required>
+			<option selected>Select One</option>
+			{% for type in server_types %}
+				<option>{{ type }}</option>
+			{% endfor %}
+		</select>
+	</div>
+	
+	{% for type in server_types %}
+		<div id="{{ type }}" style="display: none;">
+			{% include ['component/modal/server_options/', type, '.html']|join %}
+		</div>
+	{% endfor %}
+	
+	<div id='output'></div>
+	
+{% endblock %}
+{% block scripts %}
+	<script type="text/javascript">
+		$('#type').on('change', function() {
+			var server_types = JSON.parse('{{ server_types|tojson }}');
+			var selected = $( "#type option:selected" ).text();
+			$("#port").attr('value', server_types[selected]['port']);
+			
+			var options = document.getElementById("type"), option, i, div;
+			for (i = 1; i < options.length; i++) {
+				option = options[i];
+				div = document.getElementById(option.value);
+				if (option.selected) div.style.display = "block";
+				else div.style.display = "none";
+			}
+		});
+	</script>
 {% endblock %}

@@ -1,0 +1,25 @@
+{% set id="addAdmin" %}
+{% set title="Add Admin" %}
+{% set action="addAdmin" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	
+	<input type="hidden" name="username" />
+	<input type="hidden" name="servername" />
+	
+	<div class="form-group">
+		<label for="">Backend User {% include 'component/StarRed.html' %}</label>
+		<input name="user" class="form-control" required/>
+	</div>
+	
+{% endblock %}
+{% block scripts %}
+	<script language="javascript">
+		$(document).on("click", "#addAdmin", function() {
+			$(".modal-body #username").val($(this).data('username'));
+			$(".modal-body #servername").val($(this).data('servername'));
+		})
+	</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "pages/User.html" %}
+
+{% block userBlock %}
+
+	<div style="display: inline-block;">
+		<form action="{{ url_for('changeUserPassword') }}" method="POST" enctype="multipart/form-data">
+			<input name="username" type="hidden" value="{{ username }}" />
+			
+			<label for="password">Change Password</label>
+			
+			<div>
+				<span style='display: inline-block;'>
+					<strong>Old Password</strong> {% include 'component/StarRed.html' %}
+				</span>
+				<div style='display: inline-block;'>
+					<input name="old" type="password" class="form-control" required />
+				</div>
+			</div>
+			<br />
+			<div>
+				<span style='display: inline-block;'>
+					<strong>New Password</strong> {% include 'component/StarRed.html' %}
+				</span>
+				<div style='display: inline-block;'>
+					<input name="new" type="password" class="form-control" required />
+				</div>
+			</div>
+			<br />
+			<div>
+				<span style='display: inline-block;'>
+					<strong>Verify Password</strong> {% include 'component/StarRed.html' %}
+				</span>
+				<div style='display: inline-block;'>
+					<input name="verify" type="password" class="form-control" required />
+				</div>
+			</div>
+			
+			<br />
+			
+			{% if errorPassword is not none %}
+				<center>
+					<div class="alert alert-danger" role="alert">
+						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+						{{ errorPassword }}
+					</div>
+				</center>
+			{% endif %}
+			{% if infoPassword is not none %}
+				<center>
+					<div class="alert alert-success" role="alert">
+						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+						<span class="sr-only">Info:</span>
+						{{ infoPassword }}
+					</div>
+				</center>
+			{% endif %}
+			
+			<button type="submit" class="btn btn-primary">Change Password</button>
+			
+		</form>
+	</div>
+
+{% endblock %}
