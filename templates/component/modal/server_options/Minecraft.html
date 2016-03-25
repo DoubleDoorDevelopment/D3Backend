@@ -1,3 +1,23 @@
+<div class="form-group col-sm-6">
+	<label for="version_minecraft">Minecraft Version {% include 'component/StarRed.html' %}</label>
+	<select name="version_minecraft" id="version_minecraft" class="form-control" required>
+		<option></option>
+		{% for version_type in cache_versions['Minecraft'].versions_vanilla %}
+			{% for version in cache_versions['Minecraft'].versions_vanilla[version_type] %}
+				<option>{{ version }}</option>
+			{% endfor %}
+		{% endfor %}
+	</select>
+</div>
+
+<div class="form-group col-sm-6">
+	<label for="version_forge">Forge Version</label>
+	<select name="version_forge" id="version_forge" class="form-control">
+	</select>
+</div>
+
+<br />
+
 <div class="form-group">
 	<label for="ip">Hostname / IP</label>
 	<input name="ip" placeholder="Binds to all IPs by default" type="text" class="form-control" />

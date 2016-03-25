@@ -38,7 +38,7 @@
 	
 {% endblock %}
 {% block scripts %}
-	<script type="text/javascript">
+	<script type="text/javascript" language="javascript">
 		$('#type').on('change', function() {
 			var server_types = JSON.parse('{{ server_types|tojson }}');
 			var selected = $( "#type option:selected" ).text();
@@ -51,6 +51,12 @@
 				if (option.selected) div.style.display = "block";
 				else div.style.display = "none";
 			}
+		});
+	</script>
+	<script type="text/javascript" language="javascript">
+		$('#version_minecraft').on('change', function() {
+			var selected = $("#version_minecraft option:selected").text();
+			
 		});
 	</script>
 {% endblock %}

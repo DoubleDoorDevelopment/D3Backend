@@ -10,13 +10,18 @@ import time
 from distutils.dir_util import copy_tree
 import shutil
 from customthreading import *
+import versionCache
 
 app = Flask(__name__)
 app.config.from_object('config')
 GAME_TYPES = {
-		'Minecraft': { 'port': 25500 },
-		'Factorio': { 'port': 0 }
-	}
+	'Minecraft': { 'port': 25500, },
+	'Factorio': { 'port': 0 }
+}
+GAME_DATA = {
+	'Minecraft': { 'cache': versionCache.CacheMinecraft },
+	'Factorio': { 'cache': versionCache.Cache }
+}
 
 thread_downloaders_pool = None
 thread_downloaders_master = None
@@ -37,6 +42,7 @@ def login_required(f):
 def init():
 	app.secret_key = os.urandom(20)
 	initThreads()
+	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
 
 def initThreads():
 	initDownloading()
@@ -68,8 +74,11 @@ def initDownloading():
 	thread_downloaders_master.start()
 	print(thread_downloaders_master)
 
-def addDownload(serverowner, servername, url, file):
-	thread_downloaders_master.addDownload(serverowner, servername, url, file)
+def addDownload(url, file):
+	thread_downloaders_master.addDownload(url, file)
+
+def addDownloadFunc(func, url, *args, **kargs):
+	thread_downloaders_master.addDownloadFunc(func, url, *args, **kargs)
 
 # ~~~~~~~~~~ Messages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -115,6 +124,7 @@ def renderPage(template, **kwargs):
 			user_groups = models.getUserGroups(),
 			server_types = GAME_TYPES,
 			user_servers = servers,
+			cache_versions = versionCache.cache_versions,
 			**kwargs
 		)
 
@@ -231,7 +241,9 @@ def partitionServer(name, port, game, data):
 		
 		# ~~~~~~~~~~ Download server
 		
-		
+		#version_minecraft = data['version_minecraft']
+		#versionCache.cache_versions['Minecraft']
+		#addDownloadFunc(func, url)
 		
 		# ~~~~~~~~~~ End
 		

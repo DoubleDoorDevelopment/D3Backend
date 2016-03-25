@@ -10,24 +10,21 @@ class ThreadMaster(Thread):
 		Thread.__init__(self)
 		self.daemon = True
 		self.running = True
-		
-		#sys.stdout.write("Start threadmaster\n")
 		self.pool = pool
 	
 	def run(self):
 		while self.running:
 			pass
 	
-	def downloadFile(self, serverowner, serverName, url, file):
-		#sys.stdout.write("Downloading " + file + "\n")
+	def downloadFile(self, url, file):
 		import urllib
 		urllib.urlretrieve(url, file)
-		#sys.stdout.write("Done downloading " + file + "\n")
+
+	def addDownload(self, url, file):
+		self.addDownloadFunc(self.downloadFile, url, file)
 	
-	def addDownload(self, serverowner, servername, url, file):
-		self.pool.addTask(self.downloadFile,
-			serverowner, servername,
-			url, file)
+	def addDownloadFunc(self, func, *args, **kargs):
+		self.pool.addTask(func, *args, **kargs)
 
 class ThreadPool():
 	
@@ -39,7 +36,7 @@ class ThreadPool():
 	def addTask(self, func, *args, **kargs):
 		self.tasks.put((func, args, kargs))
 		if self.running_threads < self.max_threads:
-			ThreadDownload(self)
+			ThreadWorker(self)
 	
 	def setWorkerStart(self):
 		self.running_threads += 1
@@ -47,7 +44,7 @@ class ThreadPool():
 	def setWorkerFinish(self):
 		self.running_threads -= 1
 
-class ThreadDownload(Thread):
+class ThreadWorker(Thread):
 	
 	def __init__(self, pool):
 		Thread.__init__(self)
@@ -71,7 +68,7 @@ class ThreadDownload(Thread):
 				func(*args, **kargs)
 				#sys.stdout.write("end func\n")
 			except Exception as e:
-				sys.stdout.write(str(e) + "\n")
+				sys.stdout.write("ERROR: " + str(type(e)) + str(e) + "\n")
 			finally:
 				#sys.stdout.write("done task\n")
 				self.pool.tasks.task_done()
