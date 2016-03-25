@@ -9,6 +9,7 @@ import psutil
 import time
 from distutils.dir_util import copy_tree
 import shutil
+from customthreading import *
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -16,6 +17,9 @@ GAME_TYPES = {
 		'Minecraft': { 'port': 25500 },
 		'Factorio': { 'port': 0 }
 	}
+
+thread_downloaders_pool = None
+thread_downloaders_master = None
 
 def getConfig(key):
 	return app.config[key]
@@ -32,6 +36,10 @@ def login_required(f):
 
 def init():
 	app.secret_key = os.urandom(20)
+	initThreads()
+
+def initThreads():
+	initDownloading()
 
 def getIndexURL():
 	return redirect(url_for('index'))
@@ -49,6 +57,19 @@ def getUserURL(username):
 
 def getUserSettingsURL(username):
 	return redirect(url_for('userSettings', username = username))
+
+# ~~~~~~~~~~ Downloading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def initDownloading():
+	global thread_downloaders_pool
+	global thread_downloaders_master
+	thread_downloaders_pool = ThreadPool(4)
+	thread_downloaders_master = ThreadMaster(thread_downloaders_pool)
+	thread_downloaders_master.start()
+	print(thread_downloaders_master)
+
+def addDownload(serverowner, servername, url, file):
+	thread_downloaders_master.addDownload(serverowner, servername, url, file)
 
 # ~~~~~~~~~~ Messages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -178,6 +199,8 @@ def addServer():
 
 def partitionServer(name, port, game, data):
 	
+	username = session['username']
+	
 	run_directory = getConfig('RUN_DIRECTORY')
 	servers_directory = getConfig('SERVERS_DIRECTORY')
 	directory = servers_directory + name + "/"
@@ -205,6 +228,10 @@ def partitionServer(name, port, game, data):
 		runConfig.truncate()
 		runConfig.write(runConfigContent)
 		runConfig.close()
+		
+		# ~~~~~~~~~~ Download server
+		
+		
 		
 		# ~~~~~~~~~~ End
 		
@@ -513,9 +540,10 @@ def parse_minutes(time):
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-init()
-
 if __name__ == '__main__':
+
+	init()
+	
 	ctx = app.test_request_context()
 	ctx.push()
 	app.preprocess_request()
