@@ -241,8 +241,8 @@ def partitionServer(name, port, game, data):
 		
 		# ~~~~~~~~~~ Download server
 		
-		copyServerMinecraft(directory,
-			data['version_minecraft'], data['version_forge'])
+		#copyServerMinecraft(directory,
+		#	data['version_minecraft'], data['version_forge'])
 		
 		# ~~~~~~~~~~ End
 		
@@ -492,6 +492,28 @@ def logout():
 	session.pop('isAdmin', None)
 	return getIndexURL()
 
+# ~~~~~~~~~~ Active Servers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+import serverManagement
+
+activeServers = {}
+
+def getServer(nameOwner, nameServer):
+	return activeServers[nameOwner][nameServer]
+
+def startServer(nameOwner, nameServer):
+	if not nameOwner in activeServers:
+		activeServers[nameOwner] = {}
+	activeServers[nameOwner][nameServer] = Server(nameOwner, nameServer,
+		getConfig('SERVERS_DIRECTORY') + nameOwner + "_" + nameServer + "/")
+	getServer(nameOwner, nameServer).start()
+
+def stopServer(nameOwner, nameServer):
+	pass
+
+def killServer(nameOwner, nameServer):
+	pass
+
 # ~~~~~~~~~~ Javascript Ajax ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route('/_time')
@@ -536,10 +558,11 @@ def getConsole():
 	serverName = request.form['serverName']
 	ownerName = request.form['ownerName']
 	
-	consoleFile = getConfig('SERVERS_DIRECTORY') + serverName + "/console.txt"
-	consoleText = None
-	with open(consoleFile) as f:
-		consoleText = f.read()
+	consoleFile = getConfig('SERVERS_DIRECTORY') + serverName + "/console.log"
+	consoleText = ""
+	if os.path.exists(consoleFile):
+		with open(consoleFile) as f:
+			consoleText = f.read()
 	
 	return jsonify(console = consoleText)
 

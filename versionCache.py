@@ -130,8 +130,9 @@ class CacheMinecraft(Cache):
 				if force and os.path.exists(jarPath):
 					os.remove(jarPath)
 				if not os.path.exists(jarPath):
-					url_server = self.versions_vanilla[versionType]['url_server']
-					downloaders.addDownload(url_server, jarPath)
+					if 'url_server' in self.versions_vanilla[versionType]:
+						url_server = self.versions_vanilla[versionType]['url_server']
+						downloaders.addDownload(url_server, jarPath)
 	
 	def refreshDownloadsForge(self, force):
 		for version_minecraft in self.versions_forge:
