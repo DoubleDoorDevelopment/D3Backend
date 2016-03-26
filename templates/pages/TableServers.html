@@ -31,7 +31,7 @@
 					<button type="button" class="btn btn-success">Start</button>
 					<button type="button" class="btn btn-warning">Stop</button>
 					<button type="button" class="btn btn-danger">Kill</button>
-					{% with target="Server", class="", data=entry.Name %}
+					{% with target="Server", class="", data=[entry.User.Username, '|', entry.Name]|join %}
 						{% include 'component/button/Delete.html' %}
 					{% endwith %}
 					

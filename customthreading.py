@@ -4,6 +4,8 @@ from threading import Thread
 from Queue import Queue, Empty
 import sys
 
+doDownload = False
+
 class ThreadMaster(Thread):
 	
 	def __init__(self, pool):
@@ -24,7 +26,8 @@ class ThreadMaster(Thread):
 		self.addDownloadFunc(self.downloadFile, url, file)
 	
 	def addDownloadFunc(self, func, *args, **kargs):
-		self.pool.addTask(func, *args, **kargs)
+		if doDownload:
+			self.pool.addTask(func, *args, **kargs)
 
 class ThreadPool():
 	

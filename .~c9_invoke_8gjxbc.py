@@ -252,8 +252,11 @@ def partitionServer(name, port, game, data):
 
 def copyServerMinecraft(directory, versionMinecraft, versionForge):
 	directory_cache = getConfig('RUN_DIRECTORY') + "cache/"
-	directory_versions_minecraft = directory_cache + "versions/Minecraft/"
+	directory_versions_minecraft = directory_cache + "versions/Minecraft"
 	directory_vanilla = directory_versions_minecraft + "vanilla/"
+	
+	#print(versionForge)
+	#return
 	
 	for file in os.listdir(directory):
 		if str(file).endswith(".jar"):
@@ -582,3 +585,4 @@ if __name__ == '__main__':
 	
 	models.db.connect()
 	models.db.close()
+	
