@@ -4,6 +4,6 @@ server {
 	
 	location / {
 		include uwsgi_params;
-		uswgi_pass unix:/var/www/backend/backend.sock;
+		uswgi_pass unix:/home/backend/backend.sock;
 	}
 }
