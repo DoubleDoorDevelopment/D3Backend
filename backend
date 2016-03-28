@@ -2,7 +2,8 @@ server {
 	listen 80;
 	server_name v2.dries007.net;
 	
-	location / {
+	location / { try_files $uri @backend; }
+	location @backend {
 		include uwsgi_params;
 		uswgi_pass unix:/home/backend/backend.sock;
 	}
