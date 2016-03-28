@@ -50,19 +50,15 @@
 					</div>
 				</form>
 				
-				<!--
-				<button type="submit" class="btn btn-success" style="width: 30%;">Start</button>
-				<button type="button" class="btn btn-warning" style="width: 30%;">Stop</button>
-				<button type="button" class="btn btn-danger"  style="width: 30%;">Kill</button>
-				-->
-				
 				<hr>
-				
-				<form action="#" method="POST" enctype="multipart/form-data">
-					<textarea id="console" class="form-control"
-							style="font-family: monospace; min-height: 200px; font-size: 11px;"
-							readonly cols="20" wrap="hard"
-						></textarea>
+				<textarea id="console" class="form-control"
+						style="font-family: monospace; min-height: 200px; height: 200px; font-size: 11px;"
+						readonly cols="20" wrap="hard"
+					></textarea>
+				<form id="formConsole" action="{{ url_for('serverControl') }}" method="POST" enctype="multipart/form-data">
+					{% include 'component/form/current.html' %}
+					<input type="hidden" name="nameServer" value="{{ server.Name }}" />
+					<input type="hidden" name="nameOwner" value="{{ server.User.Username }}" />
 					<input id="command" type="text" name="command" placeholder="Command" class="form-control" />
 				</form>
 			</div>
@@ -321,13 +317,17 @@
 						ownerName : "{{ server.User.Username }}"
 					},
 					function(data, textstatus) {
-						textarea.innerHTML = data['console'];
+						var doScroll = textArea.scrollHeight <= (textArea.scrollTop + parseInt(textArea.style.height, 10));
+						textarea.value = data['console'];
+						if (doScroll) textArea.scrollTop = textArea.scrollHeight;
 					}, "json");
 			};
 			
-			updateConsole(document.getElementById("console"));
+			var textArea = document.getElementById("console");
+			updateConsole(textArea);
 			var checkWidgetsHalfSecond = setInterval(function() {
-				updateConsole(document.getElementById("console"));
+				//textArea.value += Math.random() + '\n';
+				updateConsole(textArea);
 			}, 250);
 		});
 	</script>

@@ -450,6 +450,8 @@ def serverControl():
 		stopServer(nameOwner, nameServer)
 	elif 'kill' in form:
 		killServer(nameOwner, nameServer)
+	elif 'command' in form:
+		sendCommandServer(nameOwner, nameServer, form['command'])
 	return getCurrentURL(form)
 
 # ~~~~~~~~~~ Authentication ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -534,6 +536,9 @@ def stopServer(nameOwner, nameServer):
 def killServer(nameOwner, nameServer):
 	getServer(nameOwner, nameServer).kill()
 
+def sendCommandServer(nameOwner, nameServer, command):
+	getServer(nameOwner, nameServer).send(command)
+
 # ~~~~~~~~~~ Javascript Ajax ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route('/_time')
@@ -578,7 +583,7 @@ def getConsole():
 	serverName = request.form['serverName']
 	ownerName = request.form['ownerName']
 	
-	consoleFile = getConfig('SERVERS_DIRECTORY') + serverName + "/console.log"
+	consoleFile = getConfig('SERVERS_DIRECTORY') + ownerName + "_" + serverName + "/console.log"
 	consoleText = ""
 	if os.path.exists(consoleFile):
 		with open(consoleFile) as f:
