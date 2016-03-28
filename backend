@@ -1,6 +1,6 @@
 server {
 	listen 80;
-	server_name backend.dries007.net;
+	server_name v2.dries007.net;
 	
 	location / {
 		include uwsgi_params;
