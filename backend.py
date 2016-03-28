@@ -2,7 +2,7 @@
 import os
 
 from datetime import datetime
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify, json
 from functools import wraps
 import sys
 import psutil
@@ -55,7 +55,13 @@ def getLoginURL():
 
 def getCurrentURL(formData):
 	if 'current' in formData and formData['current'] != '':
-		return redirect(url_for(formData['current']))
+		current = formData['current']
+		url = None
+		if current == "server":
+			url = url_for(current, username = formData['nameOwner'], serverName = formData['nameServer'])
+		else:
+			url_for(current)
+		return redirect(url)
 	return getIndexURL()
 
 def getUserURL(username):
@@ -169,7 +175,7 @@ def server(username, serverName):
 		moderators, error = models.getModerators(serverName, username, permissions = "Moderator")
 		admins, error = models.getModerators(serverName, username, permissions = "Admin")
 		userIsAdmin = session['username'] == username or session['isAdmin'] or session['username'] in admins
-		return renderPage('pages/Server.html', server = server, moderators = moderators, admins = admins, userIsAdmin = userIsAdmin)
+		return renderPage('pages/Server.html', server = server, moderators = moderators, admins = admins, userIsAdmin = userIsAdmin, current = "server")
 	else:
 		return throwError(None, error)
 
@@ -192,8 +198,10 @@ def addServer():
 	port = request.form['port']
 	game = request.form['type']
 	
-	user, error = models.getUser(session['username'])
-	server, error = models.getServer(name, user.Username)
+	username = session['username']
+	user, error = models.getUser(username)
+	print(user)
+	server, error = models.getServer(name, username)
 	
 	if len(server) > 0:
 		return throwError(request.form, 'Server with name "' + name + '" already exists for user "' + user.Username + '"')
@@ -205,6 +213,7 @@ def addServer():
 				Port = port,
 				Purpose = game
 			)
+		return redirect(url_for('server', username=username, serverName=name))
 	return getCurrentURL(request.form)
 
 def partitionServer(name, port, game, data):
@@ -226,18 +235,8 @@ def partitionServer(name, port, game, data):
 		
 		# ~~~~~~~~~ Config
 		
-		runConfigContent = ""
-		for option in data:
-			runConfigContent += option + '="'
-			if data[option] != '':
-				runConfigContent += data[option]
-			runConfigContent += '"\n'
-		runConfigContent += "doAutostart=" + str('autostart' in data) + "\n"
-		
-		runConfig = open(directory + "runConfig.cfg", 'w')
-		runConfig.truncate()
-		runConfig.write(runConfigContent)
-		runConfig.close()
+		with open(directory + "runConfig.json", 'w') as outfile:
+			json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
 		
 		# ~~~~~~~~~~ Download server
 		
@@ -381,9 +380,12 @@ def deleteServer():
 	servername = data[1]
 	
 	models.deleteServerFromTable(servername, username)
-	shutil.rmtree(getConfig('SERVERS_DIRECTORY') + username + "_" + servername + "/")
+	try:
+		shutil.rmtree(getConfig('SERVERS_DIRECTORY') + username + "_" + servername + "/")
+	except:
+		pass
 	
-	return getCurrentURL(request.form)
+	return getIndexURL()
 
 @app.route('/add/server/moderator', methods=['POST'])
 @login_required
@@ -435,6 +437,20 @@ def addUserToServer(ownerName, serverName, user2Name, permGroup):
 			setError(str(e))
 	
 	return redirect(url_for('server', username=ownerName, serverName=serverName))
+
+@app.route('/server/control/', methods=['POST'])
+@login_required
+def serverControl():
+	form = request.form
+	nameOwner = form['nameOwner']
+	nameServer = form['nameServer']
+	if 'start' in form:
+		startServer(nameOwner, nameServer)
+	elif 'stop' in form:
+		stopServer(nameOwner, nameServer)
+	elif 'kill' in form:
+		killServer(nameOwner, nameServer)
+	return getCurrentURL(form)
 
 # ~~~~~~~~~~ Authentication ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -494,7 +510,7 @@ def logout():
 
 # ~~~~~~~~~~ Active Servers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import serverManagement
+from serverManagement import Server
 
 activeServers = {}
 
@@ -504,15 +520,19 @@ def getServer(nameOwner, nameServer):
 def startServer(nameOwner, nameServer):
 	if not nameOwner in activeServers:
 		activeServers[nameOwner] = {}
-	activeServers[nameOwner][nameServer] = Server(nameOwner, nameServer,
-		getConfig('SERVERS_DIRECTORY') + nameOwner + "_" + nameServer + "/")
+	
+	servers_directory = getConfig('SERVERS_DIRECTORY')
+	directory = servers_directory + nameOwner + "_" + nameServer + "/"
+	
+	with open(directory + "runConfig.json", 'r') as outfile:
+		activeServers[nameOwner][nameServer] = Server(nameOwner, nameServer, directory, json.load(outfile))
 	getServer(nameOwner, nameServer).start()
 
 def stopServer(nameOwner, nameServer):
-	pass
+	getServer(nameOwner, nameServer).stop()
 
 def killServer(nameOwner, nameServer):
-	pass
+	getServer(nameOwner, nameServer).kill()
 
 # ~~~~~~~~~~ Javascript Ajax ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

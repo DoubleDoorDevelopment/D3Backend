@@ -34,11 +34,27 @@
 			</div>
 			<div class="panel-body" style="text-align: center;">
 				
+				<form action="{{ url_for('serverControl') }}" method="POST" enctype="multipart/form-data">
+					{% include 'component/form/current.html' %}
+					<input type="hidden" name="nameServer" value="{{ server.Name }}" />
+					<input type="hidden" name="nameOwner" value="{{ server.User.Username }}" />
+					
+					<div style="display: inline-block; width: 30%;">
+						<input type="submit" class="btn btn-success form-control" name="start" value="Start" />
+					</div>
+					<div style="display: inline-block; width: 30%;">
+						<input type="submit" class="btn btn-warning form-control" name="stop" value="Stop" />
+					</div>
+					<div style="display: inline-block; width: 30%;">
+						<input type="submit" class="btn btn-danger form-control" name="kill" value="Kill" />
+					</div>
+				</form>
 				
-				<button type="button" class="btn btn-success" style="width: 30%;">Start</button>
-				
+				<!--
+				<button type="submit" class="btn btn-success" style="width: 30%;">Start</button>
 				<button type="button" class="btn btn-warning" style="width: 30%;">Stop</button>
 				<button type="button" class="btn btn-danger"  style="width: 30%;">Kill</button>
+				-->
 				
 				<hr>
 				
