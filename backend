@@ -1,0 +1,9 @@
+server {
+	listen 80;
+	server_name backend.dries007.net;
+	
+	location / {
+		include uwsgi_params;
+		uswgi_pass unix:/var/www/backend/backend.sock;
+	}
+}
