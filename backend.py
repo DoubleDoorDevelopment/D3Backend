@@ -14,6 +14,11 @@ import versionCache
 
 app = Flask(__name__)
 app.config.from_object('config')
+
+if app.debug:
+	from werkzeug.debug import DebuggedApplication
+	app.wsgi_app = DebuggedApplication(app.wsgi_app, True)
+
 GAME_TYPES = {
 	'Minecraft': { 'port': 25500, },
 	'Factorio': { 'port': 0 }
