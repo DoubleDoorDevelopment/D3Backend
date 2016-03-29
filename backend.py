@@ -621,24 +621,26 @@ def parse_minutes(time):
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def application(environ, start_response):
-	init()
-	app.config['SERVER_START'] = int(round(time.time() * 1000))
-	models.db.connect()
-	models.db.close()
-	app.run()
+#def application(environ, start_response):
+#	init();
+#	app.config['SERVER_START'] = int(round(time.time() * 1000))
+#	print(app.run(port=8085, host='0.0.0.0'))
+#	models.db.connect()
+#	models.db.close()
+#	return ["<h1 style='color:blue'>Hello There!</h1>"]
 
 if __name__ == '__main__':
 
-	init()
-	
-	ctx = app.test_request_context()
-	ctx.push()
-	app.preprocess_request()
-	port = int(os.getenv('PORT', 8080))
-	host = os.getenv('IP', '0.0.0.0')
-	app.config['SERVER_START'] = int(round(time.time() * 1000))
-	app.run(port=port, host=host)
-	
-	models.db.connect()
-	models.db.close()
+    init()
+
+    ctx = app.test_request_context()
+    ctx.push()
+    app.preprocess_request()
+    port = int(os.getenv('PORT', 8085))
+    host = os.getenv('IP', '0.0.0.0')
+    app.config['SERVER_START'] = int(round(time.time() * 1000))
+    app.run(port=port, host=host)
+
+    models.db.connect()
+    models.db.close()
+
