@@ -46,7 +46,6 @@ def login_required(f):
 
 def init():
 	app.secret_key = os.urandom(20)
-	print("SECRET SSSSHHHHHHH: " + app.secret_key)
 	initThreads()
 	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
 
@@ -622,18 +621,11 @@ def parse_minutes(time):
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def launch():
-	init()
-	app.config['SERVER_START'] = int(round(time.time() * 1000))
-	app.run()
-	models.db.connect()
-	models.db.close()
-
 def application(environ, start_response):
-	start_response('200 OK', [('Content-Type', 'text/html')])
+	#start_response('200 OK', [('Content-Type', 'text/html')])
 	init()
 	app.config['SERVER_START'] = int(round(time.time() * 1000))
-	app.run(host='0.0.0.0')
+	print(app.run(host='0.0.0.0'))
 	models.db.connect()
 	models.db.close()
 	return ["<h1 style='color:blue'>Hello There!</h1>"]
