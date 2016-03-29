@@ -622,13 +622,11 @@ def parse_minutes(time):
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def application(environ, start_response):
-	#start_response('200 OK', [('Content-Type', 'text/html')])
 	init()
 	app.config['SERVER_START'] = int(round(time.time() * 1000))
-	print(app.run(host='0.0.0.0'))
 	models.db.connect()
 	models.db.close()
-	return ["<h1 style='color:blue'>Hello There!</h1>"]
+	app.run()
 
 if __name__ == '__main__':
 
