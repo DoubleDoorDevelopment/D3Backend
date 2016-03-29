@@ -1,10 +1,10 @@
 server {
-	listen 80;
-	server_name v2.dries007.net;
-	
-	location / { try_files $uri @backend; }
-	location @backend {
-		include uwsgi_params;
-		uswgi_pass unix:/home/backend/backend.sock;
-	}
+        listen 443 ssl;
+        server_name backend2.dries007.net;
+
+        location / { try_files $uri @backend; }
+        location @backend {
+                include uwsgi_params;
+                uwsgi_pass unix:/tmp/backend.sock;
+        }
 }
