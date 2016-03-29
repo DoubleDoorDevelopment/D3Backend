@@ -629,6 +629,10 @@ def launch():
 	models.db.connect()
 	models.db.close()
 
+def application(environ, start_response):
+	start_response('200 OK', [('Content-Type', 'text/html')])
+	app.run()
+
 if __name__ == '__main__':
 
 	init()
