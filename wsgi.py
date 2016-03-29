@@ -1,4 +1,7 @@
 #!/usr/bin/python
-from backend import app
+import backend
 if __name__ == "__main__":
-	app.run()
+	backend.init()
+	backend.app.run()
+	backend.connectToDB()
+	

@@ -621,6 +621,10 @@ def parse_minutes(time):
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def connectToDB():
+	models.db.connect()
+	models.db.close()
+
 if __name__ == '__main__':
 
 	init()
