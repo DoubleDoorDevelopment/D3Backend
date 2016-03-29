@@ -46,6 +46,7 @@ def login_required(f):
 
 def init():
 	app.secret_key = os.urandom(20)
+	print("SECRET SSSSHHHHHHH: " + app.secret_key)
 	initThreads()
 	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
 
