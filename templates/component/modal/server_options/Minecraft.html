@@ -2,11 +2,13 @@
 	<label for="version_minecraft">Minecraft Version {% include 'component/StarRed.html' %}</label>
 	<select name="version_minecraft" id="version_minecraft" class="form-control" required>
 		<option></option>
-		{% for version_type in cache_versions['Minecraft'].versions_vanilla %}
-			{% for version in cache_versions['Minecraft'].versions_vanilla[version_type] %}
-				<option>{{ version }}</option>
+		{% if 'Minecraft' in cache_versions %}
+			{% for version_type in cache_versions['Minecraft'].versions_vanilla %}
+				{% for version in cache_versions['Minecraft'].versions_vanilla[version_type] %}
+					<option>{{ version }}</option>
+				{% endfor %}
 			{% endfor %}
-		{% endfor %}
+		{% endif %}
 	</select>
 </div>
 
