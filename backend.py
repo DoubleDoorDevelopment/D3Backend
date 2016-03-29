@@ -621,7 +621,10 @@ def parse_minutes(time):
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def connectToDB():
+def launch():
+	init()
+	app.config['SERVER_START'] = int(round(time.time() * 1000))
+	app.run()
 	models.db.connect()
 	models.db.close()
 
