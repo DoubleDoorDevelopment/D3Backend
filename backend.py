@@ -31,6 +31,8 @@ GAME_DATA = {
 thread_downloaders_pool = None
 thread_downloaders_master = None
 
+# ~~~~~~~~~~ Init: Config & Startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 def getConfig(key):
 	return app.config[key]
 
@@ -51,6 +53,24 @@ def init():
 
 def initThreads():
 	initDownloading()
+
+# ~~~~~~~~~~ Init: Downloading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def initDownloading():
+	global thread_downloaders_pool
+	global thread_downloaders_master
+	thread_downloaders_pool = ThreadPool(4)
+	thread_downloaders_master = ThreadMaster(thread_downloaders_pool)
+	thread_downloaders_master.start()
+	print(thread_downloaders_master)
+
+def addDownload(url, file):
+	thread_downloaders_master.addDownload(url, file)
+
+def addDownloadFunc(func, url, *args, **kargs):
+	thread_downloaders_master.addDownloadFunc(func, url, *args, **kargs)
+
+# ~~~~~~~~~~ URL Redirects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def getIndexURL():
 	return redirect(url_for('index'))
@@ -74,22 +94,6 @@ def getUserURL(username):
 
 def getUserSettingsURL(username):
 	return redirect(url_for('userSettings', username = username))
-
-# ~~~~~~~~~~ Downloading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def initDownloading():
-	global thread_downloaders_pool
-	global thread_downloaders_master
-	thread_downloaders_pool = ThreadPool(4)
-	thread_downloaders_master = ThreadMaster(thread_downloaders_pool)
-	thread_downloaders_master.start()
-	print(thread_downloaders_master)
-
-def addDownload(url, file):
-	thread_downloaders_master.addDownload(url, file)
-
-def addDownloadFunc(func, url, *args, **kargs):
-	thread_downloaders_master.addDownloadFunc(func, url, *args, **kargs)
 
 # ~~~~~~~~~~ Messages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -139,7 +143,11 @@ def renderPage(template, **kwargs):
 			**kwargs
 		)
 
-# ~~~~~~~~~~ Pages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@app.errorhandler(404)
+def not_found(error):
+	return renderPage('pages/404.html'), 404
+
+# ~~~~~~~~~~ Endpoints ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -147,54 +155,6 @@ def index():
 		modal = getMessage('modal'),
 		runDirectory = getConfig('RUN_DIRECTORY')
 	)
-
-@app.route('/user/<string:username>')
-@login_required
-def user(username):
-	return renderPage('pages/UserProfile.html', current = None, username = username)
-
-@app.route('/settings/user')
-@login_required
-def userSettings():
-	
-	return renderPage('pages/UserSettings.html', username = session['username'],
-			errorPassword = getMessage('errorPassword'),
-			infoPassword = getMessage('infoPassword')
-		)
-
-@app.route('/users')
-@login_required
-def users():
-	return renderPage('pages/TableUsers.html', current = 'users', data = models.getUsers())
-
-@app.route('/servers')
-@login_required
-def servers():
-	return renderPage('pages/TableServers.html', current = 'servers', data = models.getServers())
-
-@app.route('/user/<string:username>/<string:serverName>')
-@login_required
-def server(username, serverName):
-	server, error = models.getServer(serverName, username)
-	if server != None:
-		moderators, error = models.getModerators(serverName, username, permissions = "Moderator")
-		admins, error = models.getModerators(serverName, username, permissions = "Admin")
-		userIsAdmin = session['username'] == username or session['isAdmin'] or session['username'] in admins
-		return renderPage('pages/Server.html', server = server, moderators = moderators, admins = admins, userIsAdmin = userIsAdmin, current = "server")
-	else:
-		return throwError(None, error)
-
-def openModal(modal):
-	setMessage('modal', modal)
-	return getIndexURL()
-
-def openLogin():
-	return openModal('login')
-
-def openCreateAccount():
-	return openModal('createUser')
-
-# ~~~~~~~~~~ Forms ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route('/add/server', methods=['POST'])
 @login_required
@@ -221,56 +181,28 @@ def addServer():
 		return redirect(url_for('server', username=username, serverName=name))
 	return getCurrentURL(request.form)
 
-def partitionServer(name, port, game, data):
-	
-	username = session['username']
-	
-	run_directory = getConfig('RUN_DIRECTORY')
-	servers_directory = getConfig('SERVERS_DIRECTORY')
-	directory = servers_directory + username + "_" + name + "/"
-	
-	if not os.path.exists(directory):
-		os.makedirs(directory)
-	
-	if game == "Minecraft":
-		
-		# ~~~~~~~~~~ Copy Template
-		
-		copy_tree(run_directory + "templates/" + game + "/", directory, update = 1)
-		
-		# ~~~~~~~~~ Config
-		
-		with open(directory + "runConfig.json", 'w') as outfile:
-			json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
-		
-		# ~~~~~~~~~~ Download server
-		
-		#copyServerMinecraft(directory,
-		#	data['version_minecraft'], data['version_forge'])
-		
-		# ~~~~~~~~~~ End
-		
-		return True
-	elif game == "Factorio":
-		return True
+@app.route('/add/server/admin', methods=['POST'])
+@login_required
+def addAdmin():
+	print()
 
-def copyServerMinecraft(directory, versionMinecraft, versionForge):
-	directory_cache = getConfig('RUN_DIRECTORY') + "cache/"
-	directory_versions_minecraft = directory_cache + "versions/Minecraft/"
-	directory_vanilla = directory_versions_minecraft + "vanilla/"
-	
-	for file in os.listdir(directory):
-		if str(file).endswith(".jar"):
-			os.remove(directory + file)
-	
-	serverFileMinecraft = directory_vanilla + versionMinecraft + ".jar"
-	shutil.copyfile(serverFileMinecraft, directory + "minecraft_server." + versionMinecraft + ".jar")
-	
-	if versionForge != '':
-		directory_forge = directory_versions_minecraft + "forge/"
-		jarFile = versionMinecraft + "-" + versionForge + ".jar"
-		serverFileForge = directory_forge + jarFile
-		shutil.copyfile(serverFileForge, directory + "forge-" + jarFile)
+@app.route('/add/server/moderator', methods=['POST'])
+@login_required
+def addModerator():
+	ownerName = request.form['username']
+	serverName = request.form['servername']
+	user2Name = request.form['user']
+	return addUserToServer(ownerName, serverName, user2Name, "Moderator")
+
+@app.route('/add/user', methods=['POST'])
+@login_required
+def addUser():
+	username = request.form['username']
+	password = generatePassword()
+	group = request.form['group']
+	if group == 'Other':
+		group = request.form['group_other']
+	return newUser(username, password, password, group, request.form)
 
 @app.route('/add/user/new', methods=['POST'])
 def createUser():
@@ -283,44 +215,6 @@ def createUser():
 		setError(error)
 		return openCreateAccount()
 	return ret
-
-@app.route('/add/user', methods=['POST'])
-@login_required
-def addUser():
-	username = request.form['username']
-	password = generatePassword()
-	group = request.form['group']
-	if group == 'Other':
-		group = request.form['group_other']
-	return newUser(username, password, password, group, request.form)
-
-def newUser(username, password, verify, group, formData):
-	
-	try:
-		user, error = models.getUser(username)
-		if len(user) > 0:
-			return throwError("Username already in use: " + str(error), request.form)
-	except Exception as e:
-		return throwError(str(e), request.form)
-	
-	if password != verify:
-		return throwError("Passwords do not match", formData)
-	
-	try:
-		models.User.create(Username = username, Password = password, Group = group)
-	except ValueError as e:
-		return throwError(str(e), formData)
-	except Exception as e:
-		return throwError(str(e), formData)
-	
-	setInfo('The password for user "' + username + '" is "' + password + '"')
-	return redirect(url_for('user', username=username))
-
-@app.route('/delete/user', methods=['POST'])
-@login_required
-def deleteUser():
-	models.deleteUserFromTable(request.form['data'])
-	return getCurrentURL(request.form)
 
 @app.route('/changeUserPassword', methods=['POST'])
 @login_required
@@ -347,36 +241,6 @@ def changeUserPass_Admin():
 	setInfo(getMessage("infoPassword"))
 	return getCurrentURL(request.form)
 
-def changePasswordForUser(username, old, new, verify):
-	
-	user, error = models.getUser(username)
-	
-	error, info = None, None
-	
-	if old != None and old != user.Password:
-		error = "Invalid Old Password"
-	elif new != verify:
-		error = "New Passwords Must Match"
-	else:
-		user.Password = new
-		user.save()
-		info = "Password Changed"
-	
-	setMessage('errorPassword', error)
-	setMessage('infoPassword', info)
-
-def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True):
-	import random
-	alpha = "abcdefghijklmnopqrstuvwxyz"
-	chars = ""
-	if alpha:
-		chars += alpha
-	if alphaUpper:
-		chars += alpha.upper()
-	if numeric:
-		chars += "0123456789"
-	return ''.join(random.choice(chars) for _ in range(length))
-
 @app.route('/delete/server', methods=['POST'])
 @login_required
 def deleteServer():
@@ -392,56 +256,16 @@ def deleteServer():
 	
 	return getIndexURL()
 
-@app.route('/add/server/moderator', methods=['POST'])
+@app.route('/delete/user', methods=['POST'])
 @login_required
-def addModerator():
-	ownerName = request.form['username']
-	serverName = request.form['servername']
-	user2Name = request.form['user']
-	return addUserToServer(ownerName, serverName, user2Name, "Moderator")
+def deleteUser():
+	models.deleteUserFromTable(request.form['data'])
+	return getCurrentURL(request.form)
 
-@app.route('/add/server/admin', methods=['POST'])
+@app.route('/servers')
 @login_required
-def addAdmin():
-	print()
-
-def addUserToServer(ownerName, serverName, user2Name, permGroup):
-	owner = None
-	user2 = None
-	
-	error = None
-	try:
-		user, error = models.getUser(ownerName)
-		if error != None:
-			setError('No user for owner with name "' + ownerName + '"')
-			return getIndexURL()
-		else:
-			owner = user
-		
-		user, error = None, None
-		
-		user, error = models.getUser(user2Name)
-		if error != None:
-			error = 'No user for moderator with name "' + user2Name + '"'
-		else:
-			user2 = user
-	except Exception as e:
-		error = str(e)
-	
-	if error != None:
-		setError(error)
-	else:
-		try:
-			models.Moderator.create(
-				Owner = owner,
-				Server = models.getServer(serverName, ownerName),
-				User = user2,
-				Permissions = permGroup
-			)
-		except Exception as e:
-			setError(str(e))
-	
-	return redirect(url_for('server', username=ownerName, serverName=serverName))
+def servers():
+	return renderPage('pages/TableServers.html', current = 'servers', data = models.getServers())
 
 @app.route('/server/control/', methods=['POST'])
 @login_required
@@ -458,6 +282,87 @@ def serverControl():
 	elif 'command' in form:
 		sendCommandServer(nameOwner, nameServer, form['command'])
 	return getCurrentURL(form)
+
+@app.route('/settings/user')
+@login_required
+def userSettings():
+	
+	return renderPage('pages/UserSettings.html', username = session['username'],
+			errorPassword = getMessage('errorPassword'),
+			infoPassword = getMessage('infoPassword')
+		)
+
+@app.route('/users')
+@login_required
+def users():
+	return renderPage('pages/TableUsers.html', current = 'users', data = models.getUsers())
+
+@app.route('/user/<string:username>')
+@login_required
+def user(username):
+	return renderPage('pages/UserProfile.html', current = None, username = username)
+
+@app.route('/user/<string:username>/<string:serverName>')
+@login_required
+def server(username, serverName):
+	server, error = models.getServer(serverName, username)
+	if server != None:
+		moderators, error = models.getModerators(serverName, username, permissions = "Moderator")
+		admins, error = models.getModerators(serverName, username, permissions = "Admin")
+		userIsAdmin = session['username'] == username or session['isAdmin'] or session['username'] in admins
+		return renderPage('pages/Server.html', server = server, moderators = moderators, admins = admins, userIsAdmin = userIsAdmin, current = "server")
+	else:
+		return throwError(None, error)
+
+@app.route('/_console', methods=['POST'])
+def getConsole():
+	serverName = request.form['serverName']
+	ownerName = request.form['ownerName']
+	
+	consoleFile = getConfig('SERVERS_DIRECTORY') + ownerName + "_" + serverName + "/console.log"
+	consoleText = ""
+	if os.path.exists(consoleFile):
+		with open(consoleFile) as f:
+			consoleText = f.read()
+	
+	return jsonify(console = consoleText)
+
+@app.route('/_onlinePlayers')
+def getOnlinePlayers():
+	return jsonify(
+			total = 50,
+			number = 28
+		)
+
+@app.route('/_onlineServers')
+def getOnlineServers():
+	return jsonify(
+			total = 4,
+			number = 3
+		)
+
+@app.route('/_onlineUsers')
+def getOnlineUsers():
+	return jsonify(
+			total = 20,
+			number = 1
+		)
+
+@app.route('/_ramUsage')
+def getRamUsage():
+	mem = psutil.virtual_memory()
+	
+	return jsonify(
+			total = findBytes(mem.total),
+			number = findBytes(mem.total - mem.available)
+		)
+
+@app.route('/_time')
+def getTimeOnline():
+	startTime = getConfig('SERVER_START')
+	currentTime = int(round(time.time() * 1000))
+	upTime = currentTime - startTime
+	return jsonify(time = parse_minutes(upTime))
 
 # ~~~~~~~~~~ Authentication ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -515,98 +420,129 @@ def logout():
 	session.pop('isAdmin', None)
 	return getIndexURL()
 
-# ~~~~~~~~~~ Active Servers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-from serverManagement import Server
-
-activeServers = {}
-
-def getServer(nameOwner, nameServer):
-	return activeServers[nameOwner][nameServer]
-
-def startServer(nameOwner, nameServer):
-	if not nameOwner in activeServers:
-		activeServers[nameOwner] = {}
-	
-	servers_directory = getConfig('SERVERS_DIRECTORY')
-	directory = servers_directory + nameOwner + "_" + nameServer + "/"
-	
-	with open(directory + "runConfig.json", 'r') as outfile:
-		activeServers[nameOwner][nameServer] = Server(nameOwner, nameServer, directory, json.load(outfile))
-	getServer(nameOwner, nameServer).start()
-
-def stopServer(nameOwner, nameServer):
-	getServer(nameOwner, nameServer).stop()
-
-def killServer(nameOwner, nameServer):
-	getServer(nameOwner, nameServer).kill()
-
-def sendCommandServer(nameOwner, nameServer, command):
-	getServer(nameOwner, nameServer).send(command)
-
-# ~~~~~~~~~~ Javascript Ajax ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-@app.route('/_time')
-def getTimeOnline():
-	startTime = getConfig('SERVER_START')
-	currentTime = int(round(time.time() * 1000))
-	upTime = currentTime - startTime
-	return jsonify(time = parse_minutes(upTime))
-
-@app.route('/_onlinePlayers')
-def getOnlinePlayers():
-	return jsonify(
-			total = 50,
-			number = 28
-		)
-
-@app.route('/_ramUsage')
-def getRamUsage():
-	mem = psutil.virtual_memory()
-	
-	return jsonify(
-			total = findBytes(mem.total),
-			number = findBytes(mem.total - mem.available)
-		)
-
-@app.route('/_onlineServers')
-def getOnlineServers():
-	return jsonify(
-			total = 4,
-			number = 3
-		)
-
-@app.route('/_onlineUsers')
-def getOnlineUsers():
-	return jsonify(
-			total = 20,
-			number = 1
-		)
-
-@app.route('/_console', methods=['POST'])
-def getConsole():
-	serverName = request.form['serverName']
-	ownerName = request.form['ownerName']
-	
-	consoleFile = getConfig('SERVERS_DIRECTORY') + ownerName + "_" + serverName + "/console.log"
-	consoleText = ""
-	if os.path.exists(consoleFile):
-		with open(consoleFile) as f:
-			consoleText = f.read()
-	
-	return jsonify(console = consoleText)
-
-# ~~~~~~~~~~ Other ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-@app.errorhandler(404)
-def not_found(error):
-	return renderPage('pages/404.html'), 404
-
 # ~~~~~~~~~~ Lib ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def addUserToServer(ownerName, serverName, user2Name, permGroup):
+	owner = None
+	user2 = None
+	
+	error = None
+	try:
+		user, error = models.getUser(ownerName)
+		if error != None:
+			setError('No user for owner with name "' + ownerName + '"')
+			return getIndexURL()
+		else:
+			owner = user
+		
+		user, error = None, None
+		
+		user, error = models.getUser(user2Name)
+		if error != None:
+			error = 'No user for moderator with name "' + user2Name + '"'
+		else:
+			user2 = user
+	except Exception as e:
+		error = str(e)
+	
+	if error != None:
+		setError(error)
+	else:
+		try:
+			models.Moderator.create(
+				Owner = owner,
+				Server = models.getServer(serverName, ownerName),
+				User = user2,
+				Permissions = permGroup
+			)
+		except Exception as e:
+			setError(str(e))
+	
+	return redirect(url_for('server', username=ownerName, serverName=serverName))
+
+def changePasswordForUser(username, old, new, verify):
+	
+	user, error = models.getUser(username)
+	
+	error, info = None, None
+	
+	if old != None and old != user.Password:
+		error = "Invalid Old Password"
+	elif new != verify:
+		error = "New Passwords Must Match"
+	else:
+		user.Password = new
+		user.save()
+		info = "Password Changed"
+	
+	setMessage('errorPassword', error)
+	setMessage('infoPassword', info)
+
+def copyServerMinecraft(directory, versionMinecraft, versionForge):
+	directory_cache = getConfig('RUN_DIRECTORY') + "cache/"
+	directory_versions_minecraft = directory_cache + "versions/Minecraft/"
+	directory_vanilla = directory_versions_minecraft + "vanilla/"
+	
+	for file in os.listdir(directory):
+		if str(file).endswith(".jar"):
+			os.remove(directory + file)
+	
+	serverFileMinecraft = directory_vanilla + versionMinecraft + ".jar"
+	shutil.copyfile(serverFileMinecraft, directory + "minecraft_server." + versionMinecraft + ".jar")
+	
+	if versionForge != '':
+		directory_forge = directory_versions_minecraft + "forge/"
+		jarFile = versionMinecraft + "-" + versionForge + ".jar"
+		serverFileForge = directory_forge + jarFile
+		shutil.copyfile(serverFileForge, directory + "forge-" + jarFile)
 
 def findBytes(bytes):
 	unit = pow(1000, 3)
 	return str(bytes / unit) + "." + str(bytes % unit)[:2]
+
+def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True):
+	import random
+	alpha = "abcdefghijklmnopqrstuvwxyz"
+	chars = ""
+	if alpha:
+		chars += alpha
+	if alphaUpper:
+		chars += alpha.upper()
+	if numeric:
+		chars += "0123456789"
+	return ''.join(random.choice(chars) for _ in range(length))
+
+def openCreateAccount():
+	return openModal('createUser')
+
+def openModal(modal):
+	setMessage('modal', modal)
+	return getIndexURL()
+
+def openLogin():
+	return openModal('login')
+
+def newUser(username, password, verify, group, formData):
+	
+	try:
+		user, error = models.getUser(username)
+		if len(user) > 0:
+			return throwError("Username already in use: " + str(error), request.form)
+	except Exception as e:
+		return throwError(str(e), request.form)
+	
+	if password != verify:
+		return throwError("Passwords do not match", formData)
+	
+	try:
+		models.User.create(Username = username, Password = password, Group = group)
+	except ValueError as e:
+		return throwError(str(e), formData)
+	except Exception as e:
+		return throwError(str(e), formData)
+	
+	setInfo('The password for user "' + username + '" is "' + password + '"')
+	return redirect(url_for('user', username=username))
 
 def parse_minutes(time):
 	milliseconds = int(time / 1000.0)
@@ -619,15 +555,40 @@ def parse_minutes(time):
 	time = int(time / 24)
 	return str(time) + " days " + str(hours) + " hours " + str(minutes) + " minutes " + str(seconds) + " seconds"
 
-# ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def partitionServer(name, port, game, data):
+	
+	username = session['username']
+	
+	run_directory = getConfig('RUN_DIRECTORY')
+	servers_directory = getConfig('SERVERS_DIRECTORY')
+	directory = servers_directory + username + "_" + name + "/"
+	
+	if not os.path.exists(directory):
+		os.makedirs(directory)
+	
+	if game == "Minecraft":
+		
+		# ~~~~~~~~~~ Copy Template
+		
+		copy_tree(run_directory + "templates/" + game + "/", directory, update = 1)
+		
+		# ~~~~~~~~~ Config
+		
+		with open(directory + "runConfig.json", 'w') as outfile:
+			json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+		
+		# ~~~~~~~~~~ Download server
+		
+		#copyServerMinecraft(directory,
+		#	data['version_minecraft'], data['version_forge'])
+		
+		# ~~~~~~~~~~ End
+		
+		return True
+	elif game == "Factorio":
+		return True
 
-#def application(environ, start_response):
-#	init();
-#	app.config['SERVER_START'] = int(round(time.time() * 1000))
-#	print(app.run(port=8085, host='0.0.0.0'))
-#	models.db.connect()
-#	models.db.close()
-#	return ["<h1 style='color:blue'>Hello There!</h1>"]
+# ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if __name__ == '__main__':
 
@@ -643,4 +604,5 @@ if __name__ == '__main__':
 
     models.db.connect()
     models.db.close()
+
 
