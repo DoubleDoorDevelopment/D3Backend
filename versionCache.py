@@ -56,7 +56,7 @@ class CacheMinecraft(Cache):
 	
 	def refresh(self):
 		self.refreshManifest()
-		self.refreshDownloads()
+		#self.refreshDownloads()
 	
 	def refreshManifest(self):
 		self.refreshManifestVanilla()
@@ -119,30 +119,30 @@ class CacheMinecraft(Cache):
 		
 		self.dumpJson(self.versions_forge, self.getManifestPathForge())
 	
-	def refreshDownloads(self, force=False):
-		self.refreshDownloadsVanilla(force=force)
-		self.refreshDownloadsForge(force=force)
+#	def refreshDownloads(self, force=False):
+#		self.refreshDownloadsVanilla(force=force)
+#		self.refreshDownloadsForge(force=force)
 	
-	def refreshDownloadsVanilla(self, force):
-		for versionType in self.versions_vanilla:
-			for version in self.versions_vanilla[versionType]:
-				jarPath = self.dir_path + self.dir_vanilla + version + ".jar"
-				if force and os.path.exists(jarPath):
-					os.remove(jarPath)
-				if not os.path.exists(jarPath):
-					if 'url_server' in self.versions_vanilla[versionType]:
-						url_server = self.versions_vanilla[versionType]['url_server']
-						downloaders.addDownload(url_server, jarPath)
+#	def refreshDownloadsVanilla(self, force):
+#		for versionType in self.versions_vanilla:
+#			for version in self.versions_vanilla[versionType]:
+#				jarPath = self.dir_path + self.dir_vanilla + version + ".jar"
+#				if force and os.path.exists(jarPath):
+#					os.remove(jarPath)
+#				if not os.path.exists(jarPath):
+#					if 'url_server' in self.versions_vanilla[versionType]:
+#						url_server = self.versions_vanilla[versionType]['url_server']
+#						downloaders.addDownload(url_server, jarPath)
 	
-	def refreshDownloadsForge(self, force):
-		for version_minecraft in self.versions_forge:
-			for buildID in self.versions_forge[version_minecraft]:
-				url_server = self.versions_forge[version_minecraft][buildID]
-				jarPath = self.dir_path + self.dir_forge + buildID + ".jar"
-				if force and os.path.exists(jarPath):
-					os.remove(jarPath)
-				if not os.path.exists(jarPath):
-					downloaders.addDownload(url_server, jarPath)
+#	def refreshDownloadsForge(self, force):
+#		for version_minecraft in self.versions_forge:
+#			for buildID in self.versions_forge[version_minecraft]:
+#				url_server = self.versions_forge[version_minecraft][buildID]
+#				jarPath = self.dir_path + self.dir_forge + buildID + ".jar"
+#				if force and os.path.exists(jarPath):
+#					os.remove(jarPath)
+#				if not os.path.exists(jarPath):
+#					downloaders.addDownload(url_server, jarPath)
 	
 	def dumpJson(self, data, file):
 		with open(file, 'w') as outfile:
