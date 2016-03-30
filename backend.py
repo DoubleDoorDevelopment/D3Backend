@@ -28,9 +28,6 @@ GAME_DATA = {
 	'Factorio': { 'cache': versionCache.Cache }
 }
 
-thread_downloaders_pool = None
-thread_downloaders_master = None
-
 # ~~~~~~~~~~ Init: Config & Startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def getConfig(key):
@@ -48,27 +45,7 @@ def login_required(f):
 
 def init():
 	app.secret_key = os.urandom(20)
-	initThreads()
 	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
-
-def initThreads():
-	initDownloading()
-
-# ~~~~~~~~~~ Init: Downloading ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def initDownloading():
-	global thread_downloaders_pool
-	global thread_downloaders_master
-	thread_downloaders_pool = ThreadPool(4)
-	thread_downloaders_master = ThreadMaster(thread_downloaders_pool)
-	thread_downloaders_master.start()
-	print(thread_downloaders_master)
-
-def addDownload(url, file):
-	thread_downloaders_master.addDownload(url, file)
-
-def addDownloadFunc(func, url, *args, **kargs):
-	thread_downloaders_master.addDownloadFunc(func, url, *args, **kargs)
 
 # ~~~~~~~~~~ URL Redirects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
