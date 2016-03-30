@@ -4,7 +4,7 @@ from threading import Thread
 from Queue import Queue, Empty
 import sys
 
-doDownload = False
+doDownload = True
 
 class ThreadMaster(Thread):
 	
