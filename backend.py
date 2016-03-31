@@ -28,11 +28,22 @@ GAME_TYPES = {
 			['Ops', 'ops.json'],
 			['Properties', 'server.properties'],
 			['Whitelist', 'whitelist.json']
+		],
+		'runConfigKeys': [
+			'ip',
+			'other_java_params',
+			'other_mc_params',
+			'perm_gen',
+			'ram_max',
+			'ram_min',
+			'version_forge',
+			'version_minecraft'
 		]
 	},
 	'Factorio': {
 		'port': 0,
-		'editorFiles': []
+		'editorFiles': [],
+		'runConfigKeys': []
 	}
 }
 GAME_DATA = {
@@ -298,7 +309,8 @@ def updateServerFile():
 def saveRunConfig():
 	nameOwner = request.form['nameOwner']
 	nameServer = request.form['nameServer']
-	
+	game = request.form['game']
+	_saveRunConfig(nameOwner, nameServer, game, request.form)
 	return redirect(url_for('server', username = nameOwner, serverName = nameServer))
 
 @app.route('/settings/user')
@@ -370,24 +382,49 @@ def getConsole():
 	
 	return jsonify(console = consoleText)
 
-@app.route('/_onlinePlayers')
+@app.route('/_onlinePlayers', methods=['GET', 'POST'])
 def getOnlinePlayers():
+	if request.method == 'GET':
+		total = 50
+		number = 28
+	else:
+		nameOwner = request.form['nameOwner']
+		nameServer = request.form['nameServer']
+		total = 20
+		number = 10
 	return jsonify(
-			total = 50,
-			number = 28
-		)
+		total = total,
+		number = number
+	)
+
+@app.route('/_onlineServer', methods=['POST'])
+def isServerOnline():
+	nameOwner = request.form['nameOwner']
+	nameServer = request.form['nameServer']
+	isonline = False
+	if nameOwner in activeServers:
+		if nameServer in activeServers[nameOwner]:
+			isonline = True
+	return jsonify(online = isonline)
 
 @app.route('/_onlineServers')
 def getOnlineServers():
+	
+	totalServers = len(models.Server.select())
+	
+	totalOnline = 0
+	for key in activeServers:
+		totalOnline += len(activeServers[key])
+	
 	return jsonify(
-			total = 4,
-			number = 3
+			total = totalServers,
+			number = totalOnline
 		)
 
 @app.route('/_onlineUsers')
 def getOnlineUsers():
 	return jsonify(
-			total = 20,
+			total = len(models.User.select()),
 			number = 1
 		)
 
@@ -603,8 +640,7 @@ def partitionServer(name, port, game, data):
 		
 		# ~~~~~~~~~ Config
 		
-		with open(directory + "runConfig.json", 'w') as outfile:
-			json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+		_saveRunConfig(username, name, game, data)
 		
 		# ~~~~~~~~~~ Download server
 		
@@ -623,6 +659,15 @@ def partitionServer(name, port, game, data):
 		return True
 	elif game == "Factorio":
 		return True
+
+def _saveRunConfig(nameOwner, nameServer, game, allData):
+	directory = getConfig('SERVERS_DIRECTORY') + nameOwner + "_" + nameServer + "/"
+	
+	data = { key: allData[key] for key in GAME_TYPES[game]['runConfigKeys'] }
+	
+	with open(directory + "runConfig.json", 'w') as outfile:
+		json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+	
 
 # ~~~~~~~~~~ Active Servers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

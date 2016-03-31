@@ -10,8 +10,8 @@
 	
 	<center>
 		
-		<div style="width: 30%; display: inline-block;">
-			{% with id="onlinePlayers", message=[players_online, " Players Online"]|join %}
+		<div style="width: 30%; display: inline-block; text-align: left;">
+			{% with id="onlinePlayers", message="Players Online" %}
 				{% include 'component/widgets/progressbar.html' %}
 			{% endwith %}
 		</div>
@@ -67,18 +67,14 @@
 					span.innerHTML = data['time'];
 				});
 			};
-			var updatePlayers = function() {
-				var id = "onlinePlayers";
+			var updatePlayers = function(progressBar, title, percentSpan) {
 				$.getJSON("{{ url_for('getOnlinePlayers') }}", function(data) {
 					var total = data['total'];
 					var number = data['number'];
 					var percent = parseInt(number / total * 100);
-					
-					var percentSpan = $('span#' + id);
-					var divIDWidth = document.getElementById(id + "Width");
-
-					percentSpan.html(percent + "%");
-					divIDWidth.setAttribute("style", "width: " + percent + "%;");
+					title.innerHTML = number;
+					percentSpan.innerHTML = percent + "%";
+					progressBar.setAttribute("style", "width: " + percent + "%;");
 				});
 			};
 			
@@ -87,17 +83,21 @@
 				updateMeter(document.getElementById("onlineUsers"));
 			};
 			
+			var onlinePlayersDiv = $("#onlinePlayersWidth").get(0);
+			var onlinePlayersSpanTitle = $("#onlinePlayersTitle").get(0);
+			var onlinePlayersSpanPercent = $("#onlinePlayersPercent").get(0);
+			
 			updateTime(document.getElementById("time"));
 			updateMeter(document.getElementById("ramUsage"));
 			checkMeters();
-			updatePlayers();
+			updatePlayers(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 			
 			var checkWidgetsHalfSecond = setInterval(function() {
 				updateTime(document.getElementById("time"));
 				updateMeter(document.getElementById("ramUsage"));
 			}, 500);
 			var checkWidgets1Min = setInterval(function() {
-				updatePlayers();
+				updatePlayers(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 			}, 60000);
 			var checkWidgets5Min = setInterval(function() {
 				checkMeters();

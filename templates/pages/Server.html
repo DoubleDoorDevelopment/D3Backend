@@ -19,7 +19,7 @@
 	<div id="header">
 		<h1>
 			<span style="text-align: left;">
-				{{ server.Name }} <small>:{{ server.Port }} <span class="label label-danger">Offline</span></small>
+				{{ server.Name }} <small>:{{ server.Port }} <span id="statusLabel" class="label label-danger">Offline</span></small>
 			</span>
 			<span style="float: right;">
 				
@@ -34,6 +34,15 @@
 	<!-- End: Header -->
 	
 	<hr>
+	
+	<div id="playerStatus">
+		{% set players_total = 20 %}
+		{% set players_online = 2 %}
+		
+		{% with id="onlinePlayers", message="Players Online" %}
+			{% include 'component/widgets/progressbar.html' %}
+		{% endwith %}
+	</div>
 	
 	<!-- Start: Panel: Console -->
 	<div class="col-sm-12">
@@ -51,13 +60,13 @@
 					<input type="hidden" name="nameOwner" value="{{ server.User.Username }}" />
 					
 					<div style="display: inline-block; width: 30%;">
-						<input type="submit" class="btn btn-success form-control" name="start" value="Start" />
+						<input id="startInput" type="submit" class="btn btn-success form-control" name="start" value="Start" />
 					</div>
 					<div style="display: inline-block; width: 30%;">
-						<input type="submit" class="btn btn-warning form-control" name="stop" value="Stop" />
+						<input id="stopInput" type="submit" class="btn btn-warning form-control" name="stop" value="Stop" />
 					</div>
 					<div style="display: inline-block; width: 30%;">
-						<input type="submit" class="btn btn-danger form-control" name="kill" value="Kill" />
+						<input id="killInput" type="submit" class="btn btn-danger form-control" name="kill" value="Kill" />
 					</div>
 				</form>
 				
@@ -79,39 +88,8 @@
 	
 	{% if userIsAdmin %}
 	
-	<!-- Start: Panel: Server Info -->
-	<div class="col-sm-3">
-		<div id="quick" class="panel panel-green">
-			<div class="panel-heading">
-				<h3 class="panel-title" style="text-align: center;">
-					Server Information
-				</h3>
-			</div>
-			<div class="panel-body" style="text-align: center;">
-				
-				<div id="playerStatus">
-					{% set players_total = 20 %}
-					{% set players_online = 2 %}
-					
-					{% with min=0, max=players_total, number=players_online, message=[players_online, " Players Online"]|join %}
-						{% include 'component/widgets/progressbar.html' %}
-					{% endwith %}
-				</div>
-				
-				<div id="diskStatus">
-					<label>Disk Space</label>
-					<div class="flot-chart">
-						<div class="flot-chart-content" id="diskspace" ></div>
-					</div>
-				</div>
-				
-			</div>
-		</div>
-	</div>
-	<!-- End: Panel: Server Info -->
-	
 	<!-- Start: Panel: Danger Zone -->
-	<div class="col-sm-9">
+	<div class="col-sm-12">
 		<div id="danger" class="panel panel-danger">
 			<div class="panel-heading">
 				<h3 class="panel-title" style="text-align: center;">
@@ -226,7 +204,7 @@
 								
 								<div class="form-group">
 									<label>Reboot Schedule</label>
-									<div class="input-group col-sm-4 col-sm-offset-4">
+									<div class="input-group col-sm-8 col-sm-offset-2">
 										<input type="number" aria-describedby="helpBlock" min="0" max="23" placeholder="0" class="form-control" />
 										<div class="input-group-addon">h</div>
 										<input type="number" aria-describedby="helpBlock" min="0" max="59" placeholder="0" class="form-control" />
@@ -316,38 +294,6 @@
 	{% include 'component/modal/AddModerator.html' %}
 	{% include 'component/modal/AddAdmin.html' %}
 	<script type="text/javascript" language="javascript">
-		$(window).load(function() {
-			var data = [
-				{label: "Files", data: 1, color: "#62A83B"},
-				{label: "Backups", data: 2, color: "#2897CB"},
-				{label: "Free", data: 3, color: "#DEAB34"}
-			];
-			
-			var options = {
-				series: {
-					pie: {
-						show: true,
-						radius: 150,
-						label: {
-							show: true,
-							radius: 0.5, // place in middle of pie slice
-							formatter: function(label, series){
-								var value = series.data[0][1];
-								return ('&nbsp;<b>' + label + '</b><br /><b>' + value + ' mb</b>');
-							}
-						}
-					}
-				},
-				legend: {
-					show: false
-				}
-			};
-			
-			$.plot($("#diskspace"), data, options);
-		});
-		
-	</script>
-	<script type="text/javascript" language="javascript">
 		$(document).ready(function() {
 			
 			var updateConsole = function(textarea) {
@@ -363,12 +309,58 @@
 						if (doScroll) textArea.scrollTop = textArea.scrollHeight;
 					}, "json");
 			};
+			var updateProgressBar = function(progressBar, title, percentSpan) {
+				$.post("{{ url_for('getOnlinePlayers') }}",
+					{
+						nameServer : "{{ server.Name }}",
+						nameOwner : "{{ server.User.Username }}"
+					},
+					function(data, textstatus) {
+						var total = data['total'];
+						var number = data['number'];
+						var percent = parseInt(number / total * 100);
+						title.innerHTML = number;
+						percentSpan.innerHTML = percent + "%";
+						progressBar.setAttribute("style", "width: " + percent + "%;");
+					}, "json");
+			};
+			var updateStatus = function() {
+				$.post("{{ url_for('isServerOnline') }}",
+					{
+						nameServer : "{{ server.Name }}",
+						nameOwner : "{{ server.User.Username }}"
+					},
+					function(data, textstatus) {
+						var online = data['online'];
+						
+						if (online) {
+							$("#statusLabel").text("Online").attr('class', 'label label-success');
+							$("#startInput").attr('class', 'btn btn-success form-control disabled');
+							$("#stopInput").attr('class', 'btn btn-warning form-control');
+							$("#killInput").attr('class', 'btn btn-danger form-control');
+						}
+						else {
+							$("#statusLabel").text("Offline").attr('class', 'label label-danger');
+							$("#startInput").attr('class', 'btn btn-success form-control');
+							$("#stopInput").attr('class', 'btn btn-warning form-control disabled');
+							$("#killInput").attr('class', 'btn btn-danger form-control disabled');
+						}
+						
+					}, "json");
+			};
 			
 			var textArea = document.getElementById("console");
+			var onlinePlayersDiv = $("#onlinePlayersWidth").get(0);
+			var onlinePlayersSpanTitle = $("#onlinePlayersTitle").get(0);
+			var onlinePlayersSpanPercent = $("#onlinePlayersPercent").get(0);
+			
 			updateConsole(textArea);
+			updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 			var checkWidgetsHalfSecond = setInterval(function() {
 				//textArea.value += Math.random() + '\n';
 				updateConsole(textArea);
+				updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
+				updateStatus();
 			}, 250);
 		});
 	</script>

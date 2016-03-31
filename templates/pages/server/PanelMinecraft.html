@@ -9,6 +9,7 @@
 		
 		<input name="nameServer" type="hidden" value="{{ server.Name }}" />
 		<input name="nameOwner" type="hidden" value="{{ server.User.Username }}" />
+		<input name="game" type="hidden" value="{{ server.Purpose }}" />
 		
 		{% include 'component/modal/server_options/Minecraft.html' %}
 		
