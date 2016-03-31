@@ -1,0 +1,37 @@
+<script type="text/javascript" language="javascript">
+	var forgeVersions = {{ cache_versions['Minecraft'].versions_forge|tojson }};
+	$("#Custom_" + "version_minecraft").on('change', function() {
+		var selected = $("#Custom_" + "version_minecraft option:selected").text();
+		
+		forgeSelect = $("#Custom_" + 'version_forge');
+		forgeSelect.find('option').remove().end();
+		
+		forgeSelect.append('<option></option>');
+		$.each(forgeVersions[selected], function(text) {
+			forgeSelect.append('<option>' + text + '</option>');
+		});
+		
+	});
+	$(document).ready(function() {
+		var dangerZone = $("#custom");
+		
+		var version_minecraft = "{{ runConfig['version_minecraft'] }}";
+		$("#Custom_" + "version_minecraft").val(version_minecraft);
+		
+		forgeSelect = $("#Custom_" + 'version_forge');
+		forgeSelect.find('option').remove().end();
+		forgeSelect.append('<option></option>');
+		$.each(forgeVersions[version_minecraft], function(text) {
+			forgeSelect.append('<option>' + text + '</option>');
+		});
+		forgeSelect.val("{{ runConfig['version_forge'] }}");
+		
+		$("#Custom_" + "ip").val("{{ runConfig['ip'] }}");
+		$("#Custom_" + "ram_min").val("{{ runConfig['ram_min'] }}");
+		$("#Custom_" + "ram_max").val("{{ runConfig['ram_max'] }}");
+		$("#Custom_" + "perm_gen").val("{{ runConfig['perm_gen'] }}");
+		$("#Custom_" + "other_java_params").val("{{ runConfig['other_java_params'] }}");
+		$("#Custom_" + "other_mc_params").val("{{ runConfig['other_mc_params'] }}");
+		
+	});
+</script>

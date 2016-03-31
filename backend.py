@@ -20,12 +20,28 @@ if app.debug:
 	app.wsgi_app = DebuggedApplication(app.wsgi_app, True)
 
 GAME_TYPES = {
-	'Minecraft': { 'port': 25500, },
-	'Factorio': { 'port': 0 }
+	'Minecraft': {
+		'port': 25500,
+		'editorFiles': [
+			['Banned-IPS', 'banned-ips.json'],
+			['Banned-Players', 'banned-players.json'],
+			['Ops', 'ops.json'],
+			['Properties', 'server.properties'],
+			['Whitelist', 'whitelist.json']
+		]
+	},
+	'Factorio': {
+		'port': 0,
+		'editorFiles': []
+	}
 }
 GAME_DATA = {
-	'Minecraft': { 'cache': versionCache.CacheMinecraft },
-	'Factorio': { 'cache': versionCache.Cache }
+	'Minecraft': {
+		'cache': versionCache.CacheMinecraft
+	},
+	'Factorio': {
+		'cache': versionCache.Cache
+	}
 }
 
 # ~~~~~~~~~~ Init: Config & Startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -260,6 +276,31 @@ def serverControl():
 		sendCommandServer(nameOwner, nameServer, form['command'])
 	return getCurrentURL(form)
 
+@app.route('/server/updateFile', methods=['POST'])
+@login_required
+def updateServerFile():
+	nameOwner = request.form['nameOwner']
+	nameServer = request.form['nameServer']
+	serverType = request.form['type']
+	fileID = request.form['id']
+	filename = request.form['filename']
+	fileContent = request.form['content']
+	
+	serverDir = getDirectoryForServer(nameOwner, nameServer)
+	filePath = os.path.join(serverDir, filename)
+	with open(filePath, 'w') as f:
+		f.write(fileContent)
+	
+	return redirect(url_for('server', username = nameOwner, serverName = nameServer))
+
+@app.route('/server/saveRunConfig', methods=['POST'])
+@login_required
+def saveRunConfig():
+	nameOwner = request.form['nameOwner']
+	nameServer = request.form['nameServer']
+	
+	return redirect(url_for('server', username = nameOwner, serverName = nameServer))
+
 @app.route('/settings/user')
 @login_required
 def userSettings():
@@ -282,12 +323,37 @@ def user(username):
 @app.route('/user/<string:username>/<string:serverName>')
 @login_required
 def server(username, serverName):
-	server, error = models.getServer(serverName, username)
-	if server != None:
+	serverModel, error = models.getServer(serverName, username)
+	if serverModel != None:
 		moderators, error = models.getModerators(serverName, username, permissions = "Moderator")
 		admins, error = models.getModerators(serverName, username, permissions = "Admin")
 		userIsAdmin = session['username'] == username or session['isAdmin'] or session['username'] in admins
-		return renderPage('pages/Server.html', server = server, moderators = moderators, admins = admins, userIsAdmin = userIsAdmin, current = "server")
+		
+		serverDirectory = getDirectoryForServer(username, serverName)
+		
+		editorFiles = GAME_TYPES[serverModel.Purpose]['editorFiles']
+		fileData = []
+		for fileDataArray in editorFiles:
+			i = len(fileData)
+			fileData.append({})
+			fileData[i]['id'] = fileDataArray[0]
+			filename = fileDataArray[1]
+			fileData[i]['filename'] = filename
+			with open(os.path.join(serverDirectory, filename), 'r') as f:
+				fileData[i]['contents'] = f.read()
+		
+		directory = getConfig('SERVERS_DIRECTORY') + username + "_" + serverName + "/"
+		with open(directory + "runConfig.json", 'r') as runJson:
+			runConfig = json.load(runJson)
+		
+		return renderPage('pages/Server.html',
+			current = "server",
+			server = serverModel,
+			moderators = moderators, admins = admins,
+			userIsAdmin = userIsAdmin,
+			fileData = fileData,
+			runConfig = runConfig
+		)
 	else:
 		return throwError(None, error)
 
@@ -455,24 +521,6 @@ def changePasswordForUser(username, old, new, verify):
 	setMessage('errorPassword', error)
 	setMessage('infoPassword', info)
 
-def copyServerMinecraft(directory, versionMinecraft, versionForge):
-	directory_cache = getConfig('RUN_DIRECTORY') + "cache/"
-	directory_versions_minecraft = directory_cache + "versions/Minecraft/"
-	directory_vanilla = directory_versions_minecraft + "vanilla/"
-	
-	for file in os.listdir(directory):
-		if str(file).endswith(".jar"):
-			os.remove(directory + file)
-	
-	serverFileMinecraft = directory_vanilla + versionMinecraft + ".jar"
-	shutil.copyfile(serverFileMinecraft, directory + "minecraft_server." + versionMinecraft + ".jar")
-	
-	if versionForge != '':
-		directory_forge = directory_versions_minecraft + "forge/"
-		jarFile = versionMinecraft + "-" + versionForge + ".jar"
-		serverFileForge = directory_forge + jarFile
-		shutil.copyfile(serverFileForge, directory + "forge-" + jarFile)
-
 def findBytes(bytes):
 	unit = pow(1000, 3)
 	return str(bytes / unit) + "." + str(bytes % unit)[:2]
@@ -488,6 +536,10 @@ def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True
 	if numeric:
 		chars += "0123456789"
 	return ''.join(random.choice(chars) for _ in range(length))
+
+def getDirectoryForServer(nameOwner, nameServer):
+	servers_directory = getConfig('SERVERS_DIRECTORY')
+	return servers_directory + nameOwner + "_" + nameServer + "/"
 
 def openCreateAccount():
 	return openModal('createUser')
@@ -559,11 +611,52 @@ def partitionServer(name, port, game, data):
 		#copyServerMinecraft(directory,
 		#	data['version_minecraft'], data['version_forge'])
 		
+		versionCache.downloadServerResources("Minecraft", directory, {
+			'version': {
+				'minecraft': data['version_minecraft'],
+				'forge': data['version_forge']
+			}
+		})
+		
 		# ~~~~~~~~~~ End
 		
 		return True
 	elif game == "Factorio":
 		return True
+
+# ~~~~~~~~~~ Active Servers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+from serverManagement import Server
+
+activeServers = {}
+
+def getServer(nameOwner, nameServer):
+	if nameOwner in activeServers and nameServer in activeServers[nameOwner]:
+		return activeServers[nameOwner][nameServer]
+	return None
+
+def startServer(nameOwner, nameServer):
+	if not nameOwner in activeServers:
+		activeServers[nameOwner] = {}
+	
+	directory = getDirectoryForServer(nameOwner, nameServer)
+	
+	with open(directory + "runConfig.json", 'r') as outfile:
+		activeServers[nameOwner][nameServer] = Server(nameOwner, nameServer, directory, json.load(outfile))
+	
+	getServer(nameOwner, nameServer).start()
+
+def stopServer(nameOwner, nameServer):
+	server = getServer(nameOwner, nameServer)
+	if server != None: server.stop()
+
+def killServer(nameOwner, nameServer):
+	server = getServer(nameOwner, nameServer)
+	if server != None: server.kill()
+
+def sendCommandServer(nameOwner, nameServer, command):
+	server = getServer(nameOwner, nameServer)
+	if server != None: server.send(command)
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

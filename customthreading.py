@@ -19,8 +19,9 @@ class ThreadMaster(Thread):
 			pass
 	
 	def downloadFile(self, url, file):
-		import urllib
-		urllib.urlretrieve(url, file)
+		if doDownload:
+			import urllib
+			urllib.urlretrieve(url, file)
 
 	def addDownload(self, url, file):
 		self.addDownloadFunc(self.downloadFile, url, file)

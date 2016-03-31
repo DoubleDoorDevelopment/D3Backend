@@ -28,11 +28,13 @@
 		</select>
 	</div>
 	
-	{% for type in server_types %}
-		<div id="{{ type }}" style="display: none;">
-			{% include ['component/modal/server_options/', type, '.html']|join %}
-		</div>
-	{% endfor %}
+	{% with prefix="AddServer_" %}
+		{% for type in server_types %}
+			<div id="{{ type }}Options" style="display: none;">
+				{% include ['component/modal/server_options/', type, '.html']|join %}
+			</div>
+		{% endfor %}
+	{% endwith %}
 	
 	<div id='output'></div>
 	
@@ -47,15 +49,24 @@
 			var options = document.getElementById("type"), option, i, div;
 			for (i = 1; i < options.length; i++) {
 				option = options[i];
-				div = document.getElementById(option.value);
+				div = document.getElementById(option.value + "Options");
 				if (option.selected) div.style.display = "block";
 				else div.style.display = "none";
 			}
 		});
 	</script>
 	<script type="text/javascript" language="javascript">
-		$('#version_minecraft').on('change', function() {
-			var selected = $("#version_minecraft option:selected").text();
+		var forgeVersions = {{ cache_versions['Minecraft'].versions_forge|tojson }};
+		$("#AddServer_" + "version_minecraft").on('change', function() {
+			var selected = $("#AddServer_" + "version_minecraft option:selected").text();
+			
+			forgeSelect = $("#AddServer_" + 'version_forge');
+			forgeSelect.find('option').remove().end();
+			
+			forgeSelect.append('<option></option>');
+			$.each(forgeVersions[selected], function(text) {
+				forgeSelect.append('<option>' + text + '</option>');
+			});
 			
 		});
 	</script>

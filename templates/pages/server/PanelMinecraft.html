@@ -5,5 +5,13 @@
 {% endblock %}
 
 {% block body %}
-	Test
+	<form action="{{ url_for('saveRunConfig') }}" method="POST" enctype="multipart/form-data">
+		
+		<input name="nameServer" type="hidden" value="{{ server.Name }}" />
+		<input name="nameOwner" type="hidden" value="{{ server.User.Username }}" />
+		
+		{% include 'component/modal/server_options/Minecraft.html' %}
+		
+		<button type="submit" class="btn btn-primary">Save</button>
+	</form>
 {% endblock %}

@@ -1,12 +1,10 @@
 <div class="form-group col-sm-6">
 	<label for="version_minecraft">Minecraft Version {% include 'component/StarRed.html' %}</label>
-	<select name="version_minecraft" id="version_minecraft" class="form-control" required>
+	<select name="version_minecraft" id="{{ prefix }}version_minecraft" class="form-control" required>
 		<option></option>
 		{% if 'Minecraft' in cache_versions %}
-			{% for version_type in cache_versions['Minecraft'].versions_vanilla %}
-				{% for version in cache_versions['Minecraft'].versions_vanilla[version_type] %}
-					<option>{{ version }}</option>
-				{% endfor %}
+			{% for version in cache_versions['Minecraft'].versions_vanilla %}
+				<option>{{ version }}</option>
 			{% endfor %}
 		{% endif %}
 	</select>
@@ -14,16 +12,14 @@
 
 <div class="form-group col-sm-6">
 	<label for="version_forge">Forge Version</label>
-	<select name="version_forge" id="version_forge" class="form-control">
-		<option></option>
-	</select>
+	<select name="version_forge" id="{{ prefix }}version_forge" class="form-control"></select>
 </div>
 
 <br />
 
 <div class="form-group">
 	<label for="ip">Hostname / IP</label>
-	<input name="ip" placeholder="Binds to all IPs by default" type="text" class="form-control" />
+	<input name="ip" id="{{ prefix }}ip" placeholder="Binds to all IPs by default" type="text" class="form-control" />
 </div>
 
 <div class="form-group">
@@ -31,38 +27,28 @@
 		<label>RAM (MB)</label>
 		<div style="display: inline-block;">
 			<label for="ram_min">Min</label>
-			<input name="ram_min" placeholder="4096" value="4096" type="number" class="form-control" />
+			<input name="ram_min" id="{{ prefix }}ram_min" placeholder="4096" value="4096" type="number" class="form-control" />
 		</div>
 		<div style="display: inline-block;">
 			<label for="ram_max">Max</label>
-			<input name="ram_max" placeholder="4096" value="4096" type="number" class="form-control" />
+			<input name="ram_max" id="{{ prefix }}ram_min"placeholder="4096" value="4096" type="number" class="form-control" />
 		</div>
 	</center>
 </div>
 
 <div class="form-group">
 	<label for="perm_gen">Perm Gen (MB)</label>
-	<input name="perm_gen" placeholder="64" value="64" type="number" class="form-control" />
+	<input name="perm_gen" id="{{ prefix }}perm_gen" placeholder="64" value="64" type="number" class="form-control" />
 </div>
 
 <div class="form-group">
 	<label for="other_java_params">Extra Java Parameters</label>
-	<input name="other_java_params" type="text" class="form-control" />
+	<input name="other_java_params" id="{{ prefix }}other_java_params" type="text" class="form-control" />
 </div>
 
 <div class="form-group">
 	<label for="other_mc_params">Extra Minecraft Parameters</label>
-	<input name="other_mc_params" type="text" class="form-control" />
-</div>
-
-<div class="form-group">
-	<label for="jar_name">Jar Name</label>
-	<input name="jar_name" placeholder="minecraft_server.jar" value="minecraft_server.jar" type="text" class="form-control" />
-</div>
-
-<div class="form-group">
-	<input name="autostart" type="checkbox" />
-	<label for="autostart">Autostart</label>
+	<input name="other_mc_params" id="{{ prefix }}other_mc_params" type="text" class="form-control" />
 </div>
 
 <center>

@@ -4,6 +4,15 @@
 	{{ server.Name }}
 {% endblock %}
 
+{% block PageStyles %}
+	<style type="text/css" media="screen">
+		.aceEditor {
+			height: 300px;
+			text-align: left;
+		}
+	</style>
+{% endblock %}
+
 {% block content %}
 	
 	<!-- Start: Header -->
@@ -14,7 +23,9 @@
 			</span>
 			<span style="float: right;">
 				
-				<button type="button" class="btn btn-danger" >Delete</button>
+				{% with target="Server", class="", data=[server.User.Username, '|', server.Name]|join %}
+					{% include 'component/button/Delete.html' %}
+				{% endwith %}
 				
 				<small>Owner: {{ server.User.Username }}</small>
 			</span>
@@ -240,7 +251,9 @@
 				<!-- End: Panel: Restart -->
 				
 				<!-- Start: Panel: Custom -->
-				{% include ['pages/server/Panel', server.Purpose, '.html']|join %}
+				{% with prefix="Custom_" %}
+					{% include ['pages/server/Panel', server.Purpose, '.html']|join %}
+				{% endwith %}
 				<!-- End: Panel: Custom -->
 				
 				<!-- End: Body: Danger Zone -->
@@ -260,7 +273,35 @@
 			</div>
 			<div class="panel-body" style="text-align: center;">
 				
+				<ul class="nav nav-pills nav-justified">
+					{% for file in fileData %}
+						<li>
+							<a data-toggle="pill" href="#{{ file['id'] }}">
+								{{ file['filename'] }}
+							</a>
+						</li>
+					{% endfor %}
+				</ul>
 				
+				<div class="tab-content">
+					{% for file in fileData %}
+						<div id="{{ file['id'] }}" class="tab-pane fade">
+							
+							<h3>{{ file['filename'] }}</h3>
+							
+							<div class="aceEditor" id="editor{{ file['id'] }}">{{ file['contents'] }}</div>
+							
+							<br />
+							
+							<form id="form{{ file['id'] }}" enctype="multipart/form-data">
+								<input type="hidden" name="id" value="{{ file['id'] }}" />
+								<input type="hidden" name="filename" value="{{ file['filename'] }}" />
+								<button type="submit" class="btn btn-info form-control">Save</button>
+							</form>
+							
+						</div>
+					{% endfor %}
+				</div>
 				
 			</div>
 		</div>
@@ -331,4 +372,39 @@
 			}, 250);
 		});
 	</script>
+	
+	<script src="{{ url_for('static', filename='ace/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
+	<script src="{{ url_for('static', filename='ace/src-noconflict/ext-modelist.js') }}" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript" language="javascript">
+		var allFileData = {{ fileData|tojson }};
+		var modelist = ace.require("ace/ext/modelist");
+		for (var i = 0; i < allFileData.length; i++) {
+			var fileData = allFileData[i];
+			
+			var editor = ace.edit("editor" + fileData['id']);
+			editor.setTheme("ace/theme/twilight");
+			
+			var mode = modelist.getModeForPath(fileData['filename']).mode;
+			console.log(mode);
+			editor.getSession().setMode(mode);
+			
+			$("#" + fileData['id']).submit(function(event) {
+				var id = event.target[0].value;
+				var filename = event.target[1].value;
+				var content = ace.edit('editor' + id).getValue();
+				$.post("{{ url_for('updateServerFile') }}", {
+					'nameOwner': '{{ server.User.Username }}',
+					'nameServer': '{{ server.Name }}',
+					'type': '{{ server.Purpose }}',
+					'id': id,
+					'filename': filename,
+					'content': content
+				}, function(data) {});
+				event.preventDefault();
+			});
+			
+		}
+	</script>
+	
+	{% include ['pages/server/Scripts', server.Purpose, '.html']|join %}
 {% endblock %}

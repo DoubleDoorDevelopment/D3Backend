@@ -64,6 +64,10 @@ class Server(Thread):
 	def run(self):
 		path = self.getLogPath()
 		writer = io.open(path, 'wb')
+		
+		writer.write("----=====##### SERVER PROCESS  STARTING #####=====-----\n")
+		writer.flush()
+		
 		self.process = Popen(self.getRunArgs(), cwd = self.directory, stdout = PIPE, stderr = STDOUT, stdin = PIPE)
 		while self.process.poll() is None:
 			out = self.process.stdout.read(1)
@@ -72,6 +76,10 @@ class Server(Thread):
 				writer.flush()
 				#sys.stdout.write(out.decode("utf-8"))
 				#sys.stdout.flush()
+		
+		writer.write("----=====##### SERVER PROCESS HAS ENDED #####=====-----\n")
+		writer.flush()
+		writer.close()
 
 	def stop(self):
 		#self.process.stdin.write('/stop')
