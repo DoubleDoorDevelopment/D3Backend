@@ -1,0 +1,111 @@
+{% set id="modpack" %}
+{% set title="Upload Modpack" %}
+{% set action="serverMinecraftUploadModpack" %}
+
+<div class="modal fade" id="{{ id }}Modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			
+			<!-- Start: Header -->
+			<div class="modal-header">
+				
+				<button type="button" class="close" data-dismiss="modal">
+					<span aria-hidden="true">&times;</span>
+					<span class="sr-only">Close</span>
+				</button>
+				
+				<div>
+					<h4 class="modal-title" style="float: left;">{{ title }}&nbsp</h4>
+					<h4 class="modal-title" style="float: left;" id="title"></h4>
+				</div>
+				
+			</div>
+			<!-- End: Header -->
+			
+			<!-- Start: Body -->
+			<div class="modal-body">
+				
+				<ul class="nav nav-tabs nav-justified">
+					<li class="active">
+						<a href="#uploadPackCurseforge" data-toggle="tab">Curseforge</a>
+					</li>
+					<li>
+						<a href="#uploadPackLink" data-toggle="tab">Link</a>
+					</li>
+					<li>
+						<a href="#uploadPackZip" data-toggle="tab">Zip</a>
+					</li>
+				</ul>
+				
+				<div class="tab-content">
+					<div id="uploadPackCurseforge" class="tab-pane fade in active">
+						<br />
+						<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
+							<input name="nameOwner" id="nameOwner" type="hidden" value="" />
+							<input name="nameServer" id="nameServer" type="hidden" value="" />
+							
+							<div>
+								<div class="col-sm-8" style="display: inline-block;">
+									<input name="projectName" id="projectName" type="text"
+											class="form-control"/>
+									</div>
+								<div style="display: inline-block;">
+									<button type="button" class="btn">
+										<i class="fa fa-refresh fa-fw"></i> Refresh
+									</button>
+								</div>
+							</div>
+							
+							<br />
+							
+							{% with type="curseforge", submitTitle="Upload" %}
+								{% include 'component/modal/Minecraft/ModpackFooter.html' %}
+							{% endwith %}
+						</form>
+					</div>
+					<div id="uploadPackLink" class="tab-pane fade">
+						<br />
+						<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
+							<input name="nameOwner" id="nameOwner" type="hidden" value="" />
+							<input name="nameServer" id="nameServer" type="hidden" value="" />
+							
+							<input name="link" type="url" class="form-control" placeholder="www.google.com" />							
+							
+							{% with type="link", submitTitle="Upload" %}
+								{% include 'component/modal/Minecraft/ModpackFooter.html' %}
+							{% endwith %}
+						</form>
+					</div>
+					<div id="uploadPackZip" class="tab-pane fade">
+						<br />
+						<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
+							<input name="nameOwner" id="nameOwner" type="hidden" value="" />
+							<input name="nameServer" id="nameServer" type="hidden" value="" />
+							
+							<input name="pack" type="file" class="form-control" />
+							
+							{% with type="pack", submitTitle="Upload" %}
+								{% include 'component/modal/Minecraft/ModpackFooter.html' %}
+							{% endwith %}
+						</form>
+					</div>
+				</div>
+				
+			</div>
+			<!-- End: Body -->
+			
+		</div>
+	</div>
+</div>
+<script language="javascript">
+	$(document).on("click", "#uploadModpack", function() {
+		var i;
+		
+		var ownerVal = $(this).data('owner');
+		$(".modal-body #nameOwner").val(ownerVal);
+		
+		var serverVal = $(this).data('server');
+		$(".modal-body #nameServer").val(serverVal);
+		
+	});
+</script>
