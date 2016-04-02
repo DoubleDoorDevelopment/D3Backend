@@ -10,7 +10,9 @@ from distutils.dir_util import copy_tree
 from functools import wraps
 
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify, json
+from werkzeug import secure_filename
 
+import minecraft
 import versionCache
 from customthreading import *
 
@@ -21,6 +23,7 @@ if app.debug:
 	from werkzeug.debug import DebuggedApplication
 	app.wsgi_app = DebuggedApplication(app.wsgi_app, True)
 
+MODPACK_EXTENSIONS = set(['zip'])
 GAME_TYPES = {
 	'Minecraft': {
 		'port': 25500,
@@ -75,6 +78,7 @@ def login_required(f):
 def init():
 	app.secret_key = os.urandom(20)
 	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
+	app.config['UPLOAD_FOLDER'] = getConfig('MAIN_DIRECTORY') + "static/uploads/"
 
 # ~~~~~~~~~~ URL Redirects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -291,6 +295,50 @@ def serverControl():
 	elif 'command' in form:
 		sendCommandServer(nameOwner, nameServer, form['command'])
 	return getCurrentURL(form)
+
+@app.route('/server/minecraft/uploadModpack/', methods=['POST'])
+@login_required
+def serverMinecraftUploadModpack():
+	form = request.form
+	files = request.files
+	
+	#print(form)
+	#print(request.files)
+	
+	#return getIndexURL()
+	
+	nameOwner = form['nameOwner']
+	nameServer = form['nameServer']
+	uploadType = form['type']
+	
+	uploadFunctions = {
+		'curseforge': uploadMCModpack_Curseforge,
+		'link': uploadMCModpack_Link,
+		'pack': uploadMCModpack_Pack
+	}
+	
+	uploadFunctions[uploadType](nameOwner, nameServer, form, files)
+	
+	return redirect(url_for('server', username = nameOwner, serverName = nameServer))
+
+def uploadMCModpack_Curseforge(nameOwner, nameServer, form, files):
+	pass
+
+def uploadMCModpack_Link(nameOwner, nameServer, form, files):
+	url = form['link']
+	fileName = "modpack_" + nameOwner + "_" + nameServer + ".zip"
+	filePath = os.path.join(app.config['UPLOAD_FOLDER'], fileName)
+	minecraft.ThreadDownloadModpack(nameOwner, nameServer, url, filePath, fileName).start()
+
+def uploadMCModpack_Pack(nameOwner, nameServer, form, files):
+	file = files['pack']
+	if file and isModpackFile(file.filename):
+		fileName = secure_filename(file.filename)
+		filePath = os.path.join(app.config['UPLOAD_FOLDER'], fileName)
+		file.save(filePath)
+		minecraft.ThreadInstallModpack(nameOwner, nameServer, filePath, fileName).start()
+	else:
+		setError("Invalid file")
 
 @app.route('/server/updateFile', methods=['POST'])
 @login_required
@@ -582,6 +630,10 @@ def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True
 def getDirectoryForServer(nameOwner, nameServer):
 	servers_directory = getConfig('SERVERS_DIRECTORY')
 	return servers_directory + nameOwner + "_" + nameServer + "/"
+
+def isModpackFile(filename):
+	return '.' in filename and \
+			filename.rsplit('.', 1)[1] in MODPACK_EXTENSIONS
 
 def openCreateAccount():
 	return openModal('createUser')
