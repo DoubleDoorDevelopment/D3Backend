@@ -6,7 +6,10 @@
 
 {% block body %}
 	
-	<button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#modpackModal">Upload Modpack</button>
+	<button id="uploadModpack" type="button" class="btn btn-primary btn-lg btn-block"
+			data-toggle="modal" data-target="#modpackModal"
+			data-owner="{{ server.User.Username }}" data-server="{{ server.Name }}"
+		>Upload Modpack</button>
 	
 	<br />
 	
