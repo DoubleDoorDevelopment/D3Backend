@@ -390,13 +390,13 @@ def getConsole():
 @app.route('/_onlinePlayers', methods=['GET', 'POST'])
 def getOnlinePlayers():
 	if request.method == 'GET':
-		total = 50
-		number = 28
+		total = 0
+		number = 0
 	else:
 		nameOwner = request.form['nameOwner']
 		nameServer = request.form['nameServer']
-		total = 20
-		number = 10
+		total = 0
+		number = 0
 	return jsonify(
 		total = total,
 		number = number
@@ -430,7 +430,7 @@ def getOnlineServers():
 def getOnlineUsers():
 	return jsonify(
 			total = len(models.User.select()),
-			number = 1
+			number = 0
 		)
 
 @app.route('/_ramUsage')
