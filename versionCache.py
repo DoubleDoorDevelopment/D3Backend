@@ -153,4 +153,3 @@ def init(gameTypes, path_run):
 
 def downloadServerResources(game, directory, data):
 	cache_versions[game].downloadServerResources(directory, data)
-	
