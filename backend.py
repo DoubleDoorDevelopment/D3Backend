@@ -1,16 +1,18 @@
 
 import os
+import psutil
+import sys
+import time
+import shutil
 
 from datetime import datetime
-from flask import Flask, render_template, session, redirect, url_for, request, jsonify, json
-from functools import wraps
-import sys
-import psutil
-import time
 from distutils.dir_util import copy_tree
-import shutil
-from customthreading import *
+from functools import wraps
+
+from flask import Flask, render_template, session, redirect, url_for, request, jsonify, json
+
 import versionCache
+from customthreading import *
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -188,7 +190,10 @@ def addServer():
 @app.route('/add/server/admin', methods=['POST'])
 @login_required
 def addAdmin():
-	print()
+	ownerName = request.form['username']
+	serverName = request.form['servername']
+	user2Name = request.form['user']
+	return addUserToServer(ownerName, serverName, user2Name, "Admin")
 
 @app.route('/add/server/moderator', methods=['POST'])
 @login_required
@@ -502,15 +507,15 @@ def logout():
 
 # ~~~~~~~~~~ Lib ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def addUserToServer(ownerName, serverName, user2Name, permGroup):
+def addUserToServer(nameOwner, nameServer, user2Name, permGroup):
 	owner = None
 	user2 = None
 	
 	error = None
 	try:
-		user, error = models.getUser(ownerName)
+		user, error = models.getUser(nameOwner)
 		if error != None:
-			setError('No user for owner with name "' + ownerName + '"')
+			setError('No user for owner with name "' + nameOwner + '"')
 			return getIndexURL()
 		else:
 			owner = user
@@ -530,15 +535,15 @@ def addUserToServer(ownerName, serverName, user2Name, permGroup):
 	else:
 		try:
 			models.Moderator.create(
-				Owner = owner,
-				Server = models.getServer(serverName, ownerName),
-				User = user2,
+				Owner = nameOwner,
+				Server = nameServer,#models.getServer(nameOwner, nameServer),
+				User = user2Name,
 				Permissions = permGroup
 			)
 		except Exception as e:
 			setError(str(e))
 	
-	return redirect(url_for('server', username=ownerName, serverName=serverName))
+	return redirect(url_for('server', username=nameOwner, serverName=nameServer))
 
 def changePasswordForUser(username, old, new, verify):
 	

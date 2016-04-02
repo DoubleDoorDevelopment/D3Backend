@@ -122,13 +122,14 @@
 							<table class="table table-striped table-bordered">
 								<thread><tr>
 									<th>Name</th>
-									<th></th>
+									<th>Actions</th>
 								</tr></thread>
 								<tbody>
 									{% for user in moderators %}
 										<tr>
-											<td>{{ user.Username }}</td>
+											<td>{{ user.User.Username }}</td>
 											<td>
+												<!-- Actions -->
 												
 											</td>
 										</tr>
@@ -161,12 +162,12 @@
 							<table class="table table-striped table-bordered">
 								<thread><tr>
 									<th>Name</th>
-									<th></th>
+									<th>Actions</th>
 								</tr></thread>
 								<tbody>
 									{% for user in admins %}
 										<tr>
-											<td>{{ user.Username }}</td>
+											<td>{{ user.User.Username }}</td>
 											<td>
 												
 											</td>
@@ -293,6 +294,7 @@
 {% block scripts %}
 	{% include 'component/modal/AddModerator.html' %}
 	{% include 'component/modal/AddAdmin.html' %}
+	{% include 'component/modal/Minecraft/ModpackModal.html' %}
 	<script type="text/javascript" language="javascript">
 		$(document).ready(function() {
 			

@@ -5,6 +5,11 @@
 {% endblock %}
 
 {% block body %}
+	
+	<button type="button" class="btn btn-primary btn-lg btn-block" data-toggle="modal" data-target="#modpackModal">Upload Modpack</button>
+	
+	<br />
+	
 	<form action="{{ url_for('saveRunConfig') }}" method="POST" enctype="multipart/form-data">
 		
 		<input name="nameServer" type="hidden" value="{{ server.Name }}" />

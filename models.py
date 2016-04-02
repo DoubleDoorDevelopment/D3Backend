@@ -39,7 +39,7 @@ class Moderator(BaseModel):
 		]
 	
 	Identifier = PrimaryKeyField()
-	Owner = ForeignKeyField(User, db_column='User', related_name='owner')
+	Owner = ForeignKeyField(User, db_column='Owner', related_name='owner')
 	Server = ForeignKeyField(Server, db_column='Server')
 	User = ForeignKeyField(User, db_column='User', related_name='user')
 	Permissions = CharField()
