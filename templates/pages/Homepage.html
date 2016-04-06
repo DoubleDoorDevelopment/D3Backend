@@ -45,8 +45,6 @@
 	
 	<script text="text/javascript" language="javascript">
 		$(document).ready(function() {
-			var sourcePath = "file://{{ runDirectory }}";
-			
 			var updateMeter = function(div) {
 				var id = div.id;
 				$.getJSON("{{ url_for('index') }}_" + id, function(data) {

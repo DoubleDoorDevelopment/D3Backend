@@ -1,5 +1,5 @@
 <script type="text/javascript" language="javascript">
-	var forgeVersions = {{ cache_versions['Minecraft'].versions_forge|tojson }};
+	var forgeVersions = {{ caches['Minecraft'].versions_forge|tojson }};
 	$("#Custom_" + "version_minecraft").on('change', function() {
 		var selected = $("#Custom_" + "version_minecraft option:selected").text();
 		

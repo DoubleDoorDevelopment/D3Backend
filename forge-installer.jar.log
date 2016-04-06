@@ -1,0 +1,8 @@
+Exception in thread "main" java.awt.HeadlessException: 
+No X11 DISPLAY variable was set, but this program performed an operation which requires it.
+	at java.awt.GraphicsEnvironment.checkHeadless(GraphicsEnvironment.java:207)
+	at java.awt.Window.<init>(Window.java:535)
+	at java.awt.Frame.<init>(Frame.java:420)
+	at net.minecraftforge.installer.InstallerPanel.run(InstallerPanel.java:279)
+	at net.minecraftforge.installer.SimpleInstaller.launchGui(SimpleInstaller.java:154)
+	at net.minecraftforge.installer.SimpleInstaller.main(SimpleInstaller.java:40)

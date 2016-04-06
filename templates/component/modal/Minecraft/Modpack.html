@@ -43,6 +43,7 @@
 						<form action="{{ url_for(action) }}" method="POST" enctype="multipart/form-data">
 							<input name="nameOwner" id="nameOwner" type="hidden" value="" />
 							<input name="nameServer" id="nameServer" type="hidden" value="" />
+							<input name="iscurse" type="hidden" />
 							
 							<div>
 								<div class="col-sm-8" style="display: inline-block;">
@@ -75,6 +76,10 @@
 							
 							<input name="link" type="url" class="form-control" placeholder="www.google.com" />							
 							
+							<div class="form-group" align="center">
+								<input name="iscurse" type="checkbox" /> Is Curse Link
+							</div>
+							
 							{% with type="link", submitTitle="Upload" %}
 								{% include 'component/modal/Minecraft/ModpackFooter.html' %}
 							{% endwith %}
@@ -87,6 +92,10 @@
 							<input name="nameServer" id="nameServer" type="hidden" value="" />
 							
 							<input name="pack" type="file" class="form-control" />
+							
+							<div class="form-group" align="center">
+								<input name="iscurse" type="checkbox" /> Is Curse Link
+							</div>
 							
 							{% with type="pack", submitTitle="Upload" %}
 								{% include 'component/modal/Minecraft/ModpackFooter.html' %}

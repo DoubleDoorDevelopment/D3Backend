@@ -21,7 +21,7 @@
 		{% for entry in data %}
 			<tr>
 				<td>
-					<a href="{{ url_for('server', username=entry.User.Username, serverName=entry.Name) }}">{{ entry.Name }}</a>
+					<a href="{{ url_for('server', nameOwner=entry.User.Username, nameServer=entry.Name) }}">{{ entry.Name }}</a>
 				</td>
 				<td>{{ entry.User.Username }}</td>
 				<td>{{ entry.Port }}</td>
