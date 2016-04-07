@@ -28,7 +28,11 @@
 	
 	<div class="form-group">
 		<label for="save">Running Save</label>
-		
+		<select name="save" id="{{ prefix }}save" class="form-control">
+			{% for save in runConfig['saves'] %}
+				<option>{{ save }}</option>
+			{% endfor %}
+		</select>
 	</div>
 	
 {% endif %}

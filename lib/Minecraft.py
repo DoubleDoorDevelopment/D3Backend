@@ -164,6 +164,21 @@ class Server(Base.Server):
 	def __init__(self, cache, directoryPath, nameOwner, nameServer):
 		Base.Server.__init__(self, cache, directoryPath, nameOwner, nameServer)
 	
+	def setPort(self, port):
+		pass
+	
+	def backup(self):
+		pass
+	
+	def cleanRunFiles(self):
+		path = self.dirRun
+		exts = ["jar"]
+		for filename in os.listdir(path):
+			filePath = os.path.join(path, filename)
+			if os.path.isfile(filePath):
+				if filename.split('.')[-1] in exts:
+					os.remove(filePath)
+	
 	def install(self, **kwargs):
 		func = kwargs['func']
 		data = None
@@ -217,14 +232,16 @@ class Server(Base.Server):
 			
 			if forge == '':
 				url = self.cache.getVersionURL('vanilla', data = {'version': mc})
-				self.runJar = 'minecraft_server.' + mc + '.jar'
-				self.addDownload(url, os.path.join(self.dirRun, self.runJar))
+				data['jar'] = 'minecraft_server.' + mc + '.jar'
+				self.updateRunConfig({'jar': data['jar']})
+				self.addDownload(url, os.path.join(self.dirRun, data['jar']))
 			else:
 				# installer
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
 				installerPath = os.path.join(self.dirRun, "forge-installer.jar")
+				data['jar'] = "forge-" + forge + "-universal.jar"
+				self.updateRunConfig({'jar': data['jar']})
 				self.addDownloadFunc(self.downloadAndInstallForge, url = url, installerPath = installerPath)
-				self.runJar = "forge-" + forge + "-universal.jar"
 		
 		self.updateRunConfig(data)
 	
@@ -236,18 +253,6 @@ class Server(Base.Server):
 		env = dict(os.environ)
 		FNULL = open(os.devnull, 'w')
 		subprocess.call(['java', '-jar', installerPath, '--installServer'], env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
-	
-	def backup(self):
-		pass
-	
-	def cleanRunFiles(self):
-		path = self.dirRun
-		exts = ["jar"]
-		for filename in os.listdir(path):
-			filePath = os.path.join(path, filename)
-			if os.path.isfile(filePath):
-				if filename.split('.')[-1] in exts:
-					os.remove(filePath)
 	
 	def setErrors_Modpack(self, errorFiles):
 		self.setErrors("modpack", errorFiles)
@@ -264,7 +269,7 @@ class Thread(Base.Thread):
 	
 	def setRunArgs(self):
 		self.javaVersions = getJava()
-		with open(self.server.dirRun + "runConfig.json", 'r') as outfile:
+		with open(self.server.dirRun + "run.json", 'r') as outfile:
 			runConfig = json.load(outfile)
 		self.runArgs = [
 			self.javaVersions[0][1] + "/bin/java",
@@ -278,7 +283,7 @@ class Thread(Base.Thread):
 			for param in params.split(' '):
 				self.runArgs.append(param)
 		self.runArgs.extend([
-			'-jar', self.getJarName(),
+			'-jar', runConfig['jar'],
 			'nogui'
 		])
 		params = runConfig['other_mc_params']

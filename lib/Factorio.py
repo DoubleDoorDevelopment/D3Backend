@@ -6,6 +6,7 @@ import urllib
 import requests
 import subprocess
 from werkzeug import secure_filename
+from configparser import ConfigParser
 
 class Data(Base.Data):
 	
@@ -132,6 +133,14 @@ class Server(Base.Server):
 	def __init__(self, cache, directory, nameOwner, nameServer):
 		Base.Server.__init__(self, cache, directory, nameOwner, nameServer)
 	
+	def setPort(self, port):
+		filePath = self.dirRun + "factorio/config/config.ini"
+		config = ConfigParser()
+		config.read(filePath)
+		config['other']['port'] = str(port)
+		with open(filePath, 'w') as file:
+			config.write(file)
+	
 	def backup(self):
 		pass
 	
@@ -168,6 +177,13 @@ class Server(Base.Server):
 						data['saves'] = []
 					data['saves'].append(filename)
 					data['save'] = filename
+			
+			updateData = {}
+			if 'saves' in data:
+				updateData['saves'] = data['saves']
+			if 'save' in data:
+				updateData['save'] = data['save']
+			self.updateRunConfig(updateData)
 			
 			version = data['version']
 			runConfig = self.getRunConfig()

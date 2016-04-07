@@ -108,6 +108,9 @@ class Server(Downloader):
 		if self.isOnline():
 			self.thread.send(cmd)
 	
+	def setPort(self, port):
+		pass
+	
 	def install(self, **kwargs):
 		self.backup()
 	

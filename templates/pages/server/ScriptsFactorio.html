@@ -3,8 +3,8 @@
 	$(document).ready(function() {
 		var dangerZone = $("#custom");
 		
-		var version = "{{ runConfig['version'] }}";
-		$("#Custom_" + "version").val(version);
+		$("#Custom_" + "version").val("{{ runConfig['version'] }}");
+		$("#Custom_" + "save").val("{{ runConfig['save'] }}");
 		
 	});
 </script>

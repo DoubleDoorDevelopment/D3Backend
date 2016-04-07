@@ -250,13 +250,15 @@ def addServer():
 		return throwError(request.form,
 			'Server with name "' + name + '" already exists for user "' + username + '"')
 	
+	port = "25500"
+	
 	createServerObj(username, name, game)
 	
 	if partitionServer(name, port, game, request.form, request.files):
 		database.Server.create(
 			Name = name,
 			User = username,
-			Port = "25500",
+			Port = port,
 			Purpose = game
 		)
 		return redirect(url_for('server', nameOwner = username, nameServer = name))
@@ -824,7 +826,12 @@ def partitionServer(name, port, game, data, files):
 	
 	copy_tree(getDirForTemplate(game), directory, update = 1)
 	
-	_saveRunConfig(username, name, game, data, files)
+	try:
+		_saveRunConfig(username, name, game, data, files)
+		server = getServer(username, name)
+		server.setPort(port)
+	except Exception as e:
+		setError(str(e))
 	
 	return True
 
