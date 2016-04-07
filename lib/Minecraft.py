@@ -97,6 +97,9 @@ class Cache(Base.Cache):
 			data = json.load(file)
 			self.versions_vanilla = data
 	
+	def getVersionsVanillaSorted(self):
+		return sorted(self.versions_vanilla)
+	
 	def getManifestPathForge(self):
 		return self.dirCache + self.dir_forge + "manifest.json"
 	
@@ -136,6 +139,9 @@ class Cache(Base.Cache):
 		with open(self.getManifestPathForge(), 'r') as file:
 			self.versions_forge = json.load(file)
 	
+	def getVersionsForgeSorted(self):
+		return self.versions_forge
+	
 	def getVersions(self, typeVersion, data = {}):
 		if 'which' in data:
 			which = data['which']
@@ -160,6 +166,12 @@ class Server(Base.Server):
 	
 	def install(self, **kwargs):
 		func = kwargs['func']
+		data = None
+		if 'data' in kwargs:
+			data = kwargs['data']
+		mc = None
+		forge = None
+		
 		if func == 'modpack':
 			filePath = kwargs['filePath']
 			isCurse = kwargs['isCurse']
@@ -211,6 +223,9 @@ class Server(Base.Server):
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
 				installerPath = os.path.join(self.dirRun, "forge-installer.jar")
 				self.addDownloadFunc(self.downloadAndInstallForge, url = url, installerPath = installerPath)
+				self.runJar = "forge-" + forge + "-universal.jar"
+		
+		self.updateRunConfigVersions(data, mc = mc, forge = forge)
 	
 	def downloadAndInstallForge(self, **kwargs):
 		url = kwargs['url']
@@ -218,7 +233,26 @@ class Server(Base.Server):
 		urllib.urlretrieve(url, installerPath)
 		
 		env = dict(os.environ)
-		subprocess.call(['java', '-jar', installerPath], env=env)
+		FNULL = open(os.devnull, 'w')
+		subprocess.call(['java', '-jar', installerPath, '--installServer'], env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
+	
+	def updateRunConfigVersions(self, data, **kwargs):
+		filePath = self.dirRun + "runConfig.json"
+
+		if data is None:
+			if os.path.exists(filePath):
+				with open(filePath, 'r') as file:
+					data = json.load(file)
+			else:
+				data = {}
+		
+		if 'mc' in kwargs and kwargs['mc'] != None:
+			data['version_minecraft'] = kwargs['mc']
+		if 'forge' in kwargs and kwargs['forge'] != None:
+			data['version_forge'] = kwargs['forge']
+		
+		with open(filePath, 'w') as file:
+			json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
 	
 	def backup(self):
 		pass

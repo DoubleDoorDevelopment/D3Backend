@@ -3,7 +3,7 @@
 	<select name="version_minecraft" id="{{ prefix }}version_minecraft" class="form-control" required>
 		<option></option>
 		{% if 'Minecraft' in caches %}
-			{% for version in caches['Minecraft'].versions_vanilla %}
+			{% for version in caches['Minecraft'].getVersionsVanillaSorted() %}
 				<option>{{ version }}</option>
 			{% endfor %}
 		{% endif %}

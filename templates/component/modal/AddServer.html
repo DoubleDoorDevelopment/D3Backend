@@ -45,7 +45,7 @@
 		});
 	</script>
 	<script type="text/javascript" language="javascript">
-		var forgeVersions = {{ caches['Minecraft'].versions_forge|tojson }};
+		var forgeVersions = {{ caches['Minecraft'].getVersionsForgeSorted()|tojson }};
 		$("#AddServer_" + "version_minecraft").on('change', function() {
 			var selected = $("#AddServer_" + "version_minecraft option:selected").text();
 			

@@ -251,14 +251,13 @@ def addServer():
 			'Server with name "' + name + '" already exists for user "' + username + '"')
 	
 	serverObj = createServerObj(username, name, game)
-	
 	if partitionServer(name, port, game, request.form):
 		database.Server.create(
-				Name = name,
-				User = username,
-				Port = "25500",
-				Purpose = game
-			)
+			Name = name,
+			User = username,
+			Port = "25500",
+			Purpose = game
+		)
 		return redirect(url_for('server', nameOwner = username, nameServer = name))
 	else:
 		removeServerObj(username, name)
@@ -350,8 +349,8 @@ def deleteServer():
 	nameOwner = data[0]
 	nameServer = data[1]
 	
-	database.deleteServerFromTable(nameOwner, nameServer)
 	try:
+		database.deleteServerFromTable(nameOwner, nameServer)
 		shutil.rmtree(getDirForServer(nameOwner, nameServer))
 	except Exception as e:
 		setError(str(e))
@@ -839,15 +838,9 @@ def partitionServer(name, port, game, data):
 		return True
 
 def _saveRunConfig(nameOwner, nameServer, game, allData):
-	directory = getDirForServer(nameOwner, nameServer)
-	
 	data = { key: allData[key] for key in serverData[game].getRunConfigKeys() }
-	
-	with open(directory + "runConfig.json", 'w') as outfile:
-		json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
-	
 	server = getServer(nameOwner, nameServer)
-	server.install(func = "jars", mc = data['version_minecraft'], forge = data['version_forge'])
+	server.install(func = "jars", mc = data['version_minecraft'], forge = data['version_forge'], data = data)
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
