@@ -2,8 +2,8 @@
 	<label for="version_minecraft">Minecraft Version {% include 'component/StarRed.html' %}</label>
 	<select name="version_minecraft" id="{{ prefix }}version_minecraft" class="form-control" required>
 		<option></option>
-		{% if 'Minecraft' in cache_versions %}
-			{% for version in cache_versions['Minecraft'].versions_vanilla %}
+		{% if 'Minecraft' in caches %}
+			{% for version in caches['Minecraft'].getVersionsVanillaSorted() %}
 				<option>{{ version }}</option>
 			{% endfor %}
 		{% endif %}
@@ -16,11 +16,6 @@
 </div>
 
 <br />
-
-<div class="form-group">
-	<label for="ip">Hostname / IP</label>
-	<input name="ip" id="{{ prefix }}ip" placeholder="Binds to all IPs by default" type="text" class="form-control" />
-</div>
 
 <div class="form-group">
 	<center>

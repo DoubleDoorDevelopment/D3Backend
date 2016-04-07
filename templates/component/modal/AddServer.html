@@ -11,13 +11,6 @@
 		<input name="name" placeholder="" type="text" class="form-control" required/>
 	</div>
 	
-	<div clas="form-group">
-		<label for="port">Port</label>
-		<input id="port" name="port" placeholder="0" type="text" class="form-control" />
-	</div>
-	
-	<br />
-	
 	<div class="form-group">
 		<label for="type">Type {% include "component/StarRed.html" %}</label>
 		<select id="type" name="type" class="form-control" required>
@@ -35,17 +28,13 @@
 			</div>
 		{% endfor %}
 	{% endwith %}
-	
+
 	<div id='output'></div>
 	
 {% endblock %}
 {% block scripts %}
 	<script type="text/javascript" language="javascript">
 		$('#type').on('change', function() {
-			var server_types = JSON.parse('{{ server_types|tojson }}');
-			var selected = $( "#type option:selected" ).text();
-			$("#port").attr('value', server_types[selected]['port']);
-			
 			var options = document.getElementById("type"), option, i, div;
 			for (i = 1; i < options.length; i++) {
 				option = options[i];
@@ -56,7 +45,7 @@
 		});
 	</script>
 	<script type="text/javascript" language="javascript">
-		var forgeVersions = {{ cache_versions['Minecraft'].versions_forge|tojson }};
+		var forgeVersions = {{ caches['Minecraft'].getVersionsForgeSorted()|tojson }};
 		$("#AddServer_" + "version_minecraft").on('change', function() {
 			var selected = $("#AddServer_" + "version_minecraft option:selected").text();
 			

@@ -59,18 +59,18 @@ CREATE TABLE IF NOT EXISTS `backend`.`moderator` (
   CONSTRAINT `ModToOwnerLink`
     FOREIGN KEY (`Owner`)
     REFERENCES `backend`.`user` (`Username`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `ModToServerLink`
     FOREIGN KEY (`Server`)
     REFERENCES `backend`.`server` (`Name`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `ModToUserLink`
     FOREIGN KEY (`User`)
     REFERENCES `backend`.`user` (`Username`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 

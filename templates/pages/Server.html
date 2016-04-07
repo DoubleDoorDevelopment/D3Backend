@@ -20,8 +20,23 @@
 		<h1>
 			<span style="text-align: left;">
 				{{ server.Name }} <small>:{{ server.Port }} <span id="statusLabel" class="label label-danger">Offline</span></small>
+				
+				<span id="messages">
+					<div class="btn-group">
+						<button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown">
+							<span class="glyphicon glyphicon-bell" aria-hidden="true"></span> Messages
+						</button>
+						<ul id="messagesContent" class="dropdown-menu" style="width: 600%;">
+						</ul>
+					</div>
+				</span>
+				
 			</span>
 			<span style="float: right;">
+				
+				<span id="downloading"><small>
+					Downloading <i class="glyphicon glyphicon-repeat gly-spin"></i>
+				</small></span>
 				
 				{% with target="Server", class="", data=[server.User.Username, '|', server.Name]|join %}
 					{% include 'component/button/Delete.html' %}
@@ -100,140 +115,148 @@
 				
 				<!-- Start: Body: Danger Zone -->
 				
-				<!-- Start: Panel: Moderators -->
-				<div class="col-sm-6">
-					<div id="moderators" class="panel panel-info">
-						<div class="panel-heading">
-							<h3 class="panel-title" style="text-align: center;">
-								Moderators
-								<button id="addModerator" type="button" class="btn btn-success btn-circle btn-sm"
-										data-toggle="modal" data-target="#addModeratorModal"
-										data-username="{{ server.User.Username }}" data-servername="{{ server.Name }}"
-									>
-									<i class="fa fa-plus"></i>
-								</button>
-							</h3>
-						</div>
-						<div class="panel-body">
-							Usernames on the backend.
-							<br />
-							Can start, stop & use console.
-							
-							<table class="table table-striped table-bordered">
-								<thread><tr>
-									<th>Name</th>
-									<th>Actions</th>
-								</tr></thread>
-								<tbody>
-									{% for user in moderators %}
-										<tr>
-											<td>{{ user.User.Username }}</td>
-											<td>
-												<!-- Actions -->
-												
-											</td>
-										</tr>
-									{% endfor %}
-								</tbody>
-							</table>
+				<div class="col-sm-12">
+					
+					<!-- Start: Panel: Moderators -->
+					<div class="col-sm-6">
+						<div id="moderators" class="panel panel-info">
+							<div class="panel-heading">
+								<h3 class="panel-title" style="text-align: center;">
+									Moderators
+									<button id="addModerator" type="button" class="btn btn-success btn-circle btn-sm"
+											data-toggle="modal" data-target="#addModeratorModal"
+											data-username="{{ server.User.Username }}" data-servername="{{ server.Name }}"
+										>
+										<i class="fa fa-plus"></i>
+									</button>
+								</h3>
+							</div>
+							<div class="panel-body">
+								Usernames on the backend.
+								<br />
+								Can start, stop & use console.
+								
+								<table class="table table-striped table-bordered">
+									<thread><tr>
+										<th>Name</th>
+										<th>Actions</th>
+									</tr></thread>
+									<tbody>
+										{% for user in moderators %}
+											<tr>
+												<td>{{ user.User.Username }}</td>
+												<td>
+													<!-- Actions -->
+													
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
-				</div>
-				<!-- End: Panel: Moderators -->
-				
-				<!-- Start: Panel: Admins -->
-				<div class="col-sm-6">
-					<div id="admins" class="panel panel-info">
-						<div class="panel-heading">
-							<h3 class="panel-title" style="text-align: center;">
-								Admins
-								<button id="addAdmin" type="button" class="btn btn-success btn-circle btn-sm"
-										data-toggle="modal" data-target="#addAdminModal"
-										data-username="{{ server.User.Username }}" data-servername="{{ server.Name }}"
-									>
-									<i class="fa fa-plus"></i>
-								</button>
-							</h3>
-						</div>
-						<div class="panel-body">
-							Usernames on the backend.
-							<br />
-							Can do everything except modify mods & admins and delete server.
-							<table class="table table-striped table-bordered">
-								<thread><tr>
-									<th>Name</th>
-									<th>Actions</th>
-								</tr></thread>
-								<tbody>
-									{% for user in admins %}
-										<tr>
-											<td>{{ user.User.Username }}</td>
-											<td>
-												
-											</td>
-										</tr>
-									{% endfor %}
-								</tbody>
-							</table>
+					<!-- End: Panel: Moderators -->
+					
+					<!-- Start: Panel: Admins -->
+					<div class="col-sm-6">
+						<div id="admins" class="panel panel-info">
+							<div class="panel-heading">
+								<h3 class="panel-title" style="text-align: center;">
+									Admins
+									<button id="addAdmin" type="button" class="btn btn-success btn-circle btn-sm"
+											data-toggle="modal" data-target="#addAdminModal"
+											data-username="{{ server.User.Username }}" data-servername="{{ server.Name }}"
+										>
+										<i class="fa fa-plus"></i>
+									</button>
+								</h3>
+							</div>
+							<div class="panel-body">
+								Usernames on the backend.
+								<br />
+								Can do everything except modify mods & admins and delete server.
+								<table class="table table-striped table-bordered">
+									<thread><tr>
+										<th>Name</th>
+										<th>Actions</th>
+									</tr></thread>
+									<tbody>
+										{% for user in admins %}
+											<tr>
+												<td>{{ user.User.Username }}</td>
+												<td>
+													
+												</td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
 						</div>
 					</div>
-				</div>
-				<!-- End: Panel: Admins -->
+					<!-- End: Panel: Admins -->
 				
-				<!-- Start: Panel: Restart -->
-				<div class="col-sm-6">
-					<div id="restart" class="panel panel-info">
-						<div class="panel-heading">
-							<h3 class="panel-title" style="text-align: center;">
-								Restart Info
-							</h3>
-						</div>
-						<div class="panel-body">
-							<form action="{{ url_for('index') }}" method="POST" enctype="multipart/form-data">
-								
-								<div class="form-group">
-									<input type="checkbox" /> <label>Autostart</label>
-									&nbsp;
-									<label><small>Last autostart: {{ autostartLast }}</small></label>
-								</div>
-								
-								<hr>
-								
-								<div class="form-group">
-									<input type="checkbox" /> <label>Use Reboot Schedule</label>
-								</div>
-								
-								<div class="form-group">
-									<label>Reboot Schedule</label>
-									<div class="input-group col-sm-8 col-sm-offset-2">
-										<input type="number" aria-describedby="helpBlock" min="0" max="23" placeholder="0" class="form-control" />
-										<div class="input-group-addon">h</div>
-										<input type="number" aria-describedby="helpBlock" min="0" max="59" placeholder="0" class="form-control" />
+				</div>
+				
+				<div class="col-sm-12">
+				
+					<!-- Start: Panel: Restart -->
+					<div class="col-sm-6">
+						<div id="restart" class="panel panel-info">
+							<div class="panel-heading">
+								<h3 class="panel-title" style="text-align: center;">
+									Restart Info
+								</h3>
+							</div>
+							<div class="panel-body">
+								<form action="{{ url_for('index') }}" method="POST" enctype="multipart/form-data">
+									
+									<div class="form-group">
+										<input type="checkbox" /> <label>Autostart</label>
+										&nbsp;
+										<label><small>Last autostart: {{ autostartLast }}</small></label>
 									</div>
-								</div>
-								
-								<div class="form-group">
-									<div class="input-group">
-										<input name="reboot_message" type="text" value="Server reboot in %time minutes!" class="form-control" />
-										<div class="input-group-addon">%time = time left in min</div>
+									
+									<hr>
+									
+									<div class="form-group">
+										<input type="checkbox" /> <label>Use Reboot Schedule</label>
 									</div>
-									<small>This message gets send at: T- 15, 10, 5, 4, 3, 2, 1, 0 min.</small>
-								</div>
-								
-								<hr>
-								
-								<button type="submit" class="btn btn-primary btn-lg btn-block">Save</button>
-							</form>
+									
+									<div class="form-group">
+										<label>Reboot Schedule</label>
+										<div class="input-group col-sm-8 col-sm-offset-2">
+											<input type="number" aria-describedby="helpBlock" min="0" max="23" placeholder="0" class="form-control" />
+											<div class="input-group-addon">h</div>
+											<input type="number" aria-describedby="helpBlock" min="0" max="59" placeholder="0" class="form-control" />
+										</div>
+									</div>
+									
+									<div class="form-group">
+										<div class="input-group">
+											<input name="reboot_message" type="text" value="Server reboot in %time minutes!" class="form-control" />
+											<div class="input-group-addon">%time = time left in min</div>
+										</div>
+										<small>This message gets send at: T- 15, 10, 5, 4, 3, 2, 1, 0 min.</small>
+									</div>
+									
+									<hr>
+									
+									<button type="submit" class="btn btn-primary btn-lg btn-block">Save</button>
+								</form>
+							</div>
 						</div>
 					</div>
-				</div>
-				<!-- End: Panel: Restart -->
+					<!-- End: Panel: Restart -->
+					
+					<!-- Start: Panel: Custom -->
+					{% with prefix="Custom_" %}
+						{% include ['pages/server/Panel', server.Purpose, '.html']|join %}
+					{% endwith %}
+					<!-- End: Panel: Custom -->
 				
-				<!-- Start: Panel: Custom -->
-				{% with prefix="Custom_" %}
-					{% include ['pages/server/Panel', server.Purpose, '.html']|join %}
-				{% endwith %}
-				<!-- End: Panel: Custom -->
+				</div>
 				
 				<!-- End: Body: Danger Zone -->
 				
@@ -350,6 +373,72 @@
 						
 					}, "json");
 			};
+			// Downloads & Messages
+			var updateMessages = function() {
+				$.post("{{ url_for('getServerMessageData') }}",
+					{
+						nameServer : "{{ server.Name }}",
+						nameOwner : "{{ server.User.Username }}"
+					},
+					function(data, textstatus) {
+						
+						// ~~~~~ Downloading Status ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						
+						var display = "none";
+						if (data['isDownloading']) display = "float";
+						
+						var span = $('#downloading').get(0);
+						span.style.display = display;
+						
+						// ~~~~~ Messages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						
+						var errors = data['errors'];
+
+						display = "none";
+						var length = Object.keys(errors).length;
+						if (length > 0) display = "float";
+						
+						span = $('#messages').get(0);
+						span.style.display = display;
+						
+						var content = $("#messagesContent").get(0);
+						content.innerHTML = "";
+						
+						for (var category in errors) {
+							for (var errorIndex in errors[category]) {
+								var error = errors[category][errorIndex];
+								var html = "";
+								
+								html += "<li>";
+								html += "<span class='row'>";
+								
+								html += "<div class='col-sm-10'>";
+								html += '<strong>';
+								html += category + ": ";
+								html += error;
+								html += '</strong>';
+								html += "</div>";
+								
+								html += "<div class='col-sm-2'>";
+								html += '<form action="' + "{{ url_for('removeServerNotification') }}" + '" method="POST">';
+								html += '<input type="hidden" name="nameOwner" value="{{ server.User.Username }}" />';
+								html += '<input type="hidden" name="nameServer" value="{{ server.Name }}" />';
+								html += '<input type="hidden" name="category" value="' + category + '" />';
+								html += '<input type="hidden" name="index" value="' + errorIndex + '" />';
+								html += '<button type="submit" class="btn pull-right"><span class="glyphicon glyphicon-remove"></span></button>';
+								html += '</form>';
+								html += "</div>";
+								
+								html += "</span>"
+								html += "</li>";
+								
+								content.innerHTML += html;
+							}
+							
+						}
+						
+					}, "json");
+			};
 			
 			var textArea = document.getElementById("console");
 			var onlinePlayersDiv = $("#onlinePlayersWidth").get(0);
@@ -358,11 +447,13 @@
 			
 			updateConsole(textArea);
 			updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
+			updateMessages();
 			var checkWidgetsHalfSecond = setInterval(function() {
 				//textArea.value += Math.random() + '\n';
 				updateConsole(textArea);
 				updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 				updateStatus();
+				updateMessages();
 			}, 250);
 		});
 	</script>
@@ -379,7 +470,6 @@
 			editor.setTheme("ace/theme/twilight");
 			
 			var mode = modelist.getModeForPath(fileData['filename']).mode;
-			console.log(mode);
 			editor.getSession().setMode(mode);
 			
 			$("#" + fileData['id']).submit(function(event) {

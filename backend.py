@@ -13,8 +13,10 @@ from flask import Flask, render_template, session, redirect, url_for, request, j
 from werkzeug import secure_filename
 
 import minecraft
-import versionCache
+#import versionCache
 from customthreading import *
+import types
+import lib.Cache
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -51,14 +53,14 @@ GAME_TYPES = {
 		'runConfigKeys': []
 	}
 }
-GAME_DATA = {
-	'Minecraft': {
-		'cache': versionCache.CacheMinecraft
-	},
-	'Factorio': {
-		'cache': versionCache.Cache
-	}
-}
+#GAME_DATA = {
+#	'Minecraft': {
+#		'cache': versionCache.CacheMinecraft
+#	},
+#	'Factorio': {
+#		'cache': versionCache.Cache
+#	}
+#}
 
 # ~~~~~~~~~~ Init: Config & Startup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -77,8 +79,35 @@ def login_required(f):
 
 def init():
 	app.secret_key = os.urandom(20)
-	versionCache.init(GAME_DATA, getConfig('RUN_DIRECTORY'))
 	app.config['UPLOAD_FOLDER'] = getConfig('MAIN_DIRECTORY') + "static/uploads/"
+	
+	initCaches()
+	initServers(models.Server.select().order_by(models.Server.User, models.Server.Name))
+
+servers = None
+caches = None
+
+def initCaches():
+	cacheDirectory = getConfig('RUN_DIRECTORY') + "cache/"
+	
+	global caches
+	caches = {}
+	
+	for serverType in types.serverTypes:
+		caches[serverType.getName()] = serverType.getCacheClass()(cacheDirectory + serverType.getName() + "/")
+
+def initServers(serverQuery):
+	serverDirectory = getConfig('SERVERS_DIRECTORY')
+	
+	global servers
+	servers = {}
+	
+	for serverModel in serverQuery:
+		nameOwner = serverModel.User.Username
+		if not nameOwner in servers:
+			servers[nameOwner] = {}
+		directory = serverDirectory + nameOwner + "_" + serverModel.Name + "/"
+		servers[nameOwner][serverModel.Name] = types.serverTypeToClass[serverModel.Purpose](directory)
 
 # ~~~~~~~~~~ URL Redirects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -149,7 +178,7 @@ def renderPage(template, **kwargs):
 			user_groups = models.getUserGroups(),
 			server_types = GAME_TYPES,
 			user_servers = servers,
-			cache_versions = versionCache.cache_versions,
+			cache_versions = servers,
 			**kwargs
 		)
 
@@ -455,9 +484,9 @@ def isServerOnline():
 	nameOwner = request.form['nameOwner']
 	nameServer = request.form['nameServer']
 	isonline = False
-	if nameOwner in activeServers:
-		if nameServer in activeServers[nameOwner]:
-			isonline = True
+	if nameOwner in servers:
+		if nameServer in servers[nameOwner]:
+			isonline = servers[nameOwner][nameServer].isOnline()
 	return jsonify(online = isonline)
 
 @app.route('/_onlineServers')
