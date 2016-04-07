@@ -1,1 +1,36 @@
-Factorio html div
+
+<div class="form-group">
+	<label for="version">Version {% include 'component/StarRed.html' %}</label>
+	{% if prefix != "AddServer_" %}
+		<select name="version" id="{{ prefix }}version" class="form-control" required>
+			<option></option>
+			{% if 'Factorio' in caches %}
+				{% for version in caches['Factorio'].getVersions() %}
+					<option
+						{% if version in caches['Factorio'].getVersionsStable() %}
+							style="font-weight:bold;"
+						{% endif %}>{{ version }}</option>
+				{% endfor %}
+			{% endif %}
+		</select>
+	{% else %}
+		<br />
+		You're only option is <input name="version" class="form-control" value="{{ caches['Factorio'].getVersionsStable()[-1] }}" readonly />
+	{% endif %}
+</div>
+
+{% if prefix != "AddServer_" %}
+	
+	<div class="form-group">
+		<label for="save">Save File (.zip)</label>
+		<input name="save" type="file" class="form-control" />
+	</div>
+	
+	<div class="form-group">
+		<label for="save">Running Save</label>
+		
+	</div>
+	
+{% endif %}
+
+<br />

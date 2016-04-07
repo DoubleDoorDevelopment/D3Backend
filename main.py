@@ -81,11 +81,11 @@ def init():
 	app.secret_key = os.urandom(20)
 	app.config['UPLOAD_FOLDER'] = getDirUploads()
 	
+	from lib.Base import initDownloaders
+	initDownloaders()
 	initData()
 	initCaches()
 	initServers(database.Server.select().order_by(database.Server.User, database.Server.Name))
-	from lib.Base import initDownloaders
-	initDownloaders()
 
 def initData():
 	global serverData
@@ -250,8 +250,9 @@ def addServer():
 		return throwError(request.form,
 			'Server with name "' + name + '" already exists for user "' + username + '"')
 	
-	serverObj = createServerObj(username, name, game)
-	if partitionServer(name, port, game, request.form):
+	createServerObj(username, name, game)
+	
+	if partitionServer(name, port, game, request.form, request.files):
 		database.Server.create(
 			Name = name,
 			User = username,
@@ -474,7 +475,7 @@ def saveRunConfig():
 	nameOwner = request.form['nameOwner']
 	nameServer = request.form['nameServer']
 	game = request.form['game']
-	_saveRunConfig(nameOwner, nameServer, game, request.form)
+	_saveRunConfig(nameOwner, nameServer, game, request.form, request.files)
 	return redirect(url_for('server', nameOwner = nameOwner, nameServer = nameServer))
 
 @app.route('/settings/user')
@@ -521,8 +522,10 @@ def server(nameOwner, nameServer):
 			
 			fileData.append(thisData)
 		
-		with open(directory + "runConfig.json", 'r') as runJson:
-			runConfig = json.load(runJson)
+		runConfig = {}
+		if os.path.exists(directory + "run.json"):
+			with open(directory + "run.json", 'r') as runJson:
+				runConfig = json.load(runJson)
 		
 		return renderPage('pages/Server.html',
 			current = "server",
@@ -809,7 +812,7 @@ def parse_minutes(time):
 	time = int(time / 24)
 	return str(time) + " days " + str(hours) + " hours " + str(minutes) + " minutes " + str(seconds) + " seconds"
 
-def partitionServer(name, port, game, data):
+def partitionServer(name, port, game, data, files):
 	
 	username = getUsername()
 	directory = getDirForServer(username, name)
@@ -817,30 +820,23 @@ def partitionServer(name, port, game, data):
 	if not os.path.exists(directory):
 		os.makedirs(directory)
 	
-	if game == "Minecraft":
-		
-		# ~~~~~~~~~~ Copy Template
-		
-		copy_tree(getDirForTemplate(game), directory, update = 1)
-		
-		# ~~~~~~~~~ Config
-		
-		_saveRunConfig(username, name, game, data)
-		
-		# ~~~~~~~~~~ Download server
-		
-		
-		
-		# ~~~~~~~~~~ End
-		
-		return True
-	elif game == "Factorio":
-		return True
+	# ~~~~~~~~~~ Copy Template
+	
+	copy_tree(getDirForTemplate(game), directory, update = 1)
+	
+	_saveRunConfig(username, name, game, data, files)
+	
+	return True
 
-def _saveRunConfig(nameOwner, nameServer, game, allData):
-	data = { key: allData[key] for key in serverData[game].getRunConfigKeys() }
+def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 	server = getServer(nameOwner, nameServer)
-	server.install(func = "jars", mc = data['version_minecraft'], forge = data['version_forge'], data = data)
+	
+	data = {}
+	for key in serverData[game].getRunConfigKeys():
+		if key in allData:
+			data[key] = allData[key]
+	
+	server.install(func = "server", data = data, files = files)
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

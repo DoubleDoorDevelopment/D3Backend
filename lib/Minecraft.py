@@ -184,6 +184,7 @@ class Server(Base.Server):
 					target = installCursePack,
 					args = (self.dirRun, modpackDir, filePath, destFilePath, self,)
 				).start()
+				return
 			else:
 				if os.path.exists(modpackDir):
 					shutil.rmtree(modpackDir)
@@ -208,9 +209,9 @@ class Server(Base.Server):
 				shutil.move(modpackDir + "mods/", self.dirRun + "mods/")
 				
 				shutil.rmtree(modpackDir)
-		elif func == "jars":
-			mc = kwargs['mc']
-			forge = kwargs['forge']
+		elif func == 'server':
+			mc = data['version_minecraft']
+			forge = data['version_forge']
 			self.backup()
 			self.cleanRunFiles()
 			
@@ -225,7 +226,7 @@ class Server(Base.Server):
 				self.addDownloadFunc(self.downloadAndInstallForge, url = url, installerPath = installerPath)
 				self.runJar = "forge-" + forge + "-universal.jar"
 		
-		self.updateRunConfigVersions(data, mc = mc, forge = forge)
+		self.updateRunConfig(data)
 	
 	def downloadAndInstallForge(self, **kwargs):
 		url = kwargs['url']
@@ -235,24 +236,6 @@ class Server(Base.Server):
 		env = dict(os.environ)
 		FNULL = open(os.devnull, 'w')
 		subprocess.call(['java', '-jar', installerPath, '--installServer'], env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
-	
-	def updateRunConfigVersions(self, data, **kwargs):
-		filePath = self.dirRun + "runConfig.json"
-
-		if data is None:
-			if os.path.exists(filePath):
-				with open(filePath, 'r') as file:
-					data = json.load(file)
-			else:
-				data = {}
-		
-		if 'mc' in kwargs and kwargs['mc'] != None:
-			data['version_minecraft'] = kwargs['mc']
-		if 'forge' in kwargs and kwargs['forge'] != None:
-			data['version_forge'] = kwargs['forge']
-		
-		with open(filePath, 'w') as file:
-			json.dump(data, file, sort_keys=True, indent=4, separators=(',', ': '))
 	
 	def backup(self):
 		pass
@@ -350,7 +333,7 @@ def installCursePack(dirRun, modpackDir, filePath, destFilePath, server):
 	mc = minecraftManifest['version']
 	forge = minecraftManifest['modLoaders'][0]['id']
 	forge = mc + '-' + forge.split('-')[1] + '-' + mc
-	server.install(func = "jars", mc = mc, forge = forge)
+	server.install(func = "server", data = {'version_minecraft': mc, 'version_forge': forge})
 	
 	urlProject = "http://minecraft.curseforge.com/mc-mods/"
 

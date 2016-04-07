@@ -136,6 +136,23 @@ class Server(Downloader):
 		del self.errors[category][index]
 		if len(self.errors[category]) <= 0:
 			self.errors.pop(category, None)
+	
+	def getRunConfig(self):
+		filePath = self.dirRun + "run.json"
+		if os.path.exists(filePath):
+			with open(filePath, 'r') as file:
+				return json.load(file)
+		return {}
+	
+	def updateRunConfig(self, newData):
+		filePath = self.dirRun + "run.json"
+		
+		oldData = self.getRunConfig()
+		
+		for key in newData:
+			oldData[key] = newData[key]
+		
+		dumpJson(oldData, filePath)
 
 class Thread(threading.Thread):
 	
@@ -168,13 +185,18 @@ class Thread(threading.Thread):
 		writer.write("----=====##### SERVER PROCESS  STARTING #####=====-----\n")
 		writer.flush()
 		
-		self.process = Popen(self.getRunArgs(), cwd = self.server.dirRun,
-				stdout = PIPE, stderr = STDOUT, stdin = PIPE)
-		while self.process.poll() is None:
-			out = self.process.stdout.read(1)
-			if out != '':
-				writer.write(out)
-				writer.flush()
+		runArgs = self.getRunArgs()
+		if runArgs is None:
+			writer.write("Invalid runtime parameters, please ask server admins WHYYYYY?!?!?!\n")
+			writer.flush()
+		else:
+			self.process = Popen(runArgs, cwd = self.server.dirRun,
+					stdout = PIPE, stderr = STDOUT, stdin = PIPE)
+			while self.process.poll() is None:
+				out = self.process.stdout.read(1)
+				if out != '':
+					writer.write(out)
+					writer.flush()
 		
 		writer.write("----=====##### SERVER PROCESS HAS ENDED #####=====-----\n")
 		writer.flush()
