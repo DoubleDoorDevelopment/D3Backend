@@ -1,0 +1,42 @@
+{% extends "base/Table.html" %}
+
+{% block page_title %}
+	Caches
+{% endblock %}
+
+{% block tableHeader %}
+	Caches
+{% endblock %}
+
+{% block tableColumnsHeaders %}
+	<th>Name</th>
+	<th>Cache</th>
+	<th></th>
+{% endblock %}
+
+{% block tableBody %}
+	{% if data is not none %}
+		{% for entry in data %}
+			
+			{% for cacheName in data[entry].getNames() %}
+				<tr>
+					<td>{{ cacheName }}</td>
+					<td>{{ entry }}</td>
+					<td>
+						
+						<a href="{{ url_for('refreshCache', cacheName=cacheName) }}" class="btn btn-warning">
+							<i class="fa fa-refresh fa-fw"></i> Refresh
+						</a>
+						
+					</td>
+				</tr>
+			{% endfor %}
+			
+		{% endfor %}
+	{% endif %}
+{%endblock%}
+
+{% block baseModals %}{% endblock %}
+
+{% block scripts2 %}
+{% endblock %}

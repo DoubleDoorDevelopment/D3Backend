@@ -19,18 +19,6 @@
 						</a>
 					</li>
 					
-					<li>
-						<a href="#"><i class="fa fa-refresh fa-fw"></i>Fetch Caches<span class="fa arrow"></span></a>
-						<ul class="nav nav-second-level">
-							{% for refCache in refreshCacheOptions %}
-								<li>
-									<a href="{{ url_for('refreshCache', cacheName=refCache) }}">
-										<i class="fa fa-arrow-circle-o-down fa-fw"></i> {{ refCache }}
-									</a>
-								</li>
-							{% endfor %}
-						</ul>
-					</li>
 				{% endif %}
 				
 				<li>
