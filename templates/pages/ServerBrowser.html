@@ -1,0 +1,152 @@
+{% extends "base/Content.html" %}
+
+{% block page_title %}
+	{{ server.Name }}
+{% endblock %}
+
+{% block PageStyles %}
+	<style type="text/css" media="screen">
+		.aceEditor {
+			height: 300px;
+			text-align: left;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	
+	<div id="actions" class="well-sm">
+		<a class="btn btn-default" id="upload-button"><i class="fa fa-chevron-left"></i> Server</a>
+		<div class="pull-right">
+			<a class="btn btn-default" id="upload-button"><i class="fa fa-upload"></i> Upload</a>
+			<a class="btn btn-default" id="new-file-button"><i class="fa fa-file"></i> New File</a>
+			<a class="btn btn-default" id="new-folder-button"><i class="fa fa-folder"></i> New folder</a>
+			<a class="btn btn-default" id="refresh-button"><i class="fa fa-refresh"></i> Refresh</a>
+		</div>
+	</div>
+	
+	<ol class="breadcrumb" id="breadcrumb"></ol>
+	
+	{% if isFile %}
+		{% if not isBinary %}
+			<div class="aceEditor" id="editor">{{ fileContents|encodeText }}</div>
+		{% else %}
+			<div>{{ fileContents|encodeText }}</div>
+		{% endif %}
+	{% else %}
+		<table class="table table-hover table-condensed" id="filemanager"></table>
+	{% endif %}
+	
+	
+{% endblock %}
+
+{% block scripts %}
+	<script src="{{ url_for('static', filename='ace/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
+	<script src="{{ url_for('static', filename='ace/src-noconflict/ext-modelist.js') }}" type="text/javascript" charset="utf-8"></script>
+	
+	<script type="text/javascript" language="javascript">
+		/*global ace*/
+		function fillBreadcrumb(path, url) {
+			/*global $*/
+			var nameOwner = '{{ server.User.Username }}';
+			var nameServer = '{{ server.Name }}';
+			$('ol#breadcrumb').html('<li><a href="' + url + '">' + nameOwner + '_' + nameServer + '</a></li>');
+			var parts = path.split('/');
+			var html = '';
+			var link = '';
+			for (var i = 0; i < parts.length; i++) {
+				if (i != parts.length - 1) {
+					link += i == 0 ? parts[i] : '/' + parts[i];
+					html += '<li><a href="' + url + '/' + link + '">' + parts[i] + '</a></li>';
+				}
+				else
+					html += '<li class="active">' + parts[i] + '</li>';
+			}
+			$('ol#breadcrumb').append(html);
+		}
+		
+		function fillFileManager(path, url) {
+			$('table#filemanager').empty();
+			
+			$('table#filemanager').append(
+				'<tr>' +
+					'<th>File Name</th>' +
+					'<th>Size</th>' +
+					'<th>Permissions</th>' +
+				'</tr>'
+			);
+			
+			var contents = JSON.parse('{{ dirContents|tojson }}');
+			for (var element in contents) {
+				var data = contents[element];
+				// https://github.com/W4RH4WK/MinimalFileManager
+				var icon = data['isFile'] ? (data['isBinary'] ? 'file' : 'file-text') : 'folder';
+				var name = '<a href="' + url + path + (path != '' ? '/' : '') + element + '">' + element + '</a>';
+				var size = data['size'];
+				var perms = data['perms'];
+				var permStr = perms + ' ';
+				for (var i in perms) {
+					var char = perms[i];
+					if (char == '0') permStr += '---';
+					else if (char == '1') permStr += '--x';
+					else if (char == '2') permStr += '-w-';
+					else if (char == '3') permStr += '-wx';
+					else if (char == '4') permStr += 'r--';
+					else if (char == '5') permStr += 'r-x';
+					else if (char == '6') permStr += 'rw-';
+					else if (char == '7') permStr += 'rwx';
+				}
+				
+				$('table#filemanager').append(
+					'<tr>' +
+						'<td>' +
+							'<i class="fa fa-' + icon + '"></i> ' +
+							name +
+						'</td>' +
+						'<td>' +
+							size +
+						'</td>' +
+						'<td>' +
+							permStr +
+						'</td>' +
+					'</tr>'
+				);
+			}
+		}
+		
+		function initEdittor(path, url) {
+			var editor = ace.edit("editor");
+			editor.setTheme("ace/theme/twilight");
+			var modelist = ace.require("ace/ext/modelist");
+			var mode = modelist.getModeForPath('{{ filename }}').mode;
+			editor.getSession().setMode(mode);
+			editor.setOptions({
+				//fontFamily: "tahoma",
+				fontSize: "12pt"
+			});
+			editor.getSession().on('change', function() {
+				$.post(url + path,
+					{
+						'function': 'saveFile',
+						'content': editor.getSession().getValue()
+					},
+					function(result) {
+						//console.log(result);
+					}
+				);
+			});
+		}
+		
+		$(document).ready(function() {
+			var isFile = '{{ isFile }}' === 'True';
+			var isBinary = '{{ isBinary }}' === 'True';
+			var path = "{{ path }}";
+			var url = '{{ url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name) }}';
+			fillBreadcrumb(path, url);
+			if (!isBinary) {
+				if (!isFile) fillFileManager(path, url);
+				else initEdittor(path, url);
+			}
+		});
+	</script>
+{% endblock %}

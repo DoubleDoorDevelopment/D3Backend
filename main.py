@@ -1,4 +1,5 @@
 
+import magic
 import os
 import psutil
 import sys
@@ -228,6 +229,13 @@ def renderPage(template, **kwargs):
 @app.errorhandler(404)
 def not_found(error):
 	return renderPage('pages/404.html'), 404
+
+@app.template_filter('encodeText')
+def filterFileEncode(value):
+	try:
+		return value.decode("utf-8")
+	except Exception as e:
+		return str(e)
 
 # ~~~~~~~~~~ Endpoints ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -536,6 +544,74 @@ def server(nameOwner, nameServer):
 			userIsAdmin = userIsAdmin,
 			fileData = fileData,
 			runConfig = runConfig
+		)
+	else:
+		return throwError(None, error)
+
+@app.route('/user/<string:nameOwner>/<string:nameServer>/browser/', methods=['GET', 'POST'])
+@app.route('/user/<string:nameOwner>/<string:nameServer>/browser/<path:path>', methods=['GET', 'POST'])
+@login_required
+def browseServer(nameOwner, nameServer, path = ''):
+	serverModel, error = database.getServer(nameOwner, nameServer)
+	if serverModel != None:
+		server = getServer(nameOwner, nameServer)
+		filePath = server.dirRun + path
+		
+		exists = os.path.exists(filePath)
+		isFile = False
+		if exists:
+			isFile = os.path.isfile(filePath)
+		
+		if request.method == 'POST':
+			if 'function' in request.form and request.form['function'] == 'saveFile':
+				with open(filePath, 'w') as file:
+					file.write(request.form['content'])
+				return "Done"
+		
+		dirContents = {}
+		fileContents = ""
+		filename = 'none.txt'
+		if not isFile:
+			for item in os.listdir(filePath):
+				itemPath = os.path.join(filePath, item)
+				itemIsFile = os.path.isfile(itemPath)
+				itemIsBinary = False
+				if itemIsFile:
+					f = magic.Magic()
+					mime = f.from_file(itemPath)
+					itemIsBinary = not mime.startswith("ASCII")
+				if itemIsFile:
+					size = os.path.getsize(itemPath)
+				else:
+					size = '---'
+				permissions = str(oct(os.stat(itemPath).st_mode & 0777))[1:]
+				dirContents[item] = {
+					'isFile': itemIsFile,
+					'isBinary': itemIsBinary,
+					'size': size,
+					'perms': permissions
+				}
+		else:
+			filename = filePath.split('/')[-1]
+			with open(filePath, 'r') as file:
+				fileContents = file.read()
+		
+		isBinary = False
+		if isFile:
+			f = magic.Magic()
+			mime = f.from_file(filePath)
+			print(mime)
+			isBinary = not mime.startswith("ASCII")
+			if isBinary:
+				fileContents = mime
+		
+		return renderPage("/pages/ServerBrowser.html",
+			server = serverModel,
+			path = path,
+			isFile = isFile, isBinary = isBinary,
+			dirContents = dirContents,
+			fileContents = fileContents,
+			filename = filename
 		)
 	else:
 		return throwError(None, error)

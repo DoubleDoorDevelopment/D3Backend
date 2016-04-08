@@ -271,6 +271,16 @@
 			<div class="panel-heading">
 				<h3 class="panel-title" style="text-align: center;">
 					File Manipulation
+					
+					<span class="pull-right">
+						<form action="{{ url_for('browseServer', nameOwner = server.User.Username, nameServer = server.Name) }}"
+								method = 'GET' >
+							<button type="submit" class="btn btn-success">
+								File Browser
+							</button>
+						</form>
+					</span>
+					
 				</h3>
 			</div>
 			<div class="panel-body" style="text-align: center;">
