@@ -19,7 +19,7 @@ class Data(Base.Data):
 		return 34197
 	
 	def getPortRange(self):
-		return (34100, 34199)
+		return 34100, 34199
 	
 	def getRunConfigKeys(self):
 		return ['version']
