@@ -10,6 +10,7 @@ import os
 import io
 import sys
 import urllib2
+import ssl
 
 from customthreading import ThreadMaster, ThreadPool
 
@@ -25,8 +26,9 @@ def dumpJson(data, file):
 
 def downloadFile(url, filePath):
 	try:
-		request = urllib2.Request(url, unverifiable = True)
-		urlFile = urllib2.urlopen(request)
+		request = urllib2.Request(url, headers={ 'X-Mashape-Key': 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' })
+		gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+		urlFile = urllib2.urlopen(request, context = gcontext)
 		print("Downloading " + url)
 		
 		with open(filePath, 'wb') as file:
