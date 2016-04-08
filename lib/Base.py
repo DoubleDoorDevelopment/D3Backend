@@ -5,7 +5,7 @@ import types as Types
 import json
 
 import threading
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, call
 import os
 import io
 import sys
@@ -129,6 +129,10 @@ class Server(Downloader):
 	def send(self, cmd):
 		if self.isOnline():
 			self.thread.send(cmd)
+	
+	def executeCommand(self, cmd, dirPath, fileDirPath):
+		parsed = cmd.replace('%RUN%', self.dirRun).replace("%CWD%", dirPath).replace('%PATH%', fileDirPath)
+		call(parsed.split(' '), cwd = dirPath, shell = False)
 	
 	def setPort(self, port):
 		pass

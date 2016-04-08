@@ -527,7 +527,7 @@ def browseServer(nameOwner, nameServer, path = ''):
 	if serverModel != None:
 		server = getServer(nameOwner, nameServer)
 		filePath = server.dirRun + path
-		
+
 		exists = os.path.exists(filePath)
 		isFile = False
 		if exists:
@@ -544,12 +544,12 @@ def browseServer(nameOwner, nameServer, path = ''):
 					file = request.files['file']
 					if file:
 						fileName = secure_filename(file.filename)
-						pathForFile = os.path.join(filePath, fileName)
+						pathForFile = filePath + "/" + fileName
 						file.save(pathForFile)
 				elif function.startswith("new"):
 					fileDirName = request.form['name']
-					fileDirPath = os.path.join(filePath, fileDirName)
-					newPath = os.path.join(path, fileDirName)
+					fileDirPath = filePath + "/" + fileDirName
+					newPath = path + "/" + fileDirName
 					try:
 						if function == "newFile":
 							if not os.path.exists(fileDirPath):
@@ -569,13 +569,16 @@ def browseServer(nameOwner, nameServer, path = ''):
 						else:
 							shutil.rmtree(filePath)
 					return redirect(url_for('browseServer', nameOwner = nameOwner, nameServer = nameServer, path = newPath))
+				elif function == 'command':
+					elementPath = filePath + "/" + request.form['path']
+					server.executeCommand(request.form['command'], filePath, elementPath)
 		
 		dirContents = {}
 		fileContents = ""
 		filename = 'none.txt'
 		if not isFile:
 			for item in os.listdir(filePath):
-				itemPath = os.path.join(filePath, item)
+				itemPath = filePath + "/" + item
 				itemIsFile = os.path.isfile(itemPath)
 				itemIsBinary = False
 				if itemIsFile:

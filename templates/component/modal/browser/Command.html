@@ -1,0 +1,36 @@
+{% set id="command" %}
+{% set title="Command" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	
+	<input type="hidden" name="function" value="command" />
+	<input type="hidden" name="path" id="element" value="" />
+	
+	<p>
+		Use:
+		<br />
+		 %RUN% - absolute path to the server's run directory
+		<br />
+		 %CWD% - absolute path to the current working directory
+		<br />
+		%PATH% - absolute path to this file or directory
+	</p>
+	
+	<div class="form-group">
+	    <label for="command">Command {% include 'component/StarRed.html' %}</label>
+	    <input name="command" type="text" class="form-control" required />
+	</div>
+	
+{% endblock %}
+{% block scripts %}
+	<script language="javascript">
+		$(document).on("click", ".openCommand", function() {
+			
+			var val = $(this).data('element');
+			$(".modal-body #element").val(val);
+			
+		});
+	</script>
+{% endblock %}

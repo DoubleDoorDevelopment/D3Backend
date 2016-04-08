@@ -1,4 +1,5 @@
-{% set url = url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name) %}
+{% set url_server = url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name) %}
+{% set url = url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name, path = path) %}
 
 {% extends "base/Content.html" %}
 
@@ -69,6 +70,7 @@
 	{% with type="Folder" %}
 		{% include 'component/modal/browser/New.html' %}
 	{% endwith %}
+	{% include 'component/modal/browser/Command.html' %}
 	
 	<script src="{{ url_for('static', filename='ace/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
 	<script src="{{ url_for('static', filename='ace/src-noconflict/ext-modelist.js') }}" type="text/javascript" charset="utf-8"></script>
@@ -86,7 +88,7 @@
 			for (var i = 0; i < parts.length; i++) {
 				if (i != parts.length - 1) {
 					link += i == 0 ? parts[i] : '/' + parts[i];
-					html += '<li><a href="' + url + '/' + link + '">' + parts[i] + '</a></li>';
+					html += '<li><a href="' + url + link + '">' + parts[i] + '</a></li>';
 				}
 				else
 					html += '<li class="active">' + parts[i] + '</li>';
@@ -130,15 +132,25 @@
 				}
 				
 				var actions = "";
-				
 				var form = '<form action="' + elementURL + '" method="POST">\n';
-				var deleteData = '<input type="hidden" name="function" value="delete" />\n' +
+				var div = '<div style="display: inline-block;">';
+				
+				var cmdButton =
+						'<button type="submit" class="openCommand btn btn-warning btn-xs"' +
+							'data-toggle="modal" data-target="#commandModal" data-element="' + element + '">' +
+							'<i class="fa fa-terminal"></i> Command' +
+						'</button>';
+				actions += div + cmdButton + '</div>';
+				
+				actions += '&nbsp;';
+				
+				var deleteData = '<input type="hidden" name="function" value="delete" />' +
 						'<input type="hidden" name="path" value="' + path + '" />';
 				var deleteButton =
 						'<button type="submit" class="btn btn-danger btn-xs">' +
 							'<i class="fa fa-trash-o"></i> Delete' +
-						'</button>\n';
-				actions += form + deleteData + deleteButton + '</form>';
+						'</button>';
+				actions += div + form + deleteData + deleteButton + '</form></div>';
 				
 				$('table#filemanager').append(
 					'<tr>' +
@@ -187,7 +199,7 @@
 			var isFile = '{{ isFile }}' === 'True';
 			var isBinary = '{{ isBinary }}' === 'True';
 			var path = "{{ path }}";
-			var url = '{{ url }}';
+			var url = '{{ url_server }}';
 			fillBreadcrumb(path, url);
 			if (!isBinary) {
 				if (!isFile) fillFileManager(path, url);
