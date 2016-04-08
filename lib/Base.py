@@ -50,7 +50,7 @@ class Data:
 		return 0
 	
 	def getPortRange(self):
-		return (0, 0)
+		return 0, 0
 	
 	def setEdittableFiles(self, dictionary):
 		self.edittableFiles = dictionary

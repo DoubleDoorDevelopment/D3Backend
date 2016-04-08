@@ -27,7 +27,7 @@ class Data(Base.Data):
 		return 25500
 	
 	def getPortRange(self):
-		return (25500, 25599)
+		return 25500, 25599
 	
 	def getRunConfigKeys(self):
 		return [
