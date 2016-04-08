@@ -217,7 +217,8 @@ class Server(Base.Server):
 				command = ['./factorio/bin/x64/factorio', '--apply-update', filePath]
 			print("Fetching Factorio server file at: " + url)
 			try:
-				urllib.urlretrieve(url, filePath)
+				#urllib.urlretrieve(url, filePath)
+				Base.downloadFile(url, filePath)
 				subprocess.call(command, env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
 			except SocketError as e:
 				print(url)
