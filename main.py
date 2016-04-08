@@ -74,7 +74,7 @@ def login_required(f):
 
 # ~~~~~~~~~~ Inits ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-servers = None
+serverObjs = None
 caches = None
 serverData = None
 
@@ -108,8 +108,8 @@ def initCaches():
 		caches[serverType.getName()].refresh()
 
 def initServers(serverQuery):
-	global servers
-	servers = {}
+	global serverObjs
+	serverObjs = {}
 	
 	for serverModel in serverQuery:
 		createServerObj(serverModel.User.Username, serverModel.Name, serverModel.Purpose)
@@ -121,25 +121,25 @@ def doesServerExist(nameOwner, nameServer):
 	return nameOwner in servers and nameServer in servers[nameOwner]
 
 def getServer(nameOwner, nameServer):
-	return servers[nameOwner][nameServer]
+	return serverObjs[nameOwner][nameServer]
 
 def createServerObj(nameOwner, nameServer, serverTypeName):
-	global servers
+	global serverObjs
 	
-	if not nameOwner in servers:
-		servers[nameOwner] = {}
+	if not nameOwner in serverObjs:
+		serverObjs[nameOwner] = {}
 	
 	directory = getDirForServer(nameOwner, nameServer)
 	
 	serverClass = Types.serverTypeToClass[serverTypeName]
 	serverObj = serverClass(caches[serverTypeName], directory, nameOwner, nameServer)
 	serverObj.setTypeServer(serverTypeName)
-	servers[nameOwner][nameServer] = serverObj
+	serverObjs[nameOwner][nameServer] = serverObj
 
 def removeServerObj(nameOwner, nameServer):
-	global servers
-	if nameOwner in servers and nameServer in servers[nameOwner]:
-		del servers[nameOwner][nameServer]
+	global serverObjs
+	if nameOwner in serverObjs and nameServer in serverObjs[nameOwner]:
+		del serverObjs[nameOwner][nameServer]
 
 # ~~~~~~~~~~ URL Getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -908,6 +908,7 @@ def partitionServer(name, port, game, data, files):
 		server.setPort(port)
 	except Exception as e:
 		setError(str(e))
+		print(str(e))
 	
 	return True
 

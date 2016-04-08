@@ -70,10 +70,12 @@ class Cache(Base.Cache):
 					# Get all the from versions
 					version = versionRow['from']
 					if not version is None and not version in versions:
+						print("Found Factorio " + package + " " + version)
 						versions.append(version)
 					# Get all the to versions
 					version = versionRow['to']
 					if not version is None and not version in versions:
+						print("Found Factorio " + package + " " + version)
 						versions.append(version)
 				elif 'stable' in versionRow:
 					stable.append(versionRow['stable'])
@@ -191,6 +193,7 @@ class Server(Base.Server):
 				currentVer = runConfig['version']
 			else:
 				currentVer = None
+			print("Factorio: Dwnld: " + str(currentVer) + " -> " + str(version))
 			self.addDownloadFunc(self.downloadAndInstall, verFrom = currentVer, verTo = version, data = data)
 	
 	def downloadAndInstall(self, **kwargs):
