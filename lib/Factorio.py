@@ -7,6 +7,7 @@ import requests
 import subprocess
 from werkzeug import secure_filename
 from configparser import ConfigParser
+from socket import error as SocketError
 
 class Data(Base.Data):
 	
@@ -217,7 +218,9 @@ class Server(Base.Server):
 			try:
 				urllib.urlretrieve(url, filePath)
 				subprocess.call(command, env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
-			except IOError as e:
+			except SocketError as e:
+				print(url)
+				print(filePath)
 				print(str(e))
 			except Exception as e:
 				print(str(e))
