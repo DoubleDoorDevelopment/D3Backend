@@ -25,11 +25,13 @@ def dumpJson(data, file):
 
 def downloadFile(url, filePath):
 	try:
-		urlFile = urllib2.urlopen(url)
+		request = urllib2.Request(url, unverifiable = True)
+		urlFile = urllib2.urlopen(request)
 		print("Downloading " + url)
 		
-		with open(os.path.basename(url), 'wb') as file:
+		with open(filePath, 'wb') as file:
 			file.write(urlFile.read())
+		
 	except urllib2.HTTPError, e:
 		print("HTTP Error: ", e.code, url)
 	except urllib2.URLError, e:
