@@ -118,7 +118,7 @@ def getServerData(serverTypeName):
 	return serverData[serverTypeName]
 
 def doesServerExist(nameOwner, nameServer):
-	return nameOwner in servers and nameServer in servers[nameOwner]
+	return nameOwner in serverObjs and nameServer in serverObjs[nameOwner]
 
 def getServer(nameOwner, nameServer):
 	return serverObjs[nameOwner][nameServer]
