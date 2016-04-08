@@ -9,6 +9,7 @@ from subprocess import Popen, PIPE, STDOUT
 import os
 import io
 import sys
+import urllib2
 
 from customthreading import ThreadMaster, ThreadPool
 
@@ -21,6 +22,20 @@ def initDownloaders():
 def dumpJson(data, file):
 	with open(file, 'w') as outfile:
 		json.dump(data, outfile, sort_keys=True, indent=4, separators=(',', ': '))
+
+def downloadFile(url, filePath):
+	try:
+		urlFile = urllib2.urlopen(url)
+		print("Downloading " + url)
+		
+		with open(os.path.basename(url), 'wb') as file:
+			file.write(urlFile.read())
+	except urllib2.HTTPError, e:
+		print("HTTP Error: ", e.code, url)
+	except urllib2.URLError, e:
+		print("URL Error: ", e.reason, url)
+	except Exception, e:
+		print("Error: ", str(e))
 
 class Data:
 	
