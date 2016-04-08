@@ -10,6 +10,7 @@ import threading
 import zipfile
 import subprocess
 from werkzeug import secure_filename
+import configger
 
 class Data(Base.Data):
 	
@@ -169,7 +170,8 @@ class Server(Base.Server):
 		Base.Server.__init__(self, cache, directoryPath, nameOwner, nameServer)
 	
 	def setPort(self, port):
-		pass
+		filePath = self.dirRun + "server.properties"
+		configger.setProperty_properties(filePath, 'server-port', str(port))
 	
 	def backup(self):
 		pass

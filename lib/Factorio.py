@@ -6,8 +6,8 @@ import urllib
 import requests
 import subprocess
 from werkzeug import secure_filename
-from configparser import ConfigParser
 from socket import error as SocketError
+import configger
 
 class Data(Base.Data):
 	
@@ -141,11 +141,7 @@ class Server(Base.Server):
 	
 	def setPort(self, port):
 		filePath = self.dirRun + "factorio/config/config.ini"
-		config = ConfigParser()
-		config.read(filePath)
-		config['other']['port'] = str(port)
-		with open(filePath, 'w') as file:
-			config.write(file)
+		configger.setProperty_ini(filePath, 'other', 'port', str(port))
 	
 	def backup(self):
 		pass
