@@ -7,7 +7,7 @@ import requests
 import subprocess
 from werkzeug import secure_filename
 from configparser import ConfigParser
-import socket.error
+from socket import error as SocketError
 
 class Data(Base.Data):
 	
@@ -215,10 +215,11 @@ class Server(Base.Server):
 				filename = url.split('?')[0].split('/')[-1]
 				filePath = self.dirRun + filename
 				command = ['./factorio/bin/x64/factorio', '--apply-update', filePath]
+			print("Fetching Factorio server file at: " + url)
 			try:
 				urllib.urlretrieve(url, filePath)
 				subprocess.call(command, env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
-			except socket.error as e:
+			except SocketError as e:
 				print(url)
 				print(filePath)
 				print(str(e))
