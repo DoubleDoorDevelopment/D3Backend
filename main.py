@@ -230,6 +230,13 @@ def renderPage(template, **kwargs):
 def not_found(error):
 	return renderPage('pages/404.html'), 404
 
+@app.template_filter('encodeText')
+def filterFileEncode(value):
+	try:
+		return value.decode("utf-8")
+	except Exception as e:
+		return str(e)
+
 # ~~~~~~~~~~ Endpoints ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @app.route('/', methods=['GET', 'POST'])

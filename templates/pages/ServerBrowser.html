@@ -29,9 +29,9 @@
 	
 	{% if isFile %}
 		{% if not isBinary %}
-			<div class="aceEditor" id="editor">{{ fileContents }}</div>
+			<div class="aceEditor" id="editor">{{ fileContents|encodeText }}</div>
 		{% else %}
-			<div>{{ fileContents }}</div>
+			<div>{{ fileContents|encodeText }}</div>
 		{% endif %}
 	{% else %}
 		<table class="table table-hover table-condensed" id="filemanager"></table>
