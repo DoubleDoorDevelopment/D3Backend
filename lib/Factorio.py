@@ -35,6 +35,9 @@ class Cache(Base.Cache):
 		self.package = 'core-linux_headless64'
 		self.stable = None
 	
+	def getNames(self):
+		return ['Factorio']
+	
 	def refreshCache(self, typeCache, force = False):
 		if force or not os.path.exists(self.getManifestPath()):
 			self.addDownloadFunc(self.downloadManifest)

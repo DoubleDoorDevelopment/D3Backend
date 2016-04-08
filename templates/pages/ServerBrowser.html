@@ -1,3 +1,5 @@
+{% set url = url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name) %}
+
 {% extends "base/Content.html" %}
 
 {% block page_title %}
@@ -16,13 +18,31 @@
 {% block content %}
 	
 	<div id="actions" class="well-sm">
-		<a class="btn btn-default" id="upload-button"><i class="fa fa-chevron-left"></i> Server</a>
-		<div class="pull-right">
-			<a class="btn btn-default" id="upload-button"><i class="fa fa-upload"></i> Upload</a>
-			<a class="btn btn-default" id="new-file-button"><i class="fa fa-file"></i> New File</a>
-			<a class="btn btn-default" id="new-folder-button"><i class="fa fa-folder"></i> New folder</a>
-			<a class="btn btn-default" id="refresh-button"><i class="fa fa-refresh"></i> Refresh</a>
-		</div>
+		
+		<a class="btn btn-default" href='{{ url_for("server", nameOwner = server.User.Username, nameServer = server.Name) }}'>
+			<i class="fa fa-chevron-left"></i> Server
+		</a>
+		
+		{% if not isFile %}
+			<div class="pull-right">
+				
+				<button type="button" class="btn btn-default"
+						data-toggle="modal" data-target="#uploadModal">
+					<i class="fa fa-upload"></i> Upload
+				</button>
+				
+				<button type="button" class="btn btn-default"
+						data-toggle="modal" data-target="#newFileModal">
+					<i class="fa fa-file"></i> New File
+				</button>
+				
+				<button type="button" class="btn btn-default"
+						data-toggle="modal" data-target="#newFolderModal">
+					<i class="fa fa-folder"></i> New folder
+				</button>
+				
+			</div>
+		{% endif %}
 	</div>
 	
 	<ol class="breadcrumb" id="breadcrumb"></ol>
@@ -41,6 +61,15 @@
 {% endblock %}
 
 {% block scripts %}
+	
+	{% include 'component/modal/browser/Upload.html' %}
+	{% with type="File" %}
+		{% include 'component/modal/browser/New.html' %}
+	{% endwith %}
+	{% with type="Folder" %}
+		{% include 'component/modal/browser/New.html' %}
+	{% endwith %}
+	
 	<script src="{{ url_for('static', filename='ace/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
 	<script src="{{ url_for('static', filename='ace/src-noconflict/ext-modelist.js') }}" type="text/javascript" charset="utf-8"></script>
 	
@@ -73,6 +102,7 @@
 					'<th>File Name</th>' +
 					'<th>Size</th>' +
 					'<th>Permissions</th>' +
+					'<th>Actions</th>' +
 				'</tr>'
 			);
 			
@@ -80,8 +110,10 @@
 			for (var element in contents) {
 				var data = contents[element];
 				// https://github.com/W4RH4WK/MinimalFileManager
+				var elementURL = url + path + (path != '' ? '/' : '') + element;
+				
 				var icon = data['isFile'] ? (data['isBinary'] ? 'file' : 'file-text') : 'folder';
-				var name = '<a href="' + url + path + (path != '' ? '/' : '') + element + '">' + element + '</a>';
+				var name = '<a href="' + elementURL + '">' + element + '</a>';
 				var size = data['size'];
 				var perms = data['perms'];
 				var permStr = perms + ' ';
@@ -97,6 +129,17 @@
 					else if (char == '7') permStr += 'rwx';
 				}
 				
+				var actions = "";
+				
+				var form = '<form action="' + elementURL + '" method="POST">\n';
+				var deleteData = '<input type="hidden" name="function" value="delete" />\n' +
+						'<input type="hidden" name="path" value="' + path + '" />';
+				var deleteButton =
+						'<button type="submit" class="btn btn-danger btn-xs">' +
+							'<i class="fa fa-trash-o"></i> Delete' +
+						'</button>\n';
+				actions += form + deleteData + deleteButton + '</form>';
+				
 				$('table#filemanager').append(
 					'<tr>' +
 						'<td>' +
@@ -108,6 +151,9 @@
 						'</td>' +
 						'<td>' +
 							permStr +
+						'</td>' +
+						'<td>' +
+							actions +
 						'</td>' +
 					'</tr>'
 				);
@@ -141,7 +187,7 @@
 			var isFile = '{{ isFile }}' === 'True';
 			var isBinary = '{{ isBinary }}' === 'True';
 			var path = "{{ path }}";
-			var url = '{{ url_for("browseServer", nameOwner = server.User.Username, nameServer = server.Name) }}';
+			var url = '{{ url }}';
 			fillBreadcrumb(path, url);
 			if (!isBinary) {
 				if (!isFile) fillFileManager(path, url);

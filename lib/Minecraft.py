@@ -9,6 +9,7 @@ import urllib2
 import threading
 import zipfile
 import subprocess
+from werkzeug import secure_filename
 
 class Data(Base.Data):
 	
@@ -54,6 +55,9 @@ class Cache(Base.Cache):
 		self.dir_forge = "forge/"
 		self.url_file_forge = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar"
 		self.versions_forge = {}
+	
+	def getNames(self):
+		return ['Minecraft', 'Minecraft Forge']
 	
 	def refreshCache(self, typeCache, force = False):
 		self.refreshManifestVanilla(force)
@@ -248,11 +252,60 @@ class Server(Base.Server):
 	def downloadAndInstallForge(self, **kwargs):
 		url = kwargs['url']
 		installerPath = kwargs['installerPath']
-		urllib.urlretrieve(url, installerPath)
+		
+		Base.downloadFile(url, installerPath)
+		#urllib.urlretrieve(url, installerPath)
 		
 		env = dict(os.environ)
 		FNULL = open(os.devnull, 'w')
 		subprocess.call(['java', '-jar', installerPath, '--installServer'], env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
+	
+	def uploadAndInstallModpackFile(self, form, urlKey, files, filesKey, isCurse, uploadFolder):
+		fileLocation, error = self.uploadModpackFile(form, urlKey, files, filesKey, isCurse, uploadFolder)
+		if fileLocation != 0:
+			if fileLocation == None:
+				if error is None:
+					return "Unable to upload file"
+				else:
+					return error
+			else:
+				self.installMinecraftModpack(fileLocation, isCurse)
+		return None
+	
+	def isModpackFile(self, filename):
+		return '.' in filename and \
+				filename.rsplit('.', 1)[1] in ['zip']
+	
+	def uploadModpackFile(self, form, formURLKey, files, filesKey, isCurse, uploadFolder):
+		if formURLKey != None:
+			url = form[formURLKey]
+			fileName = "modpack_" + self.nameOwner + "_" + self.nameServer + ".zip"
+			filePath = os.path.join(uploadFolder, fileName)
+			threading.Thread(
+				target = self.uploadFileAndInstallPack,
+				args = (url, fileName, filePath, isCurse,)
+			).start()
+			return 0, None
+		elif filesKey != None:
+			file = files[filesKey]
+			if file and self.isModpackFile(file.filename):
+				fileName = secure_filename(file.filename)
+				filePath = os.path.join(uploadFolder, fileName)
+				file.save(filePath)
+				return filePath, None
+			else:
+				return None, "Invalid file"
+		else:
+			return None, None
+	
+	def uploadFileAndInstallPack(self, url, fileName, filePath, isCurse):
+		#import urllib
+		#urllib.urlretrieve(url, filePath)
+		Base.downloadFile(url, filePath)
+		self.installMinecraftModpack(filePath, isCurse)
+	
+	def installMinecraftModpack(self, filePath, isCurse):
+		self.install(func = 'modpack', filePath = filePath, isCurse = isCurse)
 	
 	def setErrors_Modpack(self, errorFiles):
 		self.setErrors("modpack", errorFiles)
@@ -357,7 +410,8 @@ def installCursePack(dirRun, modpackDir, filePath, destFilePath, server):
 			fileName = fileData.geturl().split('?')[0].split('/')[-1]
 			fileData.close()
 			
-			urllib.urlretrieve(urlFileDownload, modpackMods + fileName)
+			Base.downloadFile(urlFileDownload, modpackMods + fileName)
+			#urllib.urlretrieve(urlFileDownload, modpackMods + fileName)
 		except Exception as e:
 			server.appendError_Modpack(str(e) + ' (projectID: ' + str(projectID) + ', fileID: ' + str(fileID) + ')<br />at file url "' + urlFileDownload + '".');
 	

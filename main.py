@@ -72,6 +72,8 @@ def login_required(f):
 		return f(*args, **kwargs)
 	return decorated_function
 
+# todo do @admin_required
+
 # ~~~~~~~~~~ Inits ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 serverObjs = None
@@ -222,7 +224,6 @@ def renderPage(template, **kwargs):
 			server_types = serverData,
 			user_servers = userServers,
 			caches = caches,
-			refreshCacheOptions = ['Minecraft', 'Minecraft Forge', 'Factorio'],
 			**kwargs
 		)
 
@@ -311,6 +312,12 @@ def createUser():
 		setError(error)
 		return openCreateAccount()
 	return ret
+
+@app.route('/caches')
+@login_required
+def caches():
+	
+	return renderPage("pages/TableCaches.html", current = 'caches', data = caches)
 
 @app.route('/cache/<string:cacheName>/refresh')
 @login_required
@@ -420,47 +427,11 @@ def serverMinecraftUploadModpack():
 	elif uploadType == 'pack':
 		filesKey = 'pack'
 	
-	fileLocation, error = uploadFile(form, urlKey, files, filesKey, nameOwner, nameServer, isCurse)
-	if fileLocation != 0:
-		if fileLocation == None:
-			if error != None:
-				setError("Unable to upload file")
-			else:
-				setError(error)
-		else:
-			installMinecraftModpack(fileLocation, nameOwner, nameServer, isCurse)
+	server = getServer(nameOwner, nameServer)
+	
+	server.uploadAndInstallModpackFile(form, urlKey, files, filesKey, isCurse, app.config['UPLOAD_FOLDER'])
 	
 	return redirect(url_for('server', nameOwner = nameOwner, nameServer = nameServer))
-
-def uploadFile(form, formURLKey, files, filesKey, nameOwner, nameServer, isCurse):
-	if formURLKey != None:
-		url = form[formURLKey]
-		fileName = "modpack_" + nameOwner + "_" + nameServer + ".zip"
-		filePath = os.path.join(app.config['UPLOAD_FOLDER'], fileName)
-		Thread(
-			target = uploadFileAndInstallPack,
-			args = (url, fileName, filePath, nameOwner, nameServer, isCurse,)
-		).start()
-		return 0, None
-	elif filesKey != None:
-		file = files[filesKey]
-		if file and isModpackFile(file.filename):
-			fileName = secure_filename(file.filename)
-			filePath = os.path.join(app.config['UPLOAD_FOLDER'], fileName)
-			file.save(filePath)
-			return filePath, None
-		else:
-			return None, "Invalid file"
-	else:
-		return None, None
-
-def uploadFileAndInstallPack(url, fileName, filePath, nameOwner, nameServer, isCurse):
-	import urllib
-	urllib.urlretrieve(url, filePath)
-	installMinecraftModpack(filePath, nameOwner, nameServer, isCurse)
-
-def installMinecraftModpack(filePath, nameOwner, nameServer, isCurse):
-	getServer(nameOwner, nameServer).install(func = 'modpack', filePath = filePath, isCurse = isCurse)
 
 @app.route('/server/updateFile', methods=['POST'])
 @login_required
@@ -563,10 +534,41 @@ def browseServer(nameOwner, nameServer, path = ''):
 			isFile = os.path.isfile(filePath)
 		
 		if request.method == 'POST':
-			if 'function' in request.form and request.form['function'] == 'saveFile':
-				with open(filePath, 'w') as file:
-					file.write(request.form['content'])
-				return "Done"
+			if 'function' in request.form:
+				function = request.form['function']
+				if function == 'saveFile':
+					with open(filePath, 'w') as file:
+						file.write(request.form['content'])
+					return "Done"
+				elif function == 'upload':
+					file = request.files['file']
+					if file:
+						fileName = secure_filename(file.filename)
+						pathForFile = os.path.join(filePath, fileName)
+						file.save(pathForFile)
+				elif function.startswith("new"):
+					fileDirName = request.form['name']
+					fileDirPath = os.path.join(filePath, fileDirName)
+					newPath = os.path.join(path, fileDirName)
+					try:
+						if function == "newFile":
+							if not os.path.exists(fileDirPath):
+								with open(fileDirPath, 'a') as file:
+									file.write(" ");
+						else:
+							os.mkdir(fileDirPath)
+						return redirect(url_for('browseServer', nameOwner = nameOwner, nameServer = nameServer, path = newPath))
+					except Exception, e:
+						setError(str(e))
+						print(str(e))
+				elif function == 'delete':
+					newPath = request.form['path']
+					if exists:
+						if isFile:
+							os.remove(filePath)
+						else:
+							shutil.rmtree(filePath)
+					return redirect(url_for('browseServer', nameOwner = nameOwner, nameServer = nameServer, path = newPath))
 		
 		dirContents = {}
 		fileContents = ""
@@ -584,7 +586,7 @@ def browseServer(nameOwner, nameServer, path = ''):
 					size = os.path.getsize(itemPath)
 				else:
 					size = '---'
-				permissions = str(oct(os.stat(itemPath).st_mode & 0777))[1:]
+				permissions = str(oct(os.stat(itemPath).st_mode & 0o777))[1:]
 				dirContents[item] = {
 					'isFile': itemIsFile,
 					'isBinary': itemIsBinary,
@@ -601,7 +603,7 @@ def browseServer(nameOwner, nameServer, path = ''):
 			f = magic.Magic()
 			mime = f.from_file(filePath)
 			print(mime)
-			isBinary = not mime.startswith("ASCII")
+			isBinary = not (mime.startswith("ASCII") or mime == "very short file (no magic)")
 			if isBinary:
 				fileContents = mime
 		
@@ -842,10 +844,6 @@ def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True
 	if numeric:
 		chars += "0123456789"
 	return ''.join(random.choice(chars) for _ in range(length))
-
-def isModpackFile(filename):
-	return '.' in filename and \
-			filename.rsplit('.', 1)[1] in ['zip']
 
 def openCreateAccount():
 	return openModal('createUser')

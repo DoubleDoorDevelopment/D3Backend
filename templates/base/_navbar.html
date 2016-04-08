@@ -6,12 +6,19 @@
 <ul class="nav navbar-nav">
 	
 	{% if session.isAdmin %}
+		
 		<li>
 			<a href="{{ url_for('servers') }}">Server List</a>
 		</li>
+		
 		<li>
 			<a href="{{ url_for('users') }}">Users</a>
 		</li>
+		
+		<li>
+			<a href="{{ url_for('caches') }}">Caches</a>
+		</li>
+		
 	{% endif %}
 	
 </ul>
@@ -32,7 +39,9 @@
 				<li>
 					<a href="{{ url_for('userSettings') }}"><i class="fa fa-gear fa-fw"></i> Settings</a>
 				</li>
+				
 				<li class="divider"></li>
+				
 				<li>
 					<a href="{{ url_for('logout') }}">
 						<i class="fa fa-sign-out fa-fw"></i>

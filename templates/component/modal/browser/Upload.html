@@ -1,0 +1,17 @@
+{% set id="upload" %}
+{% set title="Upload" %}
+
+{% extends 'component/modal/Base.html' %}
+
+{% block form %}
+	
+	<input type="hidden" name="function" value="upload" />
+	
+	<div class="form-group">
+	    <label for="file">File or Folder {% include 'component/StarRed.html' %}</label>
+	    <input name="file" type="file" class="form-control" required/>
+	</div>
+	
+{% endblock %}
+{% block scripts %}
+{% endblock %}

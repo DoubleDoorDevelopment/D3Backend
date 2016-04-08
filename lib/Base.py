@@ -77,6 +77,9 @@ class Cache(Downloader):
 	def __init__(self, directory):
 		self.dirCache = directory
 	
+	def getNames(self):
+		return []
+	
 	def refresh(self, force = False):
 		self.refreshCache(TypeCache.ALL, force)
 	
