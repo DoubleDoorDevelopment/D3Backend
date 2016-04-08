@@ -214,8 +214,13 @@ class Server(Base.Server):
 				filename = url.split('?')[0].split('/')[-1]
 				filePath = self.dirRun + filename
 				command = ['./factorio/bin/x64/factorio', '--apply-update', filePath]
-			urllib.urlretrieve(url, filePath)
-			subprocess.call(command, env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
+			try:
+				urllib.urlretrieve(url, filePath)
+				subprocess.call(command, env=env, cwd=self.dirRun, stdout=FNULL, stderr=subprocess.STDOUT)
+			except IOError as e:
+				print(str(e))
+			except Exception as e:
+				print(str(e))
 			self.updateRunConfig(data)
 
 class Thread(Base.Thread):

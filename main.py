@@ -903,9 +903,9 @@ def partitionServer(name, port, game, data, files):
 	copy_tree(getDirForTemplate(game), directory, update = 1)
 	
 	try:
-		_saveRunConfig(username, name, game, data, files)
 		server = getServer(username, name)
 		server.setPort(port)
+		_saveRunConfig(username, name, game, data, files)
 	except Exception as e:
 		setError(str(e))
 		print(str(e))
