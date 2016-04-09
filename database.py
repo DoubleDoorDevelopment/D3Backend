@@ -1,8 +1,12 @@
 
 from main import *
 from peewee import *
+from playhouse.shortcuts import RetryOperationalError
 
-db = MySQLDatabase(getConfig('SQL_DATABASE'), user=getConfig('SQL_USERNAME'), password=getConfig('SQL_PASSWORD'))
+class MysqlRetryDatabase(RetryOperationalError, MySQLDatabase):
+	pass
+
+db = MysqlRetryDatabase(getConfig('SQL_DATABASE'), user=getConfig('SQL_USERNAME'), password=getConfig('SQL_PASSWORD'))
 
 class BaseModel(Model):
 	class Meta:
