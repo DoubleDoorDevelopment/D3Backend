@@ -131,7 +131,7 @@ class Cache(Base.Cache):
 			if req.status_code == 200:
 				return req.json()[0], None
 			else:
-				return None, req.status_code
+				return None, str(req.status_code) + str(req.json())
 		return None, None
 
 class Server(Base.Server):
@@ -201,6 +201,8 @@ class Server(Base.Server):
 		verTo = kwargs['verTo']
 		data = kwargs['data']
 		url, error = self.cache.getVersionURL(None, data = { 'from': verFrom, 'to': verTo })
+		if error != None:
+			print(str(error))
 		isFirstInstall = verFrom is None
 		if url != None:
 			env = dict(os.environ)
@@ -226,6 +228,8 @@ class Server(Base.Server):
 			except Exception as e:
 				print(str(e))
 			self.updateRunConfig(data)
+		else:
+			print("Factorio: Download from ", verFrom, " to ", verTo, " has an invalid URL.")
 
 class Thread(Base.Thread):
 	

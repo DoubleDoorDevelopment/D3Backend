@@ -66,6 +66,7 @@ class ThreadWorker(Thread):
 				func, args, kargs = self.pool.tasks.get()
 			except Empty as e:
 				self.running = False
+				print(str(e))
 				pass
 			try:
 				#sys.stdout.write("start func\n")
