@@ -1,5 +1,5 @@
 
-from main import *
+from backend import *
 from peewee import *
 from playhouse.shortcuts import RetryOperationalError
 

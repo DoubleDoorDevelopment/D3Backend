@@ -330,7 +330,7 @@
 	{% include 'component/modal/Minecraft/Modpack.html' %}
 	<script type="text/javascript" language="javascript">
 		$(document).ready(function() {
-			
+			/*global $*/
 			var updateConsole = function(textarea) {
 				var id = textarea.id;
 				$.post("{{ url_for('getConsole') }}",
@@ -459,12 +459,13 @@
 			updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 			updateMessages();
 			var checkWidgetsHalfSecond = setInterval(function() {
-				//textArea.value += Math.random() + '\n';
 				updateConsole(textArea);
-				updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
 				updateStatus();
-				updateMessages();
 			}, 250);
+			var check1Minute = setInterval(function() {
+				updateProgressBar(onlinePlayersDiv, onlinePlayersSpanTitle, onlinePlayersSpanPercent);
+				updateMessages();
+			}, 60000);
 		});
 	</script>
 	
