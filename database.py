@@ -2,6 +2,7 @@
 from backend import *
 from peewee import *
 from playhouse.shortcuts import RetryOperationalError
+import safety
 
 class MysqlRetryDatabase(RetryOperationalError, MySQLDatabase):
 	pass
@@ -20,7 +21,16 @@ class User(BaseModel):
 
 	Username = CharField(primary_key=True)
 	Password = CharField()
+	Salt = CharField()
 	Group = CharField()
+	
+	def setPassword(self, new):
+		self.Salt = safety.randomString(50)
+		self.Password = safety.encrypt(self.Salt, new)
+		self.save()
+	
+	def getPassword(self):
+		return safety.decrypt(self.Salt, self.Password)
 	
 	class Meta:
 		database = db
@@ -79,9 +89,14 @@ def getUserGroups(users = getUsers()):
 
 def validatePassword(username, password):
 	user, error = getUser(username)
-	if user == None or user.Password != password:
+	if user == None or user.getPassword() != password:
 		return (False, "Invalid Credentials")
 	return (True, None)
+
+def regenHash(username):
+	user, error = getUser(username)
+	if user != None:
+		user.setPassword(user.getPassword())
 
 def deleteUserFromTable(username):
 	user, error = getUser(username)
