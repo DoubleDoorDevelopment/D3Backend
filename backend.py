@@ -384,7 +384,9 @@ def deleteUser():
 	error = database.deleteUserFromTable(request.form['data'])
 	if error != None:
 		setError(error)
-	return getCurrentURL(request.form)
+		return getCurrentURL(request.form)
+	else:
+		return getIndexURL()
 
 @app.route('/servers')
 @login_required
@@ -743,11 +745,14 @@ def login():
 				setError(error)
 				return openLogin()
 			
+			database.regenHash(user)
+			
 			# Send user back to index page
 			# (if username wasnt set, it will redirect back to login screen)
 			return getIndexURL()
 			
 		except Exception as e:
+			print("exception #login")
 			return throwError(str(e), request.form)
 	else:
 		return getIndexURL()
@@ -827,7 +832,7 @@ def changePasswordForUser(username, old, new, verify):
 	elif new != verify:
 		error = "New Passwords Must Match"
 	else:
-		user.Password = new
+		user.setPassword(new)
 		user.save()
 		info = "Password Changed"
 	
@@ -884,7 +889,15 @@ def newUser(username, password, verify, group, formData):
 		return throwError("Passwords do not match", formData)
 	
 	try:
-		database.User.create(Username = username, Password = password, Group = group)
+		import safety
+		salt = safety.randomString(50)
+		passwordEncrypted = safety.encrypt(salt, password)
+		#print("Encrypted Pass: '" + passwordEncrypted + "'")
+		database.User.create(
+			Username = username,
+			Password = passwordEncrypted,
+			Salt = salt,
+			Group = group)
 	except ValueError as e:
 		return throwError(str(e), formData)
 	except Exception as e:
