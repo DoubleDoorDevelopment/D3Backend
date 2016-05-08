@@ -771,7 +771,7 @@ def isAdmin(group):
 def loginUserPass(username, password):
 	try:
 		group = "Admin"
-		if app.debug == False:
+		if getConfig("VALIDATE_ADMIN") == True:
 			user = database.User.select().where(database.User.Username == username).get()
 			group = user.Group
 		session['username'] = username
