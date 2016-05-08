@@ -301,13 +301,19 @@ def addUser():
 	group = request.form['group']
 	if group == 'Other':
 		group = request.form['group_other']
-	return newUser(username, password, password, group, request.form)
+	ret, error = newUser(username, password, password, group, request.form)
+	if ret == None:
+		return error
+	else:
+		return ret
 
 @app.route('/add/user/new', methods=['POST'])
 def createUser():
 	username = request.form['username']
 	password = request.form['password']
-	ret = newUser(username, password, request.form['verify'], "User", request.form)
+	ret, error = newUser(username, password, request.form['verify'], "User", request.form)
+	if ret == None:
+		return error
 	
 	error = loginUserPass(username, password)
 	if error != None:
@@ -881,12 +887,12 @@ def newUser(username, password, verify, group, formData):
 	try:
 		user, error = database.getUser(username)
 		if len(user) > 0:
-			return throwError("Username already in use: " + str(error), request.form)
+			return (None, throwError("Username already in use: " + str(error), request.form))
 	except Exception as e:
-		return throwError(str(e), request.form)
+		return (None, throwError(str(e), request.form))
 	
 	if password != verify:
-		return throwError("Passwords do not match", formData)
+		return (None, throwError("Passwords do not match", formData))
 	
 	try:
 		import safety
@@ -899,12 +905,12 @@ def newUser(username, password, verify, group, formData):
 			Salt = salt,
 			Group = group)
 	except ValueError as e:
-		return throwError(str(e), formData)
+		return (None, throwError(str(e), formData))
 	except Exception as e:
-		return throwError(str(e), formData)
+		return (None, throwError(str(e), formData))
 	
 	setInfo('The password for user "' + username + '" is "' + password + '"')
-	return redirect(url_for('user', username=username))
+	return (redirect(url_for('user', username=username)), None)
 
 def parse_minutes(time):
 	milliseconds = int(time / 1000.0)
