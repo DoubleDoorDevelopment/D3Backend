@@ -20,6 +20,7 @@ USE `backend` ;
 CREATE TABLE IF NOT EXISTS `backend`.`user` (
   `Username` VARCHAR(45) NOT NULL,
   `Password` VARCHAR(45) NULL,
+  `Salt` VARCHAR(50) NULL,
   `Group` ENUM('User', 'Admin') NULL,
   PRIMARY KEY (`Username`))
 ENGINE = InnoDB;
