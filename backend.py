@@ -311,7 +311,11 @@ def addUser():
 def createUser():
 	username = request.form['username']
 	password = request.form['password']
-	ret, error = newUser(username, password, request.form['verify'], "User", request.form)
+	if len(database.getUsers()) > 0:
+		group = "User"
+	else:
+		group = "Admin"
+	ret, error = newUser(username, password, request.form['verify'], group, request.form)
 	if ret == None:
 		return error
 	
