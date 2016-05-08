@@ -118,7 +118,7 @@ class Cache(Base.Cache):
 		data = json.loads(urllib.urlopen(self.url_manifest_forge).read())
 		self.versions_forge = {}
 		for build in data['number'].itervalues():
-			print(build)
+			# print(build)
 			branch = build['branch']
 			buildNumber = build['build']
 			version_minecraft = build['mcversion']
