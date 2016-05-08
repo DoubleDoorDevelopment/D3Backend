@@ -736,7 +736,7 @@ def login():
 			user = request.form['username']
 			pw = request.form['password']
 			valid, error = database.validatePassword(user, pw)
-			if app.debug == True or valid == True:
+			if getConfig("VALIDATE_LOGINS") == False or valid == True:
 				error = loginUserPass(user, pw)
 				if error != None:
 					setError(error)
