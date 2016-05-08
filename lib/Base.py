@@ -182,6 +182,12 @@ class Server(Downloader):
 			oldData[key] = newData[key]
 		
 		dumpJson(oldData, filePath)
+	
+	def getPlayersOnline_Quantity(self):
+		return 0
+	
+	def getPlayersOnline_Capacity(self):
+		return 0
 
 class Thread(threading.Thread):
 	

@@ -11,6 +11,7 @@ import zipfile
 import subprocess
 from werkzeug import secure_filename
 import configger
+from mcstatus import MinecraftServer
 
 class Data(Base.Data):
 	
@@ -168,8 +169,10 @@ class Server(Base.Server):
 	
 	def __init__(self, cache, directoryPath, nameOwner, nameServer):
 		Base.Server.__init__(self, cache, directoryPath, nameOwner, nameServer)
+		self.mcInstance = None
 	
 	def setPort(self, port):
+		self.port = port
 		filePath = self.dirRun + "server.properties"
 		configger.setProperty_properties(filePath, 'server-port', str(port))
 	
@@ -316,6 +319,31 @@ class Server(Base.Server):
 		if not 'modpack' in self.errors:
 			self.setErrors_Modpack([]);
 		self.errors['modpack'].append(error)
+	
+	def start(self):
+		Base.Server.start(self)
+		if not self.isOnline():
+			self.mcInstance = MinecraftServer("localhost", self.port)
+	
+	def stop(self):
+		Base.Server.stop(self)
+		if self.isOnline():
+			self.mcInstance = None
+	
+	def kill(self):
+		Base.Server.kill(self)
+		if self.isOnline():
+			self.mcInstance = None
+	
+	def getPlayersOnline_Quantity(self):
+		if self.mcInstance == None:
+			return 0
+		return self.mcInstance.status().players.online
+	
+	def getPlayersOnline_Capacity(self):
+		filePath = self.dirRun + "server.properties"
+		maxPlayers = configger.getProperty_properties(filePath, 'max-players')
+		return int(maxPlayers)
 
 class Thread(Base.Thread):
 	
@@ -347,7 +375,7 @@ class Thread(Base.Thread):
 				self.runArgs.append(param)
 	
 	def formatCommand(self, cmd):
-		return "/{0}\r\n".format(cmd)
+		return "{0}\r\n".format(cmd)
 	
 	def getJarName(self):
 		return self.server.runJar
