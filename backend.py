@@ -114,7 +114,7 @@ def initServers(serverQuery):
 	serverObjs = {}
 	
 	for serverModel in serverQuery:
-		createServerObj(serverModel.User.Username, serverModel.Name, serverModel.Purpose)
+		createServerObj(serverModel.User.Username, serverModel.Name, serverModel.Purpose, serverModel.Port)
 
 def getServerData(serverTypeName):
 	return serverData[serverTypeName]
@@ -125,7 +125,7 @@ def doesServerExist(nameOwner, nameServer):
 def getServer(nameOwner, nameServer):
 	return serverObjs[nameOwner][nameServer]
 
-def createServerObj(nameOwner, nameServer, serverTypeName):
+def createServerObj(nameOwner, nameServer, serverTypeName, serverPort):
 	global serverObjs
 	
 	if not nameOwner in serverObjs:
@@ -263,7 +263,7 @@ def addServer():
 	if error != None:
 		setError(error)
 	else:
-		createServerObj(username, name, game)
+		createServerObj(username, name, game, port)
 		
 		if partitionServer(name, port, game, request.form, request.files):
 			database.Server.create(
@@ -311,7 +311,11 @@ def addUser():
 def createUser():
 	username = request.form['username']
 	password = request.form['password']
-	ret, error = newUser(username, password, request.form['verify'], "User", request.form)
+	if len(database.getUsers()) > 0:
+		group = "User"
+	else:
+		group = "Admin"
+	ret, error = newUser(username, password, request.form['verify'], group, request.form)
 	if ret == None:
 		return error
 	
@@ -646,14 +650,20 @@ def getConsole():
 
 @app.route('/_onlinePlayers', methods=['GET', 'POST'])
 def getOnlinePlayers():
-	if request.method == 'GET':
+	if request.method == 'GET': # all servers
 		total = 0
 		number = 0
+		for nameOwner in serverObjs:
+			for nameServer in serverObjs[nameOwner]:
+				server = getServer(nameOwner, nameServer)
+				total += server.getPlayersOnline_Capacity()
+				number += server.getPlayersOnline_Quantity()
 	else:
 		nameOwner = request.form['nameOwner']
 		nameServer = request.form['nameServer']
-		total = 0
-		number = 0
+		server = getServer(nameOwner, nameServer)
+		total = server.getPlayersOnline_Capacity()
+		number = server.getPlayersOnline_Quantity()
 	return jsonify(
 		total = total,
 		number = number

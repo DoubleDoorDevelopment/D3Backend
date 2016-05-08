@@ -38,3 +38,11 @@ def setProperty_properties(filePath, label, value):
 	config['general'][label] = value
 	with open(filePath, 'w') as file:
 		config.write(file)
+
+def getProperty_properties(filePath, label):
+	newContent = StringIO.StringIO()
+	newContent.write(open(filePath).read())
+	newContent.seek(0, os.SEEK_SET)
+	config = ConfigParser()
+	config.readfp(newContent)
+	return config['general'][label]
