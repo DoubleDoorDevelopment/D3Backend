@@ -11,6 +11,7 @@ import zipfile
 import subprocess
 from werkzeug import secure_filename
 import configger
+# https://github.com/Dinnerbone/mcstatus
 from mcstatus import MinecraftServer
 
 class Data(Base.Data):
