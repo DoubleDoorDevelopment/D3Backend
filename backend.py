@@ -710,8 +710,10 @@ def getOnlineServers():
 	totalServers = len(database.Server.select())
 	
 	totalOnline = 0
-	for key in serverObjs:
-		totalOnline += len(serverObjs[key])
+	for nameOwner in serverObjs:
+		for nameServer in serverObjs[nameOwner]:
+			if serverObjs[nameOwner][nameServer].isOnline():
+				totalOnline += 1
 	
 	return jsonify(
 			total = totalServers,
