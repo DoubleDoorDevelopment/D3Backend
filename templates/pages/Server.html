@@ -38,6 +38,15 @@
 					Downloading <i class="glyphicon glyphicon-repeat gly-spin"></i>
 				</small></span>
 				
+				<div style="display: inline-block;">
+					<form action="{{ url_for('browseServer', nameOwner = server.User.Username, nameServer = server.Name) }}"
+							method = 'GET' >
+						<button type="submit" class="btn btn-success">
+							File Browser
+						</button>
+					</form>
+				</div>
+				
 				{% with target="Server", class="", data=[server.User.Username, '|', server.Name]|join %}
 					{% include 'component/button/Delete.html' %}
 				{% endwith %}
@@ -265,61 +274,6 @@
 	</div>
 	<!-- End: Panel: Danger Zone -->
 	
-	<!-- Start: Panel: File Manip -->
-	<div class="col-sm-12">
-		<div id="filemanip" class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title" style="text-align: center;">
-					File Manipulation
-					
-					<span class="pull-right">
-						<form action="{{ url_for('browseServer', nameOwner = server.User.Username, nameServer = server.Name) }}"
-								method = 'GET' >
-							<button type="submit" class="btn btn-success">
-								File Browser
-							</button>
-						</form>
-					</span>
-					
-				</h3>
-			</div>
-			<div class="panel-body" style="text-align: center;">
-				
-				<ul class="nav nav-pills nav-justified">
-					{% for file in fileData %}
-						<li>
-							<a data-toggle="pill" href="#{{ file['id'] }}">
-								{{ file['filename'] }}
-							</a>
-						</li>
-					{% endfor %}
-				</ul>
-				
-				<div class="tab-content">
-					{% for file in fileData %}
-						<div id="{{ file['id'] }}" class="tab-pane fade">
-							
-							<h3>{{ file['filename'] }}</h3>
-							
-							<div class="aceEditor" id="editor{{ file['id'] }}">{{ file['contents'] }}</div>
-							
-							<br />
-							
-							<form id="form{{ file['id'] }}" enctype="multipart/form-data">
-								<input type="hidden" name="id" value="{{ file['id'] }}" />
-								<input type="hidden" name="filename" value="{{ file['filename'] }}" />
-								<button type="submit" class="btn btn-info form-control">Save</button>
-							</form>
-							
-						</div>
-					{% endfor %}
-				</div>
-				
-			</div>
-		</div>
-	</div>
-	<!-- End: Panel: File Manip -->
-	
 	{% endif %}
 	
 {% endblock %}
@@ -468,38 +422,5 @@
 			}, 60000);
 		});
 	</script>
-	
-	<script src="{{ url_for('static', filename='ace/src-noconflict/ace.js') }}" type="text/javascript" charset="utf-8"></script>
-	<script src="{{ url_for('static', filename='ace/src-noconflict/ext-modelist.js') }}" type="text/javascript" charset="utf-8"></script>
-	<script type="text/javascript" language="javascript">
-		var allFileData = {{ fileData|tojson }};
-		var modelist = ace.require("ace/ext/modelist");
-		for (var i = 0; i < allFileData.length; i++) {
-			var fileData = allFileData[i];
-			
-			var editor = ace.edit("editor" + fileData['id']);
-			editor.setTheme("ace/theme/twilight");
-			
-			var mode = modelist.getModeForPath(fileData['filename']).mode;
-			editor.getSession().setMode(mode);
-			
-			$("#" + fileData['id']).submit(function(event) {
-				var id = event.target[0].value;
-				var filename = event.target[1].value;
-				var content = ace.edit('editor' + id).getValue();
-				$.post("{{ url_for('updateServerFile') }}", {
-					'nameOwner': '{{ server.User.Username }}',
-					'nameServer': '{{ server.Name }}',
-					'type': '{{ server.Purpose }}',
-					'id': id,
-					'filename': filename,
-					'content': content
-				}, function(data) {});
-				event.preventDefault();
-			});
-			
-		}
-	</script>
-	
 	{% include ['pages/server/Scripts', server.Purpose, '.html']|join %}
 {% endblock %}
