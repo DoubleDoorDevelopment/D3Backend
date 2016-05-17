@@ -945,7 +945,7 @@ def partitionServer(name, port, game, data, files):
 	
 	# ~~~~~~~~~~ Copy Template
 	
-	copy_tree(getDirForTemplate(game), directory, update = 1)
+	copy_tree(getDirForTemplate(game), directory)
 	
 	try:
 		server = getServer(username, name)

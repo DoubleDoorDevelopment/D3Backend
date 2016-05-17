@@ -237,7 +237,9 @@ class Thread(Base.Thread):
 		Base.Thread.__init__(self, server)
 	
 	def setRunArgs(self):
-		save = self.getSaveName()
+		dirRun = self.server.dirRun
+		save = self.getSaveName(dirRun)
+		save = self.getLatestSave(dirRun, save)
 		if save is None:
 			self.runArgs = None
 		else:
@@ -247,9 +249,25 @@ class Thread(Base.Thread):
 				save
 			]
 	
-	def getSaveName(self):
+	def getSaveName(self, dirRun):
 		runConfig = self.server.getRunConfig()
 		if 'save' in runConfig:
 			return runConfig['save']
 		else:
 			return None
+	
+	def getLatestSave(self, dirRun, saveOriginal):
+		from os import listdir
+		import os.path, time
+		
+		saves = dirRun + "factorio/saves/"
+		latestLastModifiedTime = time.ctime(os.path.getmtime(saves + saveOriginal))
+		saveReturn = saveOriginal
+		for fileName in listdir(saves):
+			filePath = saves + fileName
+			if os.path.isfile(filePath) and fileName.startswith("autosave"):
+				timeLastModified = time.ctime(os.path.getmtime(filePath))
+				if timeLastModified > latestLastModifiedTime:
+					latestLastModifiedTime = timeLastModified
+					saveReturn = fileName
+		return saveReturn
