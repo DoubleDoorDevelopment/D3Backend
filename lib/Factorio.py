@@ -265,9 +265,12 @@ class Thread(Base.Thread):
 		saveReturn = saveOriginal
 		for fileName in listdir(saves):
 			filePath = saves + fileName
-			if os.path.isfile(filePath) and fileName.startswith("autosave"):
+			if os.path.isfile(filePath) and fileName.startswith("_autosave"):
 				timeLastModified = time.ctime(os.path.getmtime(filePath))
+				print("Pre Latest", latestLastModifiedTime)
+				print("Found Time", timeLastModified)
 				if timeLastModified > latestLastModifiedTime:
 					latestLastModifiedTime = timeLastModified
 					saveReturn = fileName
+				print("Latest", latestLastModifiedTime)
 		return saveReturn
