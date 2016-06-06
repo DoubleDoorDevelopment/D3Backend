@@ -247,6 +247,7 @@ class Server(Base.Server):
 				self.addDownload(url, os.path.join(self.dirRun, data['jar']))
 			else:
 				# installer
+				print(self.cache.version_forge[mc])
 				if not forge in self.cache.versions_forge[mc]:
 					forge = forge + '-' + mc
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
