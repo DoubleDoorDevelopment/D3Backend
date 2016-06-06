@@ -247,6 +247,8 @@ class Server(Base.Server):
 				self.addDownload(url, os.path.join(self.dirRun, data['jar']))
 			else:
 				# installer
+				if not forge in self.cache.versions_forge[data['mc']]:
+					forge = forge + '-' + data['mc']
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
 				installerPath = os.path.join(self.dirRun, "forge-installer.jar")
 				data['jar'] = "forge-" + forge + "-universal.jar"
@@ -421,7 +423,7 @@ def installCursePack(dirRun, modpackDir, filePath, destFilePath, server):
 	minecraftManifest = manifest['minecraft']
 	mc = minecraftManifest['version']
 	forge = minecraftManifest['modLoaders'][0]['id']
-	forge = mc + '-' + forge.split('-')[1] + '-' + mc
+	forge = mc + '-' + forge.split('-')[1]
 	server.install(func = "server", data = {'version_minecraft': mc, 'version_forge': forge})
 	
 	urlProject = "http://minecraft.curseforge.com/mc-mods/"
