@@ -1,12 +1,12 @@
 
-from configparser import ConfigParser, SafeConfigParser
+from configparser import ConfigParser, SafeConfigParser, RawConfigParser
 import StringIO
 import os
 
 class FakeSecHead(object):
 	def __init__(self, fp):
 		self.fp = fp
-		self.sechead = '[asection]\n'
+		self.sechead = '[general]\n'
 	
 	def readline(self):
 		if self.sechead:
@@ -27,12 +27,10 @@ def setProperty_ini(filePath, section, label, value):
 		config.write(file)
 
 def setProperty_properties(filePath, label, value):
-	newContent = StringIO.StringIO()
-	newContent.write('[general]\n')
-	newContent.write(open(filePath).read())
-	newContent.seek(0, os.SEEK_SET)
+	propStr = '[general]\n' + open(filePath).read()
+	newContent = StringIO.StringIO(propStr)
 	
-	config = ConfigParser()
+	config = RawConfigParser()
 	config.readfp(newContent)
 	
 	config['general'][label] = value
@@ -40,9 +38,8 @@ def setProperty_properties(filePath, label, value):
 		config.write(file)
 
 def getProperty_properties(filePath, label):
-	newContent = StringIO.StringIO()
-	newContent.write(open(filePath).read())
-	newContent.seek(0, os.SEEK_SET)
-	config = ConfigParser()
+	propStr = '[general]\n' + open(filePath).read()
+	newContent = StringIO.StringIO(propStr)
+	config = RawConfigParser()
 	config.readfp(newContent)
 	return config['general'][label]
