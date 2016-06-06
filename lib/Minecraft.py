@@ -209,7 +209,7 @@ class Server(Base.Server):
 					target = installCursePack,
 					args = (self.dirRun, modpackDir, filePath, destFilePath, self,)
 				).start()
-				return
+				return None
 			else:
 				if os.path.exists(modpackDir):
 					shutil.rmtree(modpackDir)
@@ -249,6 +249,8 @@ class Server(Base.Server):
 				# installer
 				if not forge in self.cache.versions_forge[mc]:
 					forge = forge + '-' + mc
+				if not forge in self.cache.versions_forge[mc]:
+					return "No such version"
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
 				installerPath = os.path.join(self.dirRun, "forge-installer.jar")
 				data['jar'] = "forge-" + forge + "-universal.jar"
@@ -424,36 +426,38 @@ def installCursePack(dirRun, modpackDir, filePath, destFilePath, server):
 	mc = minecraftManifest['version']
 	forge = minecraftManifest['modLoaders'][0]['id']
 	forge = mc + '-' + forge.split('-')[1]
-	server.install(func = "server", data = {'version_minecraft': mc, 'version_forge': forge})
-	
-	urlProject = "http://minecraft.curseforge.com/mc-mods/"
-
-	for fileDict in manifest['files']:
-		projectID = fileDict['projectID']
-		fileID = fileDict['fileID']
-		required = fileDict['required']
+	ret = server.install(func = "server", data = {'version_minecraft': mc, 'version_forge': forge})
+	if ret != None:
+		server.appendError_Modpack(str(ret))
+	else:
+		urlProject = "http://minecraft.curseforge.com/mc-mods/"
 		
-		projectData = urllib2.urlopen(urlProject + str(projectID))
-		urlProjectCorrected = projectData.geturl().split('?')[0]
-		projectData.close()
-		
-		urlFileDownload = urlProjectCorrected + "/files/" + str(fileID) + "/download"
-		try:
-			fileData = urllib2.urlopen(urlFileDownload)
-			fileName = fileData.geturl().split('?')[0].split('/')[-1]
-			fileData.close()
+		for fileDict in manifest['files']:
+			projectID = fileDict['projectID']
+			fileID = fileDict['fileID']
+			required = fileDict['required']
 			
-			Base.downloadFile(urlFileDownload, modpackMods + fileName)
-			#urllib.urlretrieve(urlFileDownload, modpackMods + fileName)
-		except Exception as e:
-			server.appendError_Modpack(str(e) + ' (projectID: ' + str(projectID) + ', fileID: ' + str(fileID) + ')<br />at file url "' + urlFileDownload + '".');
-	
-	if os.path.exists(dirRun + "config/"):
-		shutil.rmtree(dirRun + "config/")
-	if os.path.exists(dirRun + "mods/"):
-		shutil.rmtree(dirRun + "mods/")
-	shutil.move(modpackConfig, dirRun + "config/")
-	shutil.move(modpackMods, dirRun + "mods/")
+			projectData = urllib2.urlopen(urlProject + str(projectID))
+			urlProjectCorrected = projectData.geturl().split('?')[0]
+			projectData.close()
+			
+			urlFileDownload = urlProjectCorrected + "/files/" + str(fileID) + "/download"
+			try:
+				fileData = urllib2.urlopen(urlFileDownload)
+				fileName = fileData.geturl().split('?')[0].split('/')[-1]
+				fileData.close()
+				
+				Base.downloadFile(urlFileDownload, modpackMods + fileName)
+				#urllib.urlretrieve(urlFileDownload, modpackMods + fileName)
+			except Exception as e:
+				server.appendError_Modpack(str(e) + ' (projectID: ' + str(projectID) + ', fileID: ' + str(fileID) + ')<br />at file url "' + urlFileDownload + '".');
+		
+		if os.path.exists(dirRun + "config/"):
+			shutil.rmtree(dirRun + "config/")
+		if os.path.exists(dirRun + "mods/"):
+			shutil.rmtree(dirRun + "mods/")
+		shutil.move(modpackConfig, dirRun + "config/")
+		shutil.move(modpackMods, dirRun + "mods/")
 	
 	shutil.rmtree(modpackDir)
 	
