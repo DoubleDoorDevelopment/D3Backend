@@ -247,8 +247,8 @@ class Server(Base.Server):
 				self.addDownload(url, os.path.join(self.dirRun, data['jar']))
 			else:
 				# installer
-				if not forge in self.cache.versions_forge[data['mc']]:
-					forge = forge + '-' + data['mc']
+				if not forge in self.cache.versions_forge[mc]:
+					forge = forge + '-' + mc
 				url = self.cache.getVersionURL('forge', data = {'version': forge, 'mc': mc})
 				installerPath = os.path.join(self.dirRun, "forge-installer.jar")
 				data['jar'] = "forge-" + forge + "-universal.jar"
