@@ -86,13 +86,6 @@
             <input type="text" class="form-control" id="jarname" name="jarname" value="minecraft_server.jar">
         </div>
     </div>
-<#--<div class="form-group">-->
-<#--<label for="rconpass" class="col-sm-2 control-label">RCon password</label>-->
-
-<#--<div class="col-sm-10">-->
-<#--<input type="text" class="form-control" id="rconpass" name="rconpass" value="${Helper.randomString(10)}">-->
-<#--</div>-->
-<#--</div>-->
     <div class="form-group">
         <label for="admins" class="col-sm-2 control-label">Admins</label>
 

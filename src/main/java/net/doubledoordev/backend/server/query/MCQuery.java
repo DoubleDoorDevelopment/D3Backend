@@ -22,6 +22,7 @@ import com.google.common.base.Charsets;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 
+import java.io.IOException;
 import java.net.*;
 
 import static net.doubledoordev.backend.util.Constants.LOCALHOST;
@@ -51,7 +52,7 @@ public class MCQuery
     }
 
     // used to get a session token
-    private void handshake() throws ServerOfflineException
+    private void handshake() throws IOException
     {
         QueryRequest req = new QueryRequest();
         req.type = HANDSHAKE;
@@ -86,7 +87,7 @@ public class MCQuery
             QueryResponse res = new QueryResponse(result, false);
             return res;
         }
-        catch (ServerOfflineException e)
+        catch (Exception e)
         {
             return null;
         }
@@ -97,86 +98,53 @@ public class MCQuery
      *
      * @return a <code>QueryResponse</code> object
      */
-    public QueryResponse fullStat()
+    public QueryResponse fullStat() throws IOException
     {
-        try
-        {
-            handshake();
+        handshake();
 
-            QueryRequest req = new QueryRequest();
-            req.type = STAT;
-            req.sessionID = generateSessionID();
-            req.setPayload(token);
-            req.payload = ByteUtils.padArrayEnd(req.payload, 4); //for full stat, pad the payload with 4 null bytes
+        QueryRequest req = new QueryRequest();
+        req.type = STAT;
+        req.sessionID = generateSessionID();
+        req.setPayload(token);
+        req.payload = ByteUtils.padArrayEnd(req.payload, 4); //for full stat, pad the payload with 4 null bytes
 
-            byte[] send = req.toBytes();
-
-            byte[] result = sendUDP(send);
+        byte[] send = req.toBytes();
+        byte[] result = sendUDP(send);
 
             /*
              * note: buffer size = base + #players(online) * 16(max username length)
              */
 
-            QueryResponse res = new QueryResponse(result, true);
-            return res;
-        }
-        catch (ServerOfflineException e)
-        {
-            return null;
-        }
-        catch (Exception e)
-        {
-            Main.LOGGER.error("Got error polling for {}:{}", serverAddress, queryPort);
-            Main.LOGGER.catching(e);
-            return null;
-        }
+        QueryResponse res = new QueryResponse(result, true);
+        return res;
     }
 
-    private byte[] sendUDP(byte[] input) throws ServerOfflineException
+    private byte[] sendUDP(byte[] input) throws IOException
     {
-        try
+        while (socket == null)
         {
-            while (socket == null)
+            try
             {
-                try
-                {
-                    socket = new DatagramSocket(localPort); //create the socket
-                }
-                catch (BindException e)
-                {
-                    ++localPort; // increment if port is already in use
-                }
+                socket = new DatagramSocket(localPort); //create the socket
             }
-
-            //create a packet from the input data and send it on the socket
-            InetAddress address = InetAddress.getByName(serverAddress); //create InetAddress object from the address
-            DatagramPacket packet1 = new DatagramPacket(input, input.length, address, queryPort);
-            socket.send(packet1);
-
-            //receive a response in a new packet
-            byte[] out = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(out, out.length);
-            socket.setSoTimeout(500); //one half second timeout
-            socket.receive(packet);
-
-            return packet.getData();
-        }
-        catch (SocketException e)
-        {
-            e.printStackTrace();
-        }
-        catch (SocketTimeoutException e)
-        {
-            //System.err.println("Socket Timeout! Is the server offline?");
-            //System.exit(1);
-            throw new ServerOfflineException(e);
-        }
-        catch (Exception e) //any other exceptions that may occur
-        {
-            Main.LOGGER.catching(e);
+            catch (BindException e)
+            {
+                ++localPort; // increment if port is already in use
+            }
         }
 
-        return null;
+        //create a packet from the input data and send it on the socket
+        InetAddress address = InetAddress.getByName(serverAddress); //create InetAddress object from the address
+        DatagramPacket packet1 = new DatagramPacket(input, input.length, address, queryPort);
+        socket.send(packet1);
+
+        //receive a response in a new packet
+        byte[] out = new byte[1024];
+        DatagramPacket packet = new DatagramPacket(out, out.length);
+        socket.setSoTimeout(500); //one half second timeout
+        socket.receive(packet);
+
+        return packet.getData();
     }
 
     private int generateSessionID()

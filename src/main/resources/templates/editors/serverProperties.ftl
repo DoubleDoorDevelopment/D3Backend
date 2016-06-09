@@ -13,7 +13,7 @@
     </tbody>
 </table>
 <script>
-    const readOnlyProperties = ${Helper.getReadOnlyProperties()};
+    const readOnlyProperties = ${Helper.getReadOnlyProperties()?js_string};
 
     function change(field)
     {
@@ -55,7 +55,7 @@
         });
     }
 
-    var websocket = new WebSocket(wsurl("serverproperties/${server.ID}"));
+    var websocket = new WebSocket(wsurl("serverproperties/${server.ID?js_string}"));
     websocket.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);

@@ -25,7 +25,7 @@ public class TestMain
 {
     public static void main(String[] args) throws Exception
     {
-        MCQuery query = new MCQuery("vps2.dries007.net", 25505);
+        MCQuery query = new MCQuery("vps2.dries007.net", 25569);
         QueryResponse queryResponse;
         while (true)
         {
@@ -34,7 +34,7 @@ public class TestMain
             else System.out.println("null");
             synchronized (Thread.currentThread())
             {
-                Thread.currentThread().wait(100);
+                Thread.currentThread().wait(1000);
             }
         }
     }

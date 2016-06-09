@@ -4,7 +4,7 @@
 <#assign isCoOwner = server.isCoOwner(user) >
 <#-- This needs to happen BEFORE anything loads off the template! -->${wm.update()}
 <h1>World Manager
-    <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
+    <small><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a> <span id="online"></span></small>
 </h1>
 <!-- TODO
 <p>
@@ -34,8 +34,8 @@
         </p>
 
         <div class="btn-group">
-            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeWorldBackup', [], progressModal)" <#else>disabled</#if> class="btn btn-info">The World</button>
-            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeAllOfTheBackup', [], progressModal)" <#else>disabled</#if> class="btn btn-info">EVERYTHING</button>
+            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID?js_string}', 'makeWorldBackup', [], progressModal)" <#else>disabled</#if> class="btn btn-info">The World</button>
+            <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID?js_string}', 'makeAllOfTheBackup', [], progressModal)" <#else>disabled</#if> class="btn btn-info">EVERYTHING</button>
         </div>
     </div>
 </div>
@@ -48,8 +48,8 @@
                 <span class="pull-right clickable"><i class="fa fa-chevron-up"></i></span>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID}', 'makeBackup', ['${dimid}'], progressModal)" <#else>disabled</#if> class="btn btn-info">Backup</button>
-                <button type="button" <#if isCoOwner>onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager/${server.ID}', 'delete', ['${dimid}']);" <#else>disabled</#if> class="btn btn-danger">
+                <button type="button" <#if isCoOwner>onclick="call('worldmanager/${server.ID?js_string}', 'makeBackup', ['${dimid}'], progressModal)" <#else>disabled</#if> class="btn btn-info">Backup</button>
+                <button type="button" <#if isCoOwner>onclick="if (confirm('Are you sure?\nThis will delete the entire dimention!')) call('worldmanager/${server.ID?js_string}', 'delete', ['${dimid}']);" <#else>disabled</#if> class="btn btn-danger">
                     Delete
                 </button>
             </div>

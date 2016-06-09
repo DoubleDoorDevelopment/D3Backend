@@ -1,7 +1,7 @@
 <#include "header.ftl">
 <#assign restartInfo = server.getRestartingInfo()>
 <h1>Advanced Settings
-    <small><a href="/server?server=${server.ID}">${server.ID}</a> <span id="online"></span></small>
+    <small><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a> <span id="online"></span></small>
 </h1>
 <div class="row">
     <div class="col-sm-6">
@@ -83,7 +83,7 @@
                     <label for="JvmData_jarName">Server jar name</label>
                     <select id="JvmData_jarName" class="form-control" aria-describedby="helpBlock">
                     <#list server.getPossibleJarnames() as jarName>
-                        <option value="${jarName}">${jarName}</option>
+                        <option value="${jarName?json_string}">${jarName?html}</option>
                     </#list>
                     </select>
                 </div>
@@ -162,7 +162,7 @@
         firstRun = false;
     }
 
-    var websocket = new WebSocket(wsurl("advancedsettings/${server.ID}"));
+    var websocket = new WebSocket(wsurl("advancedsettings/${server.ID?js_string}"));
     websocket.onmessage = function (evt)
     {
         var temp = JSON.parse(evt.data);

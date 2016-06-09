@@ -19,7 +19,7 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Console ${server.ID}</title>
+    <title>Console ${server.ID?js_string}</title>
     <!-- Le meta -->
     <meta name="author" content="Dries007">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +39,7 @@
     }
     var textarea = document.getElementById("text");
     var autoScroll = true;
-    var websocket = new WebSocket(wsurl("serverconsole/${server.ID}"));
+    var websocket = new WebSocket(wsurl("serverconsole/${server.ID?js_string}"));
     websocket.onerror = function (evt)
     {
         alert("The websocket errored. Refresh the page!")

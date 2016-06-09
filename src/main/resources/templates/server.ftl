@@ -1,12 +1,12 @@
 <#include "header.ftl">
 <#assign isCoOwner = server.isCoOwner(user) || user.isAdmin() >
 <#assign isOwner = server.ownerObject == user || user.isAdmin() >
-<h1>${server.ID}
+<h1>${server.ID?js_string}
     <small> ${server.getDisplayAddress()}   <span id="online"></span></small>
 </h1>
 <div class="btn-group">
     <button type="button" id="startServerBtn" class="btn btn-success">Start</button>
-    <button type="button" class="btn btn-info" onclick="openPopup('/serverconsole?server=${server.ID}')">Console</button>
+    <button type="button" class="btn btn-info" onclick="openPopup('/serverconsole?server=${server.ID?js_string}')">Console</button>
     <button type="button" id="stopServerBtn" class="btn btn-warning">Stop</button>
     <button type="button" id="killServerBtn" class="btn btn-danger">Kill</button>
 </div>
@@ -53,38 +53,38 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <div class="btn-group">
-                    <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID}'>File Manager</a>
-                    <a type="button" class="btn btn-default" href="/filemanager?server=${server.ID}&file=server.properties">server.properties</a>
-                    <a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID}">World Manager</a>
+                    <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID?js_string}'>File Manager</a>
+                    <a type="button" class="btn btn-default" href="/filemanager?server=${server.ID?js_string}&file=server.properties">server.properties</a>
+                    <a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID?js_string}">World Manager</a>
                 </div>
                 <hr>
-                <a type="button" class="btn btn-warning" href="/advancedsettings?server=${server.ID}">Advanced Settings</a>
+                <a type="button" class="btn btn-warning" href="/advancedsettings?server=${server.ID?js_string}">Advanced Settings</a>
                 <hr>
                 <div class="btn-group">
-                    <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('servercmd/${server.ID}', 'setOwner', [name]);}"<#else>disabled</#if> class="btn btn-danger">
+                    <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('servercmd/${server.ID?js_string}', 'setOwner', [name]);}"<#else>disabled</#if> class="btn btn-danger">
                         Change owner
                     </button>
-                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID}', 'delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">
+                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID?js_string}', 'delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">
                         Delete server
                     </button>
                 </div>
                 <hr>
                 <h4>Co-owners <#if isOwner>
-                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future co-owner?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addCoowner', [name])}"><i class="fa fa-plus"></i>
+                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future co-owner?');if (name != null && name !== '') {call('servercmd/${server.ID?js_string}', 'addCoowner', [name])}"><i class="fa fa-plus"></i>
                     </small></#if></h4>
                 <ul class="list-unstyled" id="coOwnersList">
                 <#list server.getCoOwners() as name>
-                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID}', 'removeCoowner', ['${name}'])" class="fa fa-times"></i></#if></li>
+                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID?js_string}', 'removeCoowner', ['${name}'])" class="fa fa-times"></i></#if></li>
                 </#list>
                 </ul>
                 <p class="text-muted">Usernames on the backend. Can do everything except modify co-owners, change owner and delete the server.</p>
                 <hr>
                 <h4>Admins <#if isCoOwner>
-                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future admin?');if (name != null && name !== '') {call('servercmd/${server.ID}', 'addAdmin' + [name])}"><i class="fa fa-plus"></i></small></#if>
+                    <small style="cursor: pointer;" onclick="var name = prompt('Username of the future admin?');if (name != null && name !== '') {call('servercmd/${server.ID?js_string}', 'addAdmin', [name])}"><i class="fa fa-plus"></i></small></#if>
                 </h4>
                 <ul class="list-unstyled" id="adminsList">
                 <#list server.getAdmins() as name>
-                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID}', 'removeAdmin', ['${name}'])" class="fa fa-times"></i></#if></li>
+                    <li>${name}<#if isOwner><i style="cursor: pointer;" onclick="call('servercmd/${server.ID?js_string}', 'removeAdmin', ['${name}'])" class="fa fa-times"></i></#if></li>
                 </#list>
                 </ul>
                 <p class="text-muted">Usernames on the backend. Can start, stop & use console.</p>
@@ -200,7 +200,7 @@
         if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
         {
             document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value;
-            call('servercmd/${server.ID}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressModal);
+            call('servercmd/${server.ID?js_string}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressModal);
         }
     }
 
@@ -209,7 +209,7 @@
         if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
         {
             document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value;
-            call('servercmd/${server.ID}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressModal);
+            call('servercmd/${server.ID?js_string}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressModal);
         }
     }
 
@@ -218,7 +218,7 @@
         if (confirm('Are you sure?\nThis will overide the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
         {
             document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value;
-            call('servercmd/${server.ID}', 'downloadModpack', [
+            call('servercmd/${server.ID?js_string}', 'downloadModpack', [
                 document.getElementById('modpackURL').value,
                 document.getElementById('modpackPurge').checked,
                 document.getElementById('modpackCurse').checked], progressModal);
@@ -247,19 +247,19 @@
     {
         document.getElementById("startServerBtn").onclick = !data.online ? function ()
         {
-            call('servercmd/${server.ID}', "startServer")
+            call('servercmd/${server.ID?js_string}', "startServer")
         } : null;
         document.getElementById("startServerBtn").disabled = data.online;
 
         document.getElementById("stopServerBtn").onclick = data.online ? function ()
         {
-            call('servercmd/${server.ID}', "stopServer", [prompt('Message?', 'Server is stopping.')])
+            call('servercmd/${server.ID?js_string}', "stopServer", [prompt('Message?', 'Server is stopping.')])
         } : null;
         document.getElementById("stopServerBtn").disabled = !data.online;
 
         document.getElementById("killServerBtn").onclick = data.online ? function ()
         {
-            if (confirm('Are you sure?')) call('servercmd/${server.ID}', "forceStopServer")
+            if (confirm('Are you sure?')) call('servercmd/${server.ID?js_string}', "forceStopServer")
         } : null;
         document.getElementById("killServerBtn").disabled = !data.online;
 
@@ -287,16 +287,16 @@
         document.getElementById("coOwnersList").innerHTML = "";
         data.coOwners.forEach(function (entry)
         {
-            document.getElementById("coOwnersList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
+            document.getElementById("coOwnersList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
 
         document.getElementById("adminsList").innerHTML = "";
         data.admins.forEach(function (entry)
         {
-            document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
+            document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
     }
-    websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID}"));
+    websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID?js_string}"));
     websocketMonitor.onerror = function (evt)
     {
         alert("The websocket errored. Refresh the page!")

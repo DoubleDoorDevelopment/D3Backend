@@ -25,7 +25,7 @@
         </tbody>
     </table>
     <script type="text/javascript">
-        var json = ${fm.getFileContents()};
+        var json = ${fm.getFileContents()?js_string};
         var opList = document.getElementById("opList");
         json.forEach(function (object)
         {
@@ -108,7 +108,7 @@
             xmlhttp.send();
         }
 
-        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
             alert("The websocket errored. Refresh the page!")

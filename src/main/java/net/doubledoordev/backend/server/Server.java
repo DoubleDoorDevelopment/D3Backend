@@ -19,6 +19,7 @@
 package net.doubledoordev.backend.server;
 
 import com.google.gson.annotations.Expose;
+import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -830,7 +831,15 @@ public class Server
      */
     public void renewQuery()
     {
-        cachedResponse = getQuery().fullStat();
+        try
+        {
+            cachedResponse = getQuery().fullStat();
+        }
+        catch (IOException e)
+        {
+            Main.LOGGER.error("Caught IOException from server {} (on port {})", ID, serverPort);
+            Main.LOGGER.catching(e);
+        }
     }
 
     private void saveProperties() throws IOException

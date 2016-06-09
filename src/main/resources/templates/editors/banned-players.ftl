@@ -16,7 +16,7 @@
         </div>
         <div class="form-group">
             <label class="sr-only" for="newCreated">Reason</label>
-            <input type="text" class="form-control" id="newCreated" placeholder="Data Created" value="${Helper.getNowInBanFormat()}">
+            <input type="text" class="form-control" id="newCreated" placeholder="Data Created" value="${Helper.getNowInBanFormat()?js_string}">
         </div>
         <div class="form-group">
             <label class="sr-only" for="newExpires">Reason</label>
@@ -40,7 +40,7 @@
         </tbody>
     </table>
     <script type="text/javascript">
-        var json = ${fm.getFileContents()};
+        var json = ${fm.getFileContents()?js_string};
         var opList = document.getElementById("opList");
         json.forEach(function (object)
         {
@@ -122,7 +122,7 @@
                             document.getElementById("newUsername").value = "";
                             document.getElementById("newSource").value = "Server";
                             document.getElementById("newReason").value = "Banned by an operator.";
-                            document.getElementById("newCreated").value = "${Helper.getNowInBanFormat()}";
+                            document.getElementById("newCreated").value = "${Helper.getNowInBanFormat()?js_string}";
                             document.getElementById("newExpires").value = "forever";
 
                             document.getElementById("addBtn").innerHTML = "Add";
@@ -157,7 +157,7 @@
             }
         }
 
-        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
             alert("The websocket errored. Refresh the page!")

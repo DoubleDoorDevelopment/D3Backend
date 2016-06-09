@@ -9,7 +9,7 @@
     <select id="modeSelector" onchange="setMode(this.value)">
     </select>
 
-    <div id="editor">${fm.getFileContents()}</div>
+    <div id="editor">${fm.getFileContents()?html}</div>
 
     <script src="/static/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
     <script>
@@ -27,13 +27,13 @@
             modeSelector.innerHTML += "<option value=\"" + mode + "\">" + mode + "</option>";
         });
 
-        var extention = "${fm.getExtension()}";
+        var extention = "${fm.getExtension()?js_string}";
         if (modes.indexOf(extention) != -1)
         {
             modeSelector.value = extention;
             editor.getSession().setMode("ace/mode/" + extention);
         }
-        else if ("${fm.stripServer(fm.file)}".indexOf("computer") != -1)
+        else if ("${fm.stripServer(fm.file)?js_string}".indexOf("computer") != -1)
         {
             modeSelector.value = "lua";
             editor.getSession().setMode("ace/mode/lua");
@@ -49,7 +49,7 @@
             editor.getSession().setMode("ace/mode/" + mode);
         }
 
-        var websocket = new WebSocket(wsurl("filemanager/${server.ID}/${fm.stripServer(fm.getFile())}"));
+        var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())?js_string}"));
         websocket.onerror = function (evt)
         {
             alert("The websocket errored. Refresh the page!")

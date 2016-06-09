@@ -121,7 +121,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <#list Settings.servers as server>
                             <#if server.canUserControl(user)>
-                                <li id="${server.ID}NavTab"><a href="/server?server=${server.ID}">${server.ID}</a></li>
+                                <li id="${server.ID?js_string}NavTab"><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a></li>
                             </#if>
                         </#list>
                     </ul>
