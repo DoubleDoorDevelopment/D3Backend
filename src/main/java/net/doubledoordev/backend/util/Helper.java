@@ -36,6 +36,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -55,6 +56,7 @@ public class Helper
     public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
     private static final SimpleDateFormat BAN_SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
     private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
     private Helper()
@@ -340,5 +342,10 @@ public class Helper
     public static String formatDate(long time)
     {
         return SIMPLE_DATE_FORMAT.format(time);
+    }
+
+    public static String stripColor(String txt)
+    {
+        return txt.replaceAll("(?i)\u00a7[0-9a-fk-or]", "");
     }
 }

@@ -41,6 +41,7 @@ import org.apache.logging.log4j.util.Strings;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -835,6 +836,10 @@ public class Server
         {
             cachedResponse = getQuery().fullStat();
         }
+        catch (SocketTimeoutException ignored)
+        {
+
+        }
         catch (IOException e)
         {
             Main.LOGGER.error("Caught IOException from server {} (on port {})", ID, serverPort);
@@ -904,6 +909,7 @@ public class Server
                      */
                     List<String> arguments = new ArrayList<>();
                     arguments.add(Constants.getJavaPath());
+                    arguments.add("-DServerOwner=\"" + owner + '"');
                     arguments.add("-server");
                     {
                         int amount = getJvmData().ramMin;
@@ -973,6 +979,7 @@ public class Server
 
     public void printLine(String line)
     {
+        line = Helper.stripColor(line);
         logger.info(line);
         ServerconsoleSocketApplication.sendLine(this, line);
     }

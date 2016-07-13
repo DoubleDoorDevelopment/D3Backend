@@ -126,6 +126,8 @@ public class FileManager
             case "exe":
             case "mca":
             case "mcr":
+            case "gz":
+            case "lock":
                 return false;
 
             default:
@@ -135,10 +137,6 @@ public class FileManager
 
     public String getEditor()
     {
-        if (file.getName().equals("ops.json")) return "ops.ftl";
-        if (file.getName().equals("whitelist.json")) return "whitelist.ftl";
-        if (file.getName().equals("banned-players.json")) return "banned-players.ftl";
-        if (file.getName().equals("banned-ips.json")) return "banned-ips.ftl";
         if (file.getName().equals("server.properties")) return "serverProperties.ftl";
         switch (getExtension())
         {
@@ -147,6 +145,8 @@ public class FileManager
             case "disabled":
             case "mca":
             case "mcr":
+            case "gz":
+            case "lock":
                 return null;
 
             case "json":
@@ -182,6 +182,7 @@ public class FileManager
             case "jar":
             case "zip":
             case "disabled":
+            case "gz":
                 return "file-archive-o";
 
             case "jpg":
@@ -220,6 +221,8 @@ public class FileManager
             case "disabled":
             case "mca":
             case "mcr":
+            case "gz":
+            case "lock":
                 return null;
             default:
                 return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));

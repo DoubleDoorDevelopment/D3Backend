@@ -13,7 +13,7 @@
     </tbody>
 </table>
 <script>
-    const readOnlyProperties = ${Helper.getReadOnlyProperties()?js_string};
+    const readOnlyProperties = ${Helper.getReadOnlyProperties()};
 
     function change(field)
     {

@@ -145,7 +145,7 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         root.addProperty("mapName", server.getMapName());
         root.addProperty("version", server.getVersion());
         root.addProperty("size", server.getDiskspaceUse()[2] + " MB");
-        root.addProperty("motd", server.getMotd());
+        root.addProperty("motd", Helper.stripColor(server.getMotd()));
         root.addProperty("online", server.getOnline());
         root.addProperty("owner", server.getOwner());
         root.addProperty("gameMode", server.getGameMode());
@@ -159,6 +159,7 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         root.add("diskspace", object);
         root.add("coOwners", GSON.toJsonTree(server.getCoOwners()));
         root.add("admins", GSON.toJsonTree(server.getAdmins()));
+        root.addProperty("ram", Helper.DECIMAL_FORMAT.format(server.getJvmData().ramMin / 1024.0) + " GB to " + Helper.DECIMAL_FORMAT.format(server.getJvmData().ramMax / 1024.0) + " GB");
 
         return root;
     }

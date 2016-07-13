@@ -35,7 +35,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <#list ["onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID"] as key>
+                    <#list ["onlinePlayers", "slots", "motd", "gameMode", "mapName", "playerList", "plugins", "version", "gameID", "ram"] as key>
                     <tr>
                         <td style="text-align: right;">${key}</td>
                         <td style="text-align: left;" id="${key}"></td>
@@ -273,6 +273,7 @@
         document.getElementById("gameMode").innerHTML = data.gameMode;
         document.getElementById("plugins").innerHTML = data.plugins;
         document.getElementById("gameID").innerHTML = data.gameID;
+        document.getElementById("ram").innerHTML = data.ram;
 
         document.getElementById("diskspace_server").innerHTML = data.diskspace.server;
         document.getElementById("diskspace_backup").innerHTML = data.diskspace.backups;

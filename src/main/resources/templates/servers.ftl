@@ -1,14 +1,14 @@
 <#include "header.ftl">
 <h1>Server list</h1>
-<table class="table table-hover tablesorter" id="servers">
+<table class="table table-hover tablesorter" id="servers" style="table-layout: fixed">
     <thead>
     <tr>
-        <th class="col-sm-2">Server Name</th>
+        <th class="col-sm-4">Server Name</th>
         <th class="col-sm-2">Server Address</th>
         <th class="col-sm-1">Players</th>
         <th class="col-sm-1">Total Size</th>
-        <th class="col-sm-2"></th>
-        <th class="col-sm-4">MOTD</th>
+        <th class="col-sm-2" style="min-width: 174px;"></th>
+        <th class="col-sm-2">RAM (Min Max)</th>
     </tr>
     </thead>
 </table>
@@ -45,10 +45,12 @@
         columns: [
             {data: 'id', createdCell: makeClickable},
             {data: 'displayAddress', createdCell: makeClickable},
-            {data: 'onlinePlayers', createdCell: makeClickable},
+            {data: function (row) {
+                return row['onlinePlayers'] + " / " + row['slots']
+            }, createdCell: makeClickable},
             {data: 'size', createdCell: makeClickable},
             {data: createBtnGroup},
-            {data: 'motd', createdCell: makeClickable}
+            {data: 'ram', createdCell: makeClickable},
         ]
     });
     var websocket = new WebSocket(wsurl("serverlist"));

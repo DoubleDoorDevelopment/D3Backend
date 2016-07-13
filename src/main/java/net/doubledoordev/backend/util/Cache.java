@@ -97,7 +97,7 @@ public class Cache extends TimerTask
                     forgeBuild.branch = object.get("branch").isJsonNull() ? null : object.get("branch").getAsString();
                     forgeBuild.build = object.get("build").getAsInt();
                     forgeBuild.forgeVersion = object.get("version").getAsString();
-                    forgeBuild.mcVersion = object.get("mcversion").getAsString();
+                    forgeBuild.mcVersion = object.get("mcversion").isJsonNull() ? "0" : object.get("mcversion").getAsString();
                     StringBuilder sb = new StringBuilder(forgeBuild.mcVersion).append('-').append(forgeBuild.forgeVersion);
                     if (forgeBuild.branch != null) sb.append('-').append(forgeBuild.branch);
                     forgeBuild.id = sb.toString();
