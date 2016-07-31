@@ -18,9 +18,12 @@ USE `backend` ;
 -- Table `backend`.`user`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `backend`.`user` (
-  `Username` VARCHAR(45) NOT NULL,
-  `Password` VARCHAR(45) NULL,
+  `Username` VARCHAR(32) NOT NULL,
+  `Password` VARCHAR(32) NULL,
   `Salt` VARCHAR(50) NULL,
+  `SteamUser` VARCHAR(32) NULL,
+  `SteamPass` VARCHAR(32) NULL,
+  `SteamSalt` VARCHAR(50) NULL,
   `Group` ENUM('User', 'Admin') NULL,
   PRIMARY KEY (`Username`))
 ENGINE = InnoDB;
