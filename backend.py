@@ -137,16 +137,12 @@ def addServer():
 		
 		if partitionServer(name, port, game, request.form, request.files):
 			
-			print(game)
-			
 			Database.Server.create(
 				Name = name,
 				User = username,
 				Port = port,
 				Purpose = game
 			)
-			
-			print(Database.getServer(username, name)[0].Purpose)
 			
 			return redirect(url_for('server', nameOwner = username, nameServer = name))
 		else:
@@ -842,7 +838,10 @@ def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 		if key in allData:
 			data[key] = allData[key]
 	
-	server.install(func = "server", data = data, files = files)
+	import threading
+	threadInstall = threading.Thread(target=server.install, args=(func = "server", data = data, files = files))
+	threadInstall.start()
+	
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
