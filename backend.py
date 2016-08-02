@@ -296,7 +296,7 @@ def serverControl():
 		server.kill()
 	elif 'command' in form:
 		server.send(form['command'])
-	return getCurrentURL(form)
+	return UrlData.getCurrentURL(form)
 
 @app.route('/server/minecraft/uploadModpack/', methods=['POST'])
 @login_required
