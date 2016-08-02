@@ -565,7 +565,7 @@ def getServerMessageData():
 	if Servers.doesServerExist(nameOwner, nameServer):
 		server = Servers.getServer(nameOwner, nameServer)
 		isDownloading = server.isDownloading()
-		errors = server.Session.getErrors()
+		errors = server.getErrors()
 
 	return jsonify(isDownloading = isDownloading, errors = errors)
 
