@@ -54,7 +54,7 @@ class Server(Base.Server):
 	def install(self, **kwargs):
 		# Replaces the directory in the install script
 		self.replaceFileSubstring("install.steam", "%DIRECTORY%", self.dirRun)
-		os.system(Config.getSteamShell() + "+runscript " + os.path.join(self.dirRun, "install.steam"))
+		os.system(Config.getSteamShell() + " +runscript " + os.path.join(self.dirRun, "install.steam"))
 	
 	def replaceFileSubstring(self, filePath, option, string):
 		with open(filePath, "wt") as fout:
