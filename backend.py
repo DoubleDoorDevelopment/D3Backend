@@ -839,7 +839,7 @@ def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 			data[key] = allData[key]
 	
 	import threading
-	threadInstall = threading.Thread(target=server.install, args=(func = "server", data = data, files = files))
+	threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files})
 	threadInstall.start()
 	
 
