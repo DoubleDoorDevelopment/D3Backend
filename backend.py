@@ -16,8 +16,6 @@ from werkzeug import secure_filename
 
 from customthreading import *
 
-import lib.types as Types
-
 app = Flask(__name__)
 
 if app.debug:
@@ -34,33 +32,11 @@ def getConfig(key):
 	else:
 		return None
 
-def getDirMain():
-	return getConfig('MAIN_DIRECTORY')
-
-def getDirStatic():
-	return getDirMain() + "static/"
-
-def getDirUploads():
-	return getDirStatic() + "uploads/"
-
-def getDirRun():
-	return getConfig('RUN_DIRECTORY')
-
-def getDirCache():
-	return getDirRun() + "cache/"
-
-def getDirServers():
-	return getConfig('SERVERS_DIRECTORY')
-
-def getDirForServer(nameOwner, nameServer):
-	return getDirServers() + nameOwner + "_" + nameServer + "/"
-
-def getDirForTemplate(game):
-	return getDirRun() + "templates/" + game + "/"
+from python.manageConfig import *
 
 # ~~~~~~~~~~ Imports Post-Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-import database
+import database as Database
 
 # ~~~~~~~~~~ Annotations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -68,7 +44,7 @@ def login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
 		if not 'username' in session:
-			return getLoginURL()
+			return UrlData.getLoginURL()
 		return f(*args, **kwargs)
 	return decorated_function
 
@@ -76,154 +52,46 @@ def login_required(f):
 
 # ~~~~~~~~~~ Inits ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-serverObjs = None
-cacheObjs = None
-serverData = None
+import python.servers as Servers
 
 def init():
 	app.secret_key = os.urandom(20)
 	app.config['UPLOAD_FOLDER'] = getDirUploads()
 	
-	from lib.Base import initDownloaders
+	from python.Base import initDownloaders
 	initDownloaders()
-	initData()
-	initCaches()
-	initServers(database.Server.select().order_by(database.Server.User, database.Server.Name))
-
-def initData():
-	global serverData
-	serverData = {}
-	
-	for key in Types.serverTypes:
-		serverType = Types.serverTypes[key]
-		serverData[serverType.getName()] = serverType.getDataClass()()
-
-def initCaches():
-	cacheDirectory = getDirCache()
-	
-	global cacheObjs
-	cacheObjs = {}
-	
-	for serverTypeKey in Types.serverTypes:
-		serverType = Types.serverTypes[serverTypeKey]
-		cacheObjs[serverType.getName()] = serverType.getCacheClass()(cacheDirectory + serverType.getName() + "/")
-		cacheObjs[serverType.getName()].refresh()
-
-def initServers(serverQuery):
-	global serverObjs
-	serverObjs = {}
-	
-	for serverModel in serverQuery:
-		createServerObj(serverModel.User.Username, serverModel.Name, serverModel.Purpose, serverModel.Port)
-
-def getServerData(serverTypeName):
-	return serverData[serverTypeName]
-
-def doesServerExist(nameOwner, nameServer):
-	return nameOwner in serverObjs and nameServer in serverObjs[nameOwner]
-
-def getServer(nameOwner, nameServer):
-	return serverObjs[nameOwner][nameServer]
-
-def createServerObj(nameOwner, nameServer, serverTypeName, serverPort):
-	global serverObjs
-	
-	if not nameOwner in serverObjs:
-		serverObjs[nameOwner] = {}
-	
-	directory = getDirForServer(nameOwner, nameServer)
-	
-	serverClass = Types.serverTypeToClass[serverTypeName]
-	serverObj = serverClass(cacheObjs[serverTypeName], directory, nameOwner, nameServer)
-	serverObj.setTypeServer(serverTypeName)
-	serverObjs[nameOwner][nameServer] = serverObj
-
-def removeServerObj(nameOwner, nameServer):
-	global serverObjs
-	if nameOwner in serverObjs and nameServer in serverObjs[nameOwner]:
-		del serverObjs[nameOwner][nameServer]
+	Servers.initData()
+	Servers.initCaches()
+	Servers.initServers(Database.Server.select().order_by(Database.Server.User, Database.Server.Name))
 
 # ~~~~~~~~~~ URL Getters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def getIndexURL():
-	return redirect(url_for('index'))
-
-def getLoginURL():
-	return redirect(url_for('login'))
-
-def getCurrentURL(formData):
-	if 'current' in formData and formData['current'] != '':
-		current = formData['current']
-		url = None
-		if current == "server":
-			url = url_for(current, nameOwner = formData['nameOwner'], nameServer = formData['nameServer'])
-		else:
-			url_for(current)
-		return redirect(url)
-	return getIndexURL()
-
-def getUserURL(username):
-	return redirect(url_for('user', username = username))
-
-def getUserSettingsURL(username):
-	return redirect(url_for('userSettings', username = username))
+import python.urls as UrlData
 
 # ~~~~~~~~~~ Getter Session ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def isLoggedIn():
-	return 'username' in session
-
-def getUsername():
-	return session['username']
-
-# ~~~~~~~~~~ Messages ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def setMessage(key, string):
-	session[key] = string
-
-def getMessage(key):
-	string = None
-	if key in session:
-		string = session[key]
-		session.pop(key, None)
-	return string
-
-def setError(string):
-	setMessage('error', string)
-
-def throwError(error, formData):
-	setError(error)
-	return getCurrentURL(formData)
-
-def getError():
-	return getMessage('error')
-
-def setInfo(string):
-	setMessage('info', string)
-
-def getInfo():
-	return getMessage('info')
+import python.session as Session
 
 # ~~~~~~~~~~ Rendering ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def renderPage(template, **kwargs):
 	userServers = []
 	
-	if isLoggedIn():
-		username = getUsername()
-		for serverModel in database.getServersForUser(username):
+	if Session.isLoggedIn():
+		username = Session.getUsername()
+		for serverModel in Database.getServersForUser(username):
 			userServers.append(serverModel)
-		for serverModel in database.getServersForModerator(username):
+		for serverModel in Database.getServersForModerator(username):
 			if not server in userServers:
 				userServers.append(serverModel)
 	
 	return render_template(template,
-			error = getError(),
-			info = getInfo(),
-			user_groups = database.getUserGroups(),
-			server_types = serverData,
+			error = Session.getError(),
+			info = Session.getInfo(),
+			user_groups = Database.getUserGroups(),
+			server_types = Servers.getServerData(),
 			user_servers = userServers,
-			caches = cacheObjs,
+			caches = Servers.getServerCache(),
 			**kwargs
 		)
 
@@ -243,7 +111,7 @@ def filterFileEncode(value):
 @app.route('/', methods=['GET', 'POST'])
 def index():
 	return renderPage("pages/Homepage.html", current="index",
-		modal = getMessage('modal')
+		modal = Session.getMessage('modal')
 	)
 
 @app.route('/add/server', methods=['POST'])
@@ -252,30 +120,38 @@ def addServer():
 	name = request.form['name']
 	game = request.form['type']
 	
-	username = getUsername()
-	server, error = database.getServer(name, username)
+	print("Purpose ", game)
+	
+	username = Session.getUsername()
+	server, error = Database.getServer(name, username)
 	
 	if len(server) > 0:
-		return throwError(request.form,
+		return Session.throwError(request.form,
 			'Server with name "' + name + '" already exists for user "' + username + '"')
 	
 	port, error = getNextPortForGame(game)
 	if error != None:
 		setError(error)
 	else:
-		createServerObj(username, name, game, port)
+		Servers.createServerObj(username, name, game, port)
 		
 		if partitionServer(name, port, game, request.form, request.files):
-			database.Server.create(
+			
+			print(game)
+			
+			Database.Server.create(
 				Name = name,
 				User = username,
 				Port = port,
 				Purpose = game
 			)
+			
+			print(Database.getServer(username, name)[0].Purpose)
+			
 			return redirect(url_for('server', nameOwner = username, nameServer = name))
 		else:
 			removeServerObj(username, name)
-	return getCurrentURL(request.form)
+	return Session.getCurrentURL(request.form)
 
 @app.route('/add/server/admin', methods=['POST'])
 @login_required
@@ -311,7 +187,7 @@ def addUser():
 def createUser():
 	username = request.form['username']
 	password = request.form['password']
-	if len(database.getUsers()) > 0:
+	if len(Database.getUsers()) > 0:
 		group = "User"
 	else:
 		group = "Admin"
@@ -368,8 +244,8 @@ def changeUserPass_Admin():
 			request.form['new'],
 			request.form['verify']
 		)
-	setError(getMessage("errorPassword"))
-	setInfo(getMessage("infoPassword"))
+	setError(Session.getMessage("errorPassword"))
+	setInfo(Session.getMessage("infoPassword"))
 	return getCurrentURL(request.form)
 
 @app.route('/delete/server', methods=['POST'])
@@ -380,18 +256,18 @@ def deleteServer():
 	nameServer = data[1]
 	
 	try:
-		database.deleteServerFromTable(nameOwner, nameServer)
+		Database.deleteServerFromTable(nameOwner, nameServer)
 		shutil.rmtree(getDirForServer(nameOwner, nameServer))
 	except Exception as e:
-		setError(str(e))
+		Session.setError(str(e))
 		pass
 	
-	return getIndexURL()
+	return UrlData.getIndexURL()
 
 @app.route('/delete/user', methods=['POST'])
 @login_required
 def deleteUser():
-	error = database.deleteUserFromTable(request.form['data'])
+	error = Database.deleteUserFromTable(request.form['data'])
 	if error != None:
 		setError(error)
 		return getCurrentURL(request.form)
@@ -401,7 +277,7 @@ def deleteUser():
 @app.route('/servers')
 @login_required
 def servers():
-	return renderPage('pages/TableServers.html', current = 'servers', data = database.getServers())
+	return renderPage('pages/TableServers.html', current = 'servers', data = Database.getServers())
 
 @app.route('/server/control/', methods=['POST'])
 @login_required
@@ -410,7 +286,7 @@ def serverControl():
 	nameOwner = form['nameOwner']
 	nameServer = form['nameServer']
 	
-	server = getServer(nameOwner, nameServer)
+	server = Servers.getServer(nameOwner, nameServer)
 	
 	if 'start' in form:
 		server.start()
@@ -477,14 +353,14 @@ def saveRunConfig():
 @login_required
 def userSettings():
 	return renderPage('pages/UserSettings.html', username = getUsername(),
-			errorPassword = getMessage('errorPassword'),
-			infoPassword = getMessage('infoPassword')
+			errorPassword = Session.getMessage('errorPassword'),
+			infoPassword = Session.getMessage('infoPassword')
 		)
 
 @app.route('/users')
 @login_required
 def users():
-	return renderPage('pages/TableUsers.html', current = 'users', data = database.getUsers())
+	return renderPage('pages/TableUsers.html', current = 'users', data = Database.getUsers())
 
 @app.route('/user/<string:username>')
 @login_required
@@ -494,17 +370,17 @@ def user(username):
 @app.route('/user/<string:nameOwner>/<string:nameServer>')
 @login_required
 def server(nameOwner, nameServer):
-	serverModel, error = database.getServer(nameOwner, nameServer)
+	serverModel, error = Database.getServer(nameOwner, nameServer)
 	if serverModel != None:
-		moderators, error = database.getModerators(nameServer, nameOwner, permissions = "Moderator")
-		admins, error = database.getModerators(nameServer, nameOwner, permissions = "Admin")
+		moderators, error = Database.getModerators(nameServer, nameOwner, permissions = "Moderator")
+		admins, error = Database.getModerators(nameServer, nameOwner, permissions = "Admin")
 		
-		username = getUsername()
+		username = Session.getUsername()
 		userIsAdmin = username == nameOwner or session['isAdmin'] or username in admins
 		
 		directory = getDirForServer(nameOwner, nameServer)
 		serverType = serverModel.Purpose
-		serverData = getServerData(serverType)
+		serverData = Servers.getServerData(serverType)
 		
 		fileData = []
 		for fileKey in serverData.getEdittableFileKeys():
@@ -537,7 +413,7 @@ def server(nameOwner, nameServer):
 @app.route('/user/<string:nameOwner>/<string:nameServer>/browser/<path:path>', methods=['GET', 'POST'])
 @login_required
 def browseServer(nameOwner, nameServer, path = ''):
-	serverModel, error = database.getServer(nameOwner, nameServer)
+	serverModel, error = Database.getServer(nameOwner, nameServer)
 	if serverModel != None:
 		server = getServer(nameOwner, nameServer)
 		filePath = server.dirRun + path
@@ -653,15 +529,15 @@ def getOnlinePlayers():
 	if request.method == 'GET': # all servers
 		total = 0
 		number = 0
-		for nameOwner in serverObjs:
-			for nameServer in serverObjs[nameOwner]:
-				server = getServer(nameOwner, nameServer)
+		for nameOwner in Servers.getServerObjs():
+			for nameServer in Servers.getServers(nameOwner):
+				server = Servers.getServer(nameOwner, nameServer)
 				total += server.getPlayersOnline_Capacity()
 				number += server.getPlayersOnline_Quantity()
 	else:
 		nameOwner = request.form['nameOwner']
 		nameServer = request.form['nameServer']
-		server = getServer(nameOwner, nameServer)
+		server = Servers.getServer(nameOwner, nameServer)
 		total = server.getPlayersOnline_Capacity()
 		number = server.getPlayersOnline_Quantity()
 	return jsonify(
@@ -674,8 +550,8 @@ def isServerOnline():
 	nameOwner = request.form['nameOwner']
 	nameServer = request.form['nameServer']
 	isonline = False
-	if doesServerExist(nameOwner, nameServer):
-		isonline = getServer(nameOwner, nameServer).isOnline()
+	if Servers.doesServerExist(nameOwner, nameServer):
+		isonline = Servers.getServer(nameOwner, nameServer).isOnline()
 	return jsonify(online = isonline)
 
 @app.route('/_serverData', methods=['POST'])
@@ -686,10 +562,10 @@ def getServerMessageData():
 	isDownloading = False
 	errors = {}
 	
-	if doesServerExist(nameOwner, nameServer):
-		server = getServer(nameOwner, nameServer)
+	if Servers.doesServerExist(nameOwner, nameServer):
+		server = Servers.getServer(nameOwner, nameServer)
 		isDownloading = server.isDownloading()
-		errors = server.getErrors()
+		errors = server.Session.getErrors()
 
 	return jsonify(isDownloading = isDownloading, errors = errors)
 
@@ -701,18 +577,18 @@ def removeServerNotification():
 	nameServer = form['nameServer']
 	category = form['category']
 	index = form['index']
-	getServer(nameOwner, nameServer).removeError(category, int(index))
+	Servers.getServer(nameOwner, nameServer).removeError(category, int(index))
 	return redirect(url_for('server', nameOwner = nameOwner, nameServer = nameServer))
 
 @app.route('/_onlineServers')
 def getOnlineServers():
 	
-	totalServers = len(database.Server.select())
+	totalServers = len(Database.Server.select())
 	
 	totalOnline = 0
-	for nameOwner in serverObjs:
-		for nameServer in serverObjs[nameOwner]:
-			if serverObjs[nameOwner][nameServer].isOnline():
+	for nameOwner in Servers.getServerObjs():
+		for nameServer in Servers.getServers(nameOwner):
+			if Servers.getServer(nameOwner, nameServer).isOnline():
 				totalOnline += 1
 	
 	return jsonify(
@@ -723,7 +599,7 @@ def getOnlineServers():
 @app.route('/_onlineUsers')
 def getOnlineUsers():
 	return jsonify(
-			total = len(database.User.select()),
+			total = len(Database.User.select()),
 			number = 0
 		)
 
@@ -747,33 +623,33 @@ def getTimeOnline():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-	if isLoggedIn():
+	if Session.isLoggedIn():
 		return getIndexURL()
 	elif request.method == 'POST':
 		try:
 			user = request.form['username']
 			pw = request.form['password']
-			valid, error = database.validatePassword(user, pw)
+			valid, error = Database.validatePassword(user, pw)
 			if getConfig("VALIDATE_LOGINS") == False or valid == True:
 				error = loginUserPass(user, pw)
 				if error != None:
-					setError(error)
+					Session.setError(error)
 					return openLogin()
 			elif valid != True:
-				setError(error)
+				Session.setError(error)
 				return openLogin()
 			
-			database.regenHash(user)
+			Database.regenHash(user)
 			
 			# Send user back to index page
 			# (if username wasnt set, it will redirect back to login screen)
-			return getIndexURL()
+			return UrlData.getIndexURL()
 			
 		except Exception as e:
 			print("exception #login")
-			return throwError(str(e), request.form)
+			return Session.throwError(str(e), request.form)
 	else:
-		return getIndexURL()
+		return UrlData.getIndexURL()
 
 @app.route('/logout')
 @login_required
@@ -790,7 +666,7 @@ def loginUserPass(username, password):
 	try:
 		group = "Admin"
 		if getConfig("VALIDATE_ADMIN") == True:
-			user = database.User.select().where(database.User.Username == username).get()
+			user = Database.User.select().where(Database.User.Username == username).get()
 			group = user.Group
 		session['username'] = username
 		session['displayName'] = username
@@ -807,7 +683,7 @@ def addUserToServer(nameOwner, nameServer, user2Name, permGroup):
 	
 	error = None
 	try:
-		user, error = database.getUser(nameOwner)
+		user, error = Database.getUser(nameOwner)
 		if error != None:
 			setError('No user for owner with name "' + nameOwner + '"')
 			return getIndexURL()
@@ -816,7 +692,7 @@ def addUserToServer(nameOwner, nameServer, user2Name, permGroup):
 		
 		user, error = None, None
 		
-		user, error = database.getUser(user2Name)
+		user, error = Database.getUser(user2Name)
 		if error != None:
 			error = 'No user for moderator with name "' + user2Name + '"'
 		else:
@@ -828,7 +704,7 @@ def addUserToServer(nameOwner, nameServer, user2Name, permGroup):
 		setError(error)
 	else:
 		try:
-			database.Moderator.create(
+			Database.Moderator.create(
 				Owner = nameOwner,
 				Server = nameServer,
 				User = user2Name,
@@ -841,7 +717,7 @@ def addUserToServer(nameOwner, nameServer, user2Name, permGroup):
 
 def changePasswordForUser(username, old, new, verify):
 	
-	user, error = database.getUser(username)
+	user, error = Database.getUser(username)
 	
 	error, info = None, None
 	
@@ -874,9 +750,9 @@ def generatePassword(length = 9, alpha = True, alphaUpper = True, numeric = True
 	return ''.join(random.choice(chars) for _ in range(length))
 
 def getNextPortForGame(game):
-	query = database.Server.select().where(database.Server.Purpose == game)
+	query = Database.Server.select().where(Database.Server.Purpose == game)
 	createdServers = len(query)
-	data = serverData[game]
+	data = Servers.getServerData(game)
 	portMin, portMax = data.getPortRange()
 	port = portMin + createdServers
 	if port > portMax:
@@ -888,8 +764,8 @@ def openCreateAccount():
 	return openModal('createUser')
 
 def openModal(modal):
-	setMessage('modal', modal)
-	return getIndexURL()
+	Session.setMessage('modal', modal)
+	return UrlData.getIndexURL()
 
 def openLogin():
 	return openModal('login')
@@ -897,7 +773,7 @@ def openLogin():
 def newUser(username, password, verify, group, formData):
 	
 	try:
-		user, error = database.getUser(username)
+		user, error = Database.getUser(username)
 		if len(user) > 0:
 			return (None, throwError("Username already in use: " + str(error), request.form))
 	except Exception as e:
@@ -911,17 +787,18 @@ def newUser(username, password, verify, group, formData):
 		salt = safety.randomString(50)
 		passwordEncrypted = safety.encrypt(salt, password)
 		#print("Encrypted Pass: '" + passwordEncrypted + "'")
-		database.User.create(
+		Database.User.create(
 			Username = username,
 			Password = passwordEncrypted,
 			Salt = salt,
-			Group = group)
+			Group = group
+		)
 	except ValueError as e:
-		return (None, throwError(str(e), formData))
+		return (None, Session.throwError(str(e), formData))
 	except Exception as e:
-		return (None, throwError(str(e), formData))
+		return (None, Session.throwError(str(e), formData))
 	
-	setInfo('The password for user "' + username + '" is "' + password + '"')
+	Session.setInfo('The password for user "' + username + '" is "' + password + '"')
 	return (redirect(url_for('user', username=username)), None)
 
 def parse_minutes(time):
@@ -937,7 +814,7 @@ def parse_minutes(time):
 
 def partitionServer(name, port, game, data, files):
 	
-	username = getUsername()
+	username = Session.getUsername()
 	directory = getDirForServer(username, name)
 	
 	if not os.path.exists(directory):
@@ -948,20 +825,20 @@ def partitionServer(name, port, game, data, files):
 	copy_tree(getDirForTemplate(game), directory)
 	
 	try:
-		server = getServer(username, name)
+		server = Servers.getServer(username, name)
 		server.setPort(port)
 		_saveRunConfig(username, name, game, data, files)
 	except Exception as e:
-		setError(str(e))
+		Session.setError(str(e))
 		print(str(e))
 	
 	return True
 
 def _saveRunConfig(nameOwner, nameServer, game, allData, files):
-	server = getServer(nameOwner, nameServer)
+	server = Servers.getServer(nameOwner, nameServer)
 	
 	data = {}
-	for key in serverData[game].getRunConfigKeys():
+	for key in Servers.getServerData(game).getRunConfigKeys():
 		if key in allData:
 			data[key] = allData[key]
 	
@@ -981,5 +858,5 @@ if __name__ == '__main__':
     app.config['SERVER_START'] = int(round(time.time() * 1000))
     app.run(port=port, host=host)
 
-    database.db.connect()
-    database.db.close()
+    Database.db.connect()
+    Database.db.close()

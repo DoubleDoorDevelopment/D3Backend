@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `backend`.`server` (
   `Name` VARCHAR(45) NOT NULL,
   `User` VARCHAR(45) NULL,
   `Port` VARCHAR(5) NULL,
-  `Purpose` ENUM('Minecraft', 'Factorio') NULL,
+  `Purpose` ENUM('Minecraft', 'Factorio', 'Starbound') NULL,
   INDEX `UsernameLink_idx` (`User` ASC),
   PRIMARY KEY (`Name`),
   CONSTRAINT `ServerToUserLink`

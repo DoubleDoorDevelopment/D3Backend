@@ -1,0 +1,37 @@
+
+<div class="form-group">
+	<label for="version">Version {% include 'component/StarRed.html' %}</label>
+	{% if prefix != "AddServer_" %}
+		<select name="version" id="{{ prefix }}version" class="form-control" required>
+			<option></option>
+			{% if 'Starbound' in caches %}
+				{% for version in caches['Starbound'].getVersions() %}
+					<option>{{ version }}</option>
+				{% endfor %}
+			{% endif %}
+		</select>
+	{% else %}
+		<br />
+		You're only option is <input name="version" class="form-control" value="Latest" readonly />
+	{% endif %}
+</div>
+
+{% if prefix != "AddServer_" %}
+	
+	<div class="form-group">
+		<label for="save">Save File (.zip)</label>
+		<input name="save" type="file" class="form-control" />
+	</div>
+	
+	<div class="form-group">
+		<label for="save">Running Save</label>
+		<select name="save" id="{{ prefix }}save" class="form-control">
+			{% for save in runConfig['saves'] %}
+				<option>{{ save }}</option>
+			{% endfor %}
+		</select>
+	</div>
+	
+{% endif %}
+
+<br />

@@ -212,6 +212,9 @@ class Thread(threading.Thread):
 		self.server.setCurrentThread(self)
 		self.setRunArgs()
 		threading.Thread.start(self)
+		
+	def getRunDir(self):
+		return self.server.dirRun
 	
 	def run(self):
 		pathLog = self.getLogPath()
@@ -225,7 +228,7 @@ class Thread(threading.Thread):
 			writer.write("Invalid runtime parameters, please ask server admins WHYYYYY?!?!?!\n")
 			writer.flush()
 		else:
-			self.process = Popen(runArgs, cwd = self.server.dirRun,
+			self.process = Popen(runArgs, cwd = self.getRunDir(),
 					stdout = PIPE, stderr = STDOUT, stdin = PIPE)
 			while self.process.poll() is None:
 				out = self.process.stdout.read(1)

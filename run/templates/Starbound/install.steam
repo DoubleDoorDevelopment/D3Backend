@@ -1,0 +1,4 @@
+login anonymous
+force_install_dir %DIRECTORY%
+app_update 211820 validate
+quit

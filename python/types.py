@@ -18,6 +18,7 @@ class TypeCache(Enum):
 
 import Minecraft
 import Factorio
+import Starbound
 
 serverTypes = {}
 serverTypeToClass = {}
@@ -26,6 +27,7 @@ serverTypeToClass = {}
 class TypeServer(Enum):
 	minecraft	= ("Minecraft", Minecraft)
 	factorio	= ("Factorio", Factorio)
+	starbound	= ("Starbound", Starbound)
 	
 	def __init__(self, name, module):
 		self.nameID = name

@@ -27,7 +27,9 @@ def setProperty_ini(filePath, section, label, value):
 		config.write(file)
 
 def setProperty_properties(filePath, label, value):
-	propStr = '[general]\n' + open(filePath).read()
+	propStr = open(filePath).read()
+	if not propStr.startswith('[general]\n'):
+		propStr = '[general]\n' + propStr
 	newContent = StringIO.StringIO(propStr)
 	
 	config = RawConfigParser()
@@ -38,7 +40,9 @@ def setProperty_properties(filePath, label, value):
 		config.write(file)
 
 def getProperty_properties(filePath, label):
-	propStr = '[general]\n' + open(filePath).read()
+	propStr = open(filePath).read()
+	if not propStr.startswith('[general]\n'):
+		propStr = '[general]\n' + propStr
 	newContent = StringIO.StringIO(propStr)
 	config = RawConfigParser()
 	config.readfp(newContent)

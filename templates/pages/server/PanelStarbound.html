@@ -1,7 +1,7 @@
 {% extends 'pages/server/Panel.html' %}
 
 {% block title %}
-	Factorio Options
+	Starbound Options
 {% endblock %}
 
 {% block body %}
@@ -12,7 +12,7 @@
 		<input name="nameOwner" type="hidden" value="{{ server.User.Username }}" />
 		<input name="game" type="hidden" value="{{ server.Purpose }}" />
 		
-		{% include 'component/modal/server_options/Factorio.html' %}
+		{% include 'component/modal/server_options/Starbound.html' %}
 		
 		<button type="submit" class="btn btn-primary">Save</button>
 	</form>

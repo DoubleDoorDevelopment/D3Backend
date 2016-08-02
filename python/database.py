@@ -22,6 +22,9 @@ class User(BaseModel):
 	Username = CharField(primary_key=True)
 	Password = CharField()
 	Salt = CharField()
+	SteamUser = CharField()
+	SteamPass = CharField()
+	SteamSalt = CharField()
 	Group = CharField()
 	
 	def setPassword(self, new):
