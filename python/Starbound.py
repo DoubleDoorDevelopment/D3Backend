@@ -52,13 +52,13 @@ class Server(Base.Server):
 		pass
 	
 	def getInstallCmd(self, args, kwargs):
-		return " ".join([
+		return [
 			Config.getSteamShell(),
-			"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
-			"+force_install_dir " + self.dirRun,
-			"+app_update 211820 validate",
+			#"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
+			#"+force_install_dir " + self.dirRun,
+			#"+app_update 211820 validate",
 			"exit"
-		])
+		]
 	
 	def replaceFileSubstring(self, filePath, option, string):
 		f = open(filePath,'r')

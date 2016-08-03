@@ -97,8 +97,6 @@ class ThreadInstall(Thread):
 	
 	def run(self):
 		
-		print(self.outputFilePath)
-		
 		cmd = self.server.getInstallCmd(args=self.args, kwargs=self.kwargs)
 		
 		print(cmd)
