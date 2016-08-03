@@ -99,8 +99,6 @@ class ThreadInstall(Thread):
 		
 		cmd = self.server.getInstallCmd(args=self.args, kwargs=self.kwargs)
 		
-		print(cmd)
-		
 		if (cmd == None):
 			oldout = sys.stdout
 			sys.stdout = open(self.outputFilePath, 'wb')
