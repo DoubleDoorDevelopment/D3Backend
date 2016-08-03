@@ -109,10 +109,8 @@ class ThreadInstall(Thread):
 		else:
 			writer = io.open(self.outputFilePath, 'wb')
 			
-			writer.write("Starting installation...")
+			writer.write("Starting installation...\n")
 			writer.flush()
-			
-			print(self.server.dirRun)
 			
 			self.process = Popen(cmd, cwd = self.server.dirRun, stdout = PIPE, stderr = STDOUT, stdin = PIPE)
 			while self.process.poll() is None:
@@ -120,5 +118,7 @@ class ThreadInstall(Thread):
 				if out != '':
 					writer.write(out)
 					writer.flush()
+			
+			writer.write("Done installation...\n")
 			
 			writer.close()

@@ -54,9 +54,9 @@ class Server(Base.Server):
 	def getInstallCmd(self, args, kwargs):
 		return [
 			Config.getSteamShell(),
-			#"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
-			#"+force_install_dir " + self.dirRun,
-			#"+app_update 211820 validate",
+			"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
+			"+force_install_dir " + self.dirRun,
+			"+app_update 211820 validate",
 			"exit"
 		]
 	
