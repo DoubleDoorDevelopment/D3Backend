@@ -44,9 +44,6 @@ class User(BaseModel):
 	
 	def getSteamCredentials(self):
 		return (self.SteamUser, safety.decrypt(self.SteamSalt, self.SteamPass))
-	
-	class Meta:
-		database = db
 
 class Server(BaseModel):
 	

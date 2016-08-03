@@ -239,7 +239,7 @@ def changeUserPassword():
 		Session.setMessage('errorPassword', error)
 		Session.setMessage('infoPassword', info)
 	
-	return getUserSettingsURL(username)
+	return UrlData.getUserSettingsURL(username)
 
 @app.route('/changeUserPasswordAdmin', methods=['POST'])
 @login_required
@@ -359,15 +359,12 @@ def saveRunConfig():
 @login_required
 def userSettings():
 	username = Session.getUsername()
-	print(username)
 	user, error = Database.getUser(username)
-	print(user)
-	print(user.Group)
 	#steamUser, steamPass = user.getSteamCredentials()
 	
 	return renderPage('pages/UserSettings.html',
 			username = username,
-			steamUser = "",
+			steamUser = user.SteamUser,
 			errorPassword = Session.getMessage('errorPassword'),
 			infoPassword = Session.getMessage('infoPassword')
 		)
@@ -852,6 +849,7 @@ def partitionServer(name, port, game, data, files):
 
 def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 	server = Servers.getServer(nameOwner, nameServer)
+	user, error = Database.getUser(nameOwner)
 	
 	data = {}
 	for key in Servers.getServerData(game).getRunConfigKeys():
@@ -859,7 +857,7 @@ def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 			data[key] = allData[key]
 	
 	import threading
-	threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files})
+	threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files, 'user': user})
 	threadInstall.start()
 	
 
