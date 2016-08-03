@@ -137,8 +137,11 @@ class Server(Downloader):
 	def setPort(self, port):
 		pass
 	
-	def install(self, **kwargs):
+	def install(self, args, kwargs):
 		self.backup()
+	
+	def getInstallCmd(self, args, kwargs):
+		return None
 	
 	def backup(self):
 		pass

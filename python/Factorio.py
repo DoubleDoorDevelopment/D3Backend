@@ -155,7 +155,7 @@ class Server(Base.Server):
 				if filename.split('.')[-1] in exts:
 					os.remove(filePath)
 	
-	def install(self, **kwargs):
+	def install(self, args, kwargs):
 		func = kwargs['func']
 		data = kwargs['data']
 		files = kwargs['files']

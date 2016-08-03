@@ -51,20 +51,14 @@ class Server(Base.Server):
 	def cleanRunFiles(self):
 		pass
 	
-	def install(self, **kwargs):
-		# Replaces the directory in the install script
-		#self.replaceFileSubstring("install.steam", "%DIRECTORY%", self.dirRun)
-		#cmd = Config.getSteamShell() + " +runscript " + os.path.join(self.dirRun, "install.steam")
-		#print(cmd)
-		cmd = " ".join([
+	def getInstallCmd(self, args, kwargs):
+		return " ".join([
 			Config.getSteamShell(),
 			"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
 			"+force_install_dir " + self.dirRun,
 			"+app_update 211820 validate",
 			"exit"
 		])
-		print(cmd)
-		os.system(cmd)
 	
 	def replaceFileSubstring(self, filePath, option, string):
 		f = open(filePath,'r')

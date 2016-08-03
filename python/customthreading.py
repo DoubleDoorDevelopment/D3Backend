@@ -3,6 +3,8 @@
 from threading import Thread
 from Queue import Queue, Empty
 import sys
+import io
+from subprocess import Popen, PIPE, STDOUT, call
 
 doDownload = True
 
@@ -78,3 +80,47 @@ class ThreadWorker(Thread):
 				#sys.stdout.write("done task\n")
 				self.pool.tasks.task_done()
 		self.pool.setWorkerFinish()
+
+class ThreadInstall(Thread):
+	
+	def __init__(self, outputFilePath, server, *args, **kwargs):
+		Thread.__init__(self)
+		
+		self.daemon = True
+		
+		self.outputFilePath = outputFilePath
+		self.server = server
+		self.args = args
+		self.kwargs = kwargs
+		
+		self.start()
+	
+	def run(self):
+		
+		print(self.outputFilePath)
+		
+		cmd = self.server.getInstallCmd(args=self.args, kwargs=self.kwargs)
+		
+		print(cmd)
+		
+		if (cmd == None):
+			oldout = sys.stdout
+			sys.stdout = open(self.outputFilePath, 'wb')
+			self.server.install(args=self.args, kwargs=self.kwargs)
+			sys.stdout = oldout
+		else:
+			writer = io.open(self.outputFilePath, 'wb')
+			
+			writer.write("Starting installation...")
+			writer.flush()
+			
+			print(self.server.dirRun)
+			
+			self.process = Popen(cmd, cwd = self.server.dirRun, stdout = PIPE, stderr = STDOUT, stdin = PIPE)
+			while self.process.poll() is None:
+				out = self.process.stdout.read(1)
+				if out != '':
+					writer.write(out)
+					writer.flush()
+			
+			writer.close()

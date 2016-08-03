@@ -14,7 +14,7 @@ from threading import Thread
 from flask import Flask, render_template, session, redirect, url_for, request, jsonify, json
 from werkzeug import secure_filename
 
-from customthreading import *
+from python.customthreading import *
 
 app = Flask(__name__)
 
@@ -636,30 +636,30 @@ def getTimeOnline():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 	if Session.isLoggedIn():
-		return getIndexURL()
+		return UrlData.getIndexURL()
 	elif request.method == 'POST':
-		try:
-			user = request.form['username']
-			pw = request.form['password']
-			valid, error = Database.validatePassword(user, pw)
-			if getConfig("VALIDATE_LOGINS") == False or valid == True:
-				error = loginUserPass(user, pw)
-				if error != None:
-					Session.setError(error)
-					return openLogin()
-			elif valid != True:
+		#try:
+		user = request.form['username']
+		pw = request.form['password']
+		valid, error = Database.validatePassword(user, pw)
+		if getConfig("VALIDATE_LOGINS") == False or valid == True:
+			error = loginUserPass(user, pw)
+			if error != None:
 				Session.setError(error)
 				return openLogin()
+		elif valid != True:
+			Session.setError(error)
+			return openLogin()
 			
-			Database.regenHash(user)
+		Database.regenHash(user)
 			
-			# Send user back to index page
-			# (if username wasnt set, it will redirect back to login screen)
-			return UrlData.getIndexURL()
+		# Send user back to index page
+		# (if username wasnt set, it will redirect back to login screen)
+		return UrlData.getIndexURL()
 			
-		except Exception as e:
-			print("exception #login")
-			return Session.throwError(str(e), request.form)
+		#except Exception as e:
+		#	print("exception #login")
+		#0	return Session.throwError(str(e), request.form)
 	else:
 		return UrlData.getIndexURL()
 
@@ -856,10 +856,17 @@ def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 		if key in allData:
 			data[key] = allData[key]
 	
-	import threading
-	threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files, 'user': user})
-	threadInstall.start()
-	
+	#import threading
+	#threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files, 'user': user})
+	#threadInstall.start()
+	ThreadInstall(
+		outputFilePath = os.path.join(server.dirRun, "console.log"),
+		server = server,
+		func = "server", data = data, files = files, user = user
+	)
+
+def testFunc():
+	print("this is a test")
 
 # ~~~~~~~~~~ Run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

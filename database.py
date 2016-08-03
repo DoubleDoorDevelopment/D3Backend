@@ -2,7 +2,7 @@
 from backend import *
 from peewee import *
 from playhouse.shortcuts import RetryOperationalError
-import safety
+from python.safety import *
 
 class MysqlRetryDatabase(RetryOperationalError, MySQLDatabase):
 	pass
@@ -29,21 +29,21 @@ class User(BaseModel):
 	Group = CharField()
 	
 	def setPassword(self, new):
-		self.Salt = safety.randomString(50)
-		self.Password = safety.encrypt(self.Salt, new)
+		self.Salt = randomString(50)
+		self.Password = encrypt(self.Salt, new)
 		self.save()
 	
 	def getPassword(self):
-		return safety.decrypt(self.Salt, self.Password)
+		return decrypt(self.Salt, self.Password)
 	
 	def setSteamCredentials(self, username, password):
-		self.SteamSalt = safety.randomString(50)
+		self.SteamSalt = randomString(50)
 		self.SteamUser = username
-		self.SteamPass = safety.encrypt(self.SteamSalt, password)
+		self.SteamPass = encrypt(self.SteamSalt, password)
 		self.save()
 	
 	def getSteamCredentials(self):
-		return (self.SteamUser, safety.decrypt(self.SteamSalt, self.SteamPass))
+		return (self.SteamUser, decrypt(self.SteamSalt, self.SteamPass))
 
 class Server(BaseModel):
 	
