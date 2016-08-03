@@ -53,18 +53,27 @@ class Server(Base.Server):
 	
 	def install(self, **kwargs):
 		# Replaces the directory in the install script
-		self.replaceFileSubstring("install.steam", "%DIRECTORY%", self.dirRun)
-		self.replaceFileSubstring("install.steam", "%USERNAME%", kwargs['user'].SteamUser)
-		self.replaceFileSubstring("install.steam", "%PASSWORD%", kwargs['user'].SteamPass)
-		cmd = Config.getSteamShell() + " +runscript " + os.path.join(self.dirRun, "install.steam")
+		#self.replaceFileSubstring("install.steam", "%DIRECTORY%", self.dirRun)
+		#cmd = Config.getSteamShell() + " +runscript " + os.path.join(self.dirRun, "install.steam")
+		#print(cmd)
+		cmd = " ".join([
+			Config.getSteamShell(),
+			"+login " + kwargs['user'].SteamUser + " '" + kwargs['user'].SteamPass + "'",
+			"+force_install_dir " + self.dirRun,
+			"+app_update 211820 validate",
+			"exit"
+		])
 		print(cmd)
 		os.system(cmd)
 	
 	def replaceFileSubstring(self, filePath, option, string):
-		with open(filePath, "wt") as fout:
-		    with open(filePath, "rt") as fin:
-		        for line in fin:
-		            fout.write(line.replace(option, string))
+		f = open(filePath,'r')
+		filedata = f.read()
+		f.close()
+		newdata = filedata.replace(option, string)
+		f = open(filePath,'w')
+		f.write(newdata)
+		f.close()
 
 class Thread(Base.Thread):
 	
