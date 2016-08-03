@@ -5,6 +5,7 @@
 	<div style="display: inline-block;">
 		<form action="{{ url_for('changeUserPassword') }}" method="POST" enctype="multipart/form-data">
 			<input name="username" type="hidden" value="{{ username }}" />
+			<input name="passwordType" type="hidden" value="main" />
 			
 			<label for="password">Change Password</label>
 			
@@ -56,6 +57,56 @@
 			{% endif %}
 			
 			<button type="submit" class="btn btn-primary">Change Password</button>
+			
+		</form>
+	</div>
+	
+	<div style="display: inline-block;">
+		<form action="{{ url_for('changeUserPassword') }}" method="POST" enctype="multipart/form-data">
+			<input name="username" type="hidden" value="{{ username }}" />
+			<input name="passwordType" type="hidden" value="steam" />
+		
+			<label for="password">Steam Credentials</label>
+			
+			<div>
+				<span style='display: inline-block;'>
+					<strong>Steam Username</strong>
+				</span>
+				<div style='display: inline-block;'>
+					<input name="steamUser" type="input" class="form-control" value="{{ steamUser }}" required />
+				</div>
+			</div>
+			<br />
+			<div>
+				<span style='display: inline-block;'>
+					<strong>Steam Password</strong>
+				</span>
+				<div style='display: inline-block;'>
+					<input name="steamPass" type="password" class="form-control" required />
+				</div>
+			</div>
+			
+			<br />
+			
+			{% if errorPassword is not none %}
+				<center>
+					<div class="alert alert-danger" role="alert">
+						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+						{{ errorPassword }}
+					</div>
+				</center>
+			{% endif %}
+			{% if infoPassword is not none %}
+				<center>
+					<div class="alert alert-success" role="alert">
+						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+						<span class="sr-only">Info:</span>
+						{{ infoPassword }}
+					</div>
+				</center>
+			{% endif %}
+			
+			<button type="submit" class="btn btn-primary">Submit Credentials</button>
 			
 		</form>
 	</div>

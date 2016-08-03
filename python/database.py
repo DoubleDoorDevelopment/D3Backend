@@ -16,7 +16,8 @@ class BaseModel(Model):
 class User(BaseModel):
 
 	__searchable__ = [
-		'Username'
+		'Username',
+		'SteamUser'
 	]
 
 	Username = CharField(primary_key=True)
@@ -34,6 +35,15 @@ class User(BaseModel):
 	
 	def getPassword(self):
 		return safety.decrypt(self.Salt, self.Password)
+	
+	def setSteamCredentials(self, username, password):
+		self.SteamSalt = safety.randomString(50)
+		self.SteamUser = username
+		self.SteamPass = safety.encrypt(self.SteamSalt, password)
+		self.save()
+	
+	def getSteamCredentials(self):
+		return (self.SteamUser, safety.decrypt(self.SteamSalt, self.SteamPass))
 	
 	class Meta:
 		database = db

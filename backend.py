@@ -223,12 +223,22 @@ def refreshCache(cacheName):
 @login_required
 def changeUserPassword():
 	username = request.form['username']
-	changePasswordForUser(
+	function = request.form['passwordType']
+	
+	if function == 'main':
+		changePasswordForUser(
 			username,
 			request.form['old'],
 			request.form['new'],
 			request.form['verify']
 		)
+	elif function == 'steam':
+		user, error = Database.getUser(username)
+		user.setSteamCredentials(request.form['steamUser'], request.form['steamPass'])
+		info = "Credentials Changed"
+		Session.setMessage('errorPassword', error)
+		Session.setMessage('infoPassword', info)
+	
 	return getUserSettingsURL(username)
 
 @app.route('/changeUserPasswordAdmin', methods=['POST'])
@@ -265,10 +275,10 @@ def deleteServer():
 def deleteUser():
 	error = Database.deleteUserFromTable(request.form['data'])
 	if error != None:
-		setError(error)
-		return getCurrentURL(request.form)
+		Session.setError(error)
+		return UrlData.getCurrentURL(request.form)
 	else:
-		return getIndexURL()
+		return UrlData.getIndexURL()
 
 @app.route('/servers')
 @login_required
@@ -348,7 +358,16 @@ def saveRunConfig():
 @app.route('/settings/user')
 @login_required
 def userSettings():
-	return renderPage('pages/UserSettings.html', username = getUsername(),
+	username = Session.getUsername()
+	print(username)
+	user, error = Database.getUser(username)
+	print(user)
+	print(user.Group)
+	#steamUser, steamPass = user.getSteamCredentials()
+	
+	return renderPage('pages/UserSettings.html',
+			username = username,
+			steamUser = "",
 			errorPassword = Session.getMessage('errorPassword'),
 			infoPassword = Session.getMessage('infoPassword')
 		)
@@ -653,7 +672,7 @@ def logout():
 	session.pop('username', None)
 	session.pop('displayName', None)
 	session.pop('isAdmin', None)
-	return getIndexURL()
+	return UrlData.getIndexURL()
 
 def isAdmin(group):
 	return group == "Admin"
@@ -726,8 +745,8 @@ def changePasswordForUser(username, old, new, verify):
 		user.save()
 		info = "Password Changed"
 	
-	setMessage('errorPassword', error)
-	setMessage('infoPassword', info)
+	Session.setMessage('errorPassword', error)
+	Session.setMessage('infoPassword', info)
 
 def findBytes(bytes):
 	unit = pow(1000, 3)
@@ -787,6 +806,7 @@ def newUser(username, password, verify, group, formData):
 			Username = username,
 			Password = passwordEncrypted,
 			Salt = salt,
+			SteamUser = "", SteamPass = "", SteamSalt = "",
 			Group = group
 		)
 	except ValueError as e:
