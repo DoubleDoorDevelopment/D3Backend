@@ -427,7 +427,7 @@ def server(nameOwner, nameServer):
 def browseServer(nameOwner, nameServer, path = ''):
 	serverModel, error = Database.getServer(nameOwner, nameServer)
 	if serverModel != None:
-		server = getServer(nameOwner, nameServer)
+		server = Servers.getServer(nameOwner, nameServer)
 		filePath = server.dirRun + path
 
 		exists = os.path.exists(filePath)
@@ -461,7 +461,7 @@ def browseServer(nameOwner, nameServer, path = ''):
 							os.mkdir(fileDirPath)
 						return redirect(url_for('browseServer', nameOwner = nameOwner, nameServer = nameServer, path = newPath))
 					except Exception, e:
-						setError(str(e))
+						Session.setError(str(e))
 						print(str(e))
 				elif function == 'delete':
 					newPath = request.form['path']

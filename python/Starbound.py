@@ -53,7 +53,6 @@ class Server(Base.Server):
 	
 	def getInstallCmd(self, args, kwargs):
 		steamUser, steamPass = kwargs['user'].getSteamCredentials()
-		#print(steamUser, steamPass)
 		return [
 			str(Config.getSteamShell()),
 			"+login", str(steamUser), str(steamPass),
@@ -61,8 +60,6 @@ class Server(Base.Server):
 			"+app_update", "211820",  "validate",
 			"exit"
 		]
-		#return str(Config.getSteamShell()) + " +login " + str(steamUser) + " '" + str(steamPass) + "' exit"
-		
 	
 	def replaceFileSubstring(self, filePath, option, string):
 		f = open(filePath,'r')
