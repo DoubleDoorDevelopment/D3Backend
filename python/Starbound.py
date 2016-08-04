@@ -53,11 +53,12 @@ class Server(Base.Server):
 	
 	def getInstallCmd(self, args, kwargs):
 		steamUser, steamPass = kwargs['user'].getSteamCredentials()
+		print(steamUser, steamPass)
 		return [
 			Config.getSteamShell(),
-			"+login " + steamUser + " '" + steamPass + "'",
-			"+force_install_dir " + self.dirRun,
-			"+app_update 211820 validate",
+			"+login", steamUser, "'" + steamPass + "'",
+			"+force_install_dir", self.dirRun,
+			"+app_update", "211820",  "validate",
 			"exit"
 		]
 	
