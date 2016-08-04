@@ -225,7 +225,7 @@ public class FileManager
             case "lock":
                 return null;
             default:
-                return StringEscapeUtils.escapeHtml4(FileUtils.readFileToString(file));
+                return FileUtils.readFileToString(file);
         }
     }
 

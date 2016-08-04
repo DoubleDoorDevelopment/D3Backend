@@ -21,7 +21,7 @@ Typos? [Go here.](https://github.com/DoubleDoorDevelopment/D3Backend/issues/10)
 1. Tell us what you clicked exactly (if applicable)
 1. If we ask you for more information and you don't replay within 14 days, the issue will be considerer inactive.
 
-ToDO
+ToDo
 ----
 
 - [ ]  Implement email system
