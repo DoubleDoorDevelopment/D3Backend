@@ -1,3 +1,4 @@
+<#setting url_escaping_charset="UTF-8">
 <!DOCTYPE html>
 <!--
   ~     D3Backend
@@ -121,7 +122,7 @@
                     <ul class="dropdown-menu" role="menu">
                         <#list Settings.servers as server>
                             <#if server.canUserControl(user)>
-                                <li id="${server.ID?js_string}NavTab"><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a></li>
+                                <li id="${server.ID?url}NavTab"><a href="/server?server=${server.ID?url}">${server.ID?html}</a></li>
                             </#if>
                         </#list>
                     </ul>

@@ -1,21 +1,21 @@
 <#include "header.ftl">
 <h1>File Manager
-    <small><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a> <span id="online"></span></small>
+    <small><a href="/server?server=${server.ID?url}">${server.ID?url}</a> <span id="online"></span></small>
 </h1>
 <#if !fm.file.exists()>
 <div class="panel panel-danger">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?js_string}&file=${fm.stripServer(file)?js_string}">${file.getName()?js_string}</a></#list></div>
+    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
     <div class="panel-body">
         <h4>File not found.</h4>
     </div>
 </div>
 <#elseif fm.file.isDirectory() >
 <div class="panel panel-info">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?js_string}&file=${fm.stripServer(file)?js_string}">${file.getName()?js_string}</a></#list></div>
+    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
     <div class="panel-body">
         <div class="btn-group">
-            <button type="button" onclick="{var n = prompt('New file name?', ''); if (n != null) call('filemanager/${fm.server.ID?js_string}/${fm.stripServer(fm.file)?js_string}', 'newFile', [n]);}" class="btn btn-default btn-xs">New file</button>
-            <button type="button" onclick="{var n = prompt('New folder name?', ''); if (n != null) call('filemanager/${fm.server.ID?js_string}/${fm.stripServer(fm.file)?js_string}', 'newFolder', [n]);}" class="btn btn-default btn-xs">New folder</button>
+            <button type="button" onclick="{var n = prompt('New file name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFile', [n]);}" class="btn btn-default btn-xs">New file</button>
+            <button type="button" onclick="{var n = prompt('New folder name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFolder', [n]);}" class="btn btn-default btn-xs">New folder</button>
             <button type="button" onclick="fileSelector.click();" class="btn btn-default btn-xs">Upload file</button>
         </div>
     </div>
@@ -25,6 +25,14 @@
 </div>
 <script src="/static/js/jquery.dataTables.min.js"></script>
 <script>
+    function encode(str)
+    {
+        return encodeURIComponent(str).replace(/[!'()*]/g, function(c)
+        {
+            return '%' + c.charCodeAt(0).toString(16);
+        });
+    }
+
     var table = $('#servers').DataTable({
         paging: false,
         order: [[ 1, 'asc' ]],
@@ -39,7 +47,7 @@
                 {
                     if (row.canEdit)
                     {
-                        var out = '<a href="?server=${server.ID?js_string}&file=' + row.url + '"';
+                        var out = '<a href="?server=${server.ID?url}&file=' + encode(row.url) + '"';
                         if (row.hasOwnProperty("tooltip")) out += 'rel="tooltip" data-toggle="tooltip" data-placement="top" title="' + row.tooltip + '"';
                         out += '>' + row.name + '</a>';
                         return out;
@@ -56,7 +64,7 @@
                 {
                     if (!row.isFolder)
                     {
-                        return '<a type="button" class="btn btn-default btn-xs" href="/raw/${server.ID?js_string}/' + row.url + '">Raw file</a>';
+                        return '<a type="button" class="btn btn-default btn-xs" href="/raw/${server.ID?url}/' + encodeURI(row.url) + '">Raw file</a>';
                     }
                     return "";
                 }
@@ -66,16 +74,16 @@
                     if (row.canWrite)
                     {
                         var out = '<div class="btn-group">';
-                        out += '<button type="button" onclick="rename(\'' + row.name + '\', \'' + row.url + '\')" class="btn btn-default btn-xs">Rename</button>';
-                        out += '<button type="button" onclick="del(\'' + row.url + '\')" class="btn btn-danger btn-xs">Delete</button>';
+                        out += '<button type="button" onclick="rename(\'' + encode(row.name) + '\', \'' + encode(row.url) + '\')" class="btn btn-default btn-xs">Rename</button>';
+                        out += '<button type="button" onclick="del(\'' + encode(row.url) + '\')" class="btn btn-danger btn-xs">Delete</button>';
 
                         if (row.extension === "jar" || row.extension === "zip")
                         {
-                            out += '<button type="button" onclick="call(\'filemanager/${fm.server.ID?js_string}/' + row.url + '\', \'rename\', [\'' + row.name + '.disabled\']);" class="btn btn-default btn-xs">Disable</button>';
+                            out += '<button type="button" onclick="call(\'filemanager/${fm.server.ID?url}/' + encode(row.url) + '\', \'rename\', [\'' + encode(row.name) + '.disabled\']);" class="btn btn-default btn-xs">Disable</button>';
                         }
                         else if (row.extension === "disabled")
                         {
-                            out += '<button type="button" onclick="call(\'filemanager/${fm.server.ID?js_string}/' + row.url + '\', \'rename\', [\'' + row.name.replace(".disabled", "") + '\']);" class="btn btn-default btn-xs">Enable</button>';
+                            out += '<button type="button" onclick="call(\'filemanager/${fm.server.ID?url}/' + encode(row.url) + '\', \'rename\', [\'' + encode(row.name.replace(".disabled", "")) + '\']);" class="btn btn-default btn-xs">Enable</button>';
                         }
 
                         out += '</div>';
@@ -83,14 +91,14 @@
                     }
                     else
                     {
-                        return '<button type="button" onclick="call(\'filemanager/${fm.server.ID?js_string}/' + row.url + '\', \'makeWritable\');" class="btn btn-info btn-xs">Make writeable</button>';
+                        return '<button type="button" onclick="call(\'filemanager/${fm.server.ID?url}/' + encode(row.url) + '\', \'makeWritable\');" class="btn btn-info btn-xs">Make writeable</button>';
                     }
                 }
             }
         ]
     });
 
-    websocketMonitor = new WebSocket(wsurl("filemonitor/${server.ID?js_string}/${fm.stripServer(fm.file)}"));
+    websocketMonitor = new WebSocket(wsurl("filemonitor/${server.ID?url}/${fm.stripServer(fm.file)?url}"));
     websocketMonitor.onerror = function (evt)
     {
         alert("The websocket errored. Refresh the page!")
@@ -121,16 +129,16 @@
     {
         if (confirm('Are you sure?\nIt will be gone FOREVER!'))
         {
-            call('filemanager/${fm.server.ID?js_string}/' + urlpart, 'delete', []);
+            call('filemanager/${fm.server.ID?url}/' + urlpart, 'delete', []);
         }
     }
 
     function rename(oldname, urlpart)
     {
-        var n = prompt('New file name?', oldname);
+        var n = prompt('New file name?', decodeURIComponent(oldname));
         if (n != null)
         {
-            call('filemanager/${fm.server.ID?js_string}/' + urlpart, 'rename', [n]);
+            call('filemanager/${fm.server.ID?url}/' + urlpart, 'rename', [n]);
         }
     }
 
@@ -149,7 +157,7 @@
     <#assign readonly = !fm.file.canWrite()>
 <div class="panel panel-<#if readonly>warning<#elseif fm.getEditor()??>success<#else>danger</#if>">
     <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> /
-        <a href="?server=${server.ID?js_string}&file=${fm.stripServer(file)?js_string}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list>
+        <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list>
     </div>
     <#if fm.getEditor()??>
         <#include "editors/" + fm.getEditor()>
