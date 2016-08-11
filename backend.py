@@ -304,6 +304,18 @@ def serverControl():
 		server.send(form['command'])
 	return UrlData.getCurrentURL(form)
 
+@app.route('/shutdownServers')
+@login_required
+def shutdownServers():	
+	servers = Servers.getServerObjs()
+	
+	for nameOwner in servers:
+		for nameServer in servers[nameOwner]:
+			if servers[nameOwner][nameServer].isOnline():
+				servers[nameOwner][nameServer].stop()
+	
+	return UrlData.getIndexURL()
+
 @app.route('/server/minecraft/uploadModpack/', methods=['POST'])
 @login_required
 def serverMinecraftUploadModpack():

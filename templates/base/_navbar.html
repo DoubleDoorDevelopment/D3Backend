@@ -24,6 +24,14 @@
 </ul>
 <ul class="nav navbar-top-links navbar-right">
 	{% if session.username %}
+		
+		{% if session.isAdmin %}
+			<a href="{{ url_for('shutdownServers') }}">
+				<i class="fa fa-power-off fa-fw"></i>
+				Shutdown Servers
+			</a>
+		{% endif %}
+		
 		<li class="dropdown">
 			<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 				<i class="fa fa-user fa-fw"></i>
