@@ -258,7 +258,9 @@ class Thread(Base.Thread):
 		if save is None:
 			self.runArgs = None
 		else:
+			print("Current save is:", save)
 			save = self.getLatestSave(dirRun, save)
+			print("Latest save is:", save)
 			self.runArgs = [
 				'./factorio/bin/x64/factorio',
 				'--start-server',
@@ -278,7 +280,7 @@ class Thread(Base.Thread):
 		
 		saves = dirRun + "factorio/saves/"
 		latestLastModifiedTime = time.ctime(os.path.getmtime(saves + saveOriginal))
-		saveReturn = saveOriginal
+		saveReturn = saves + saveOriginal
 		for fileName in listdir(saves):
 			filePath = saves + fileName
 			if os.path.isfile(filePath) and fileName.startswith("_autosave"):
