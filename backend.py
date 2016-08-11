@@ -201,23 +201,23 @@ def createUser():
 @login_required
 def caches():
 	
-	return renderPage("pages/TableCaches.html", current = 'caches', data = cacheObjs)
+	return renderPage("pages/TableCaches.html", current = 'caches', data = Servers.getServerCache())
 
 @app.route('/cache/<string:cacheName>/refresh')
 @login_required
 def refreshCache(cacheName):
 	cache = None
 	if cacheName.startswith("Minecraft"):
-		cache = cacheObjs["Minecraft"]
+		cache = Servers.getServerCache()["Minecraft"]
 		if cacheName == "Minecraft":
 			cache.refreshManifestVanilla(True)
 		else:
 			cache.refreshManifestForge(True)
 	else:
-		cache = cacheObjs[cacheName]
+		cache = Servers.getServerCache()[cacheName]
 		cache.refresh(force = True)
 	
-	return getIndexURL()
+	return UrlData.getIndexURL()
 
 @app.route('/changeUserPassword', methods=['POST'])
 @login_required
