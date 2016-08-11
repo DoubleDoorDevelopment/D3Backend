@@ -239,10 +239,10 @@ class Thread(Base.Thread):
 	def setRunArgs(self):
 		dirRun = self.server.dirRun
 		save = self.getSaveName(dirRun)
-		save = self.getLatestSave(dirRun, save)
 		if save is None:
 			self.runArgs = None
 		else:
+			save = self.getLatestSave(dirRun, save)
 			self.runArgs = [
 				'./factorio/bin/x64/factorio',
 				'--start-server',
