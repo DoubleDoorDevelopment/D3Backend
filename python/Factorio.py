@@ -8,6 +8,7 @@ import subprocess
 from werkzeug import secure_filename
 from socket import error as SocketError
 import configger
+import shutil
 
 class Data(Base.Data):
 	
@@ -158,27 +159,42 @@ class Server(Base.Server):
 	def install(self, args, kwargs):
 		func = kwargs['func']
 		data = kwargs['data']
-		files = kwargs['files']
+		# files = kwargs['files']
 		if func == 'server':
 			self.backup()
 			self.cleanRunFiles()
 			
-			if 'save' in files:
-				file = files['save']
-				if file and '.' in file.filename and file.filename.rsplit('.', 1)[1] in ['zip']:
-					filename = secure_filename(file.filename)
-					
-					saves = self.dirRun + "factorio/saves/"
-					if not os.path.exists(saves):
-						os.mkdir(saves)
-					
-					filePath = saves + filename
-					file.save(filePath)
-					
+			saves = self.dirRun + "factorio/saves/"
+			if not os.path.exists(saves):
+				os.mkdir(saves)
+			
+			for filename in data['files']:
+				fileFieldName = data['files'][filename][0]
+				filePath = data['files'][filename][1]
+				shutil.move(filePath, saves + filename)
+				if fileFieldName == 'save':
 					if not 'saves' in data:
 						data['saves'] = []
 					data['saves'].append(filename)
 					data['save'] = filename
+			
+			#if 'save' in files:
+			#	file = files['save']
+			#	if file and '.' in file.filename and file.filename.rsplit('.', 1)[1] in ['zip']:
+			#		filename = secure_filename(file.filename)
+			#		
+			#		saves = self.dirRun + "factorio/saves/"
+			#
+			#		if not os.path.exists(saves):
+			#			os.mkdir(saves)
+			#		
+			#		filePath = saves + filename
+			#		file.save(filePath)
+			#		
+			#		if not 'saves' in data:
+			#			data['saves'] = []
+			#		data['saves'].append(filename)
+			#		data['save'] = filename
 			
 			updateData = {}
 			if 'saves' in data:

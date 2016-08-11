@@ -868,6 +868,14 @@ def _saveRunConfig(nameOwner, nameServer, game, allData, files):
 		if key in allData:
 			data[key] = allData[key]
 	
+	data['files'] = {}
+	for fileFieldName in files:
+		file = files[fileFieldName]
+		filename = secure_filename(file.filename)
+		filePath = getDirUploads() + filename
+		file.save(filePath)
+		data['files'][filename] = [fileFieldName, filePath]
+	
 	#import threading
 	#threadInstall = threading.Thread(target=server.install, kwargs={'func': "server", 'data': data, 'files': files, 'user': user})
 	#threadInstall.start()
