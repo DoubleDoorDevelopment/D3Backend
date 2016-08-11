@@ -9,13 +9,22 @@
 					<option
 						{% if version in caches['Factorio'].getVersionsStable() %}
 							style="font-weight:bold;"
-						{% endif %}>{{ version }}</option>
+						{% endif %}
+					>
+						{{ version }}
+					</option>
 				{% endfor %}
 			{% endif %}
 		</select>
 	{% else %}
 		<br />
+		<select name="version" class="form-control" required>
+			<option>{{ caches['Factorio'].getVersionsStable()[-1] }}</option>
+			<option>{{ caches['Factorio'].getVersions()[-1] }}</option>
+		</select>
+		<!--
 		You're only option is <input name="version" class="form-control" value="{{ caches['Factorio'].getVersionsStable()[-1] }}" readonly />
+		-->
 	{% endif %}
 </div>
 
