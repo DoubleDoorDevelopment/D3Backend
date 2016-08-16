@@ -59,6 +59,7 @@ public class Main
     public static String adminKey;
     public static boolean running = true;
     public static boolean debug = false;
+    public static boolean safe = false;
 
     static
     {
@@ -111,6 +112,7 @@ public class Main
         for (String arg : args)
         {
             if (arg.equalsIgnoreCase("debug")) debug = true;
+            if (arg.equalsIgnoreCase("safe")) safe = true;
         }
 
         // todo: get JDK and classload tools.jar + native library; if not jdk: disable warmroast
@@ -178,17 +180,15 @@ public class Main
         CommandHandler.init();
         for (Server server : SETTINGS.servers.values())
         {
-            server.init();
-            if (server.getRestartingInfo().autoStart)
+            try
             {
-                try
-                {
-                    server.startServer();
-                }
-                catch (Exception ignored)
-                {
-                    ignored.printStackTrace();
-                }
+                server.init();
+                if (!safe && server.getRestartingInfo().autoStart) server.startServer();
+            }
+            catch (Exception ignored)
+            {
+                LOGGER.catching(ignored);
+                ignored.printStackTrace();
             }
         }
     }
