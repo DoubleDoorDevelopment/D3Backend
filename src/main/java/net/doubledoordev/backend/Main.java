@@ -115,6 +115,9 @@ public class Main
             if (arg.equalsIgnoreCase("safe")) safe = true;
         }
 
+        if (debug) LOGGER.info("DEBUG MODE");
+        if (safe) LOGGER.info("SAFE MODE");
+
         // todo: get JDK and classload tools.jar + native library; if not jdk: disable warmroast
         LOGGER.info("\n\n    D3Backend  Copyright (C) 2015 - 2016  Dries007 & Double Door Development\n" +
                 "    This program comes with ABSOLUTELY NO WARRANTY;\n" +
