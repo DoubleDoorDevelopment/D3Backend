@@ -64,7 +64,7 @@
                     <button type="button" <#if isOwner>onclick="var name = prompt('Username of the future owner?'); if (name != null && confirm('Are you sure?')) {call('servercmd/${server.ID?js_string}', 'setOwner', [name]);}"<#else>disabled</#if> class="btn btn-danger">
                         Change owner
                     </button>
-                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID?js_string}', 'delete'); window.location='/servers'}"<#else>disabled</#if> class="btn btn-danger">
+                    <button type="button" <#if isOwner && !server.online>onclick="if (confirm('Are you sure?\nThis will remove all files related to this server!')) {call('servercmd/${server.ID?js_string}', 'delete', [], function() {window.location='/servers'});}"<#else>disabled</#if> class="btn btn-danger">
                         Delete server
                     </button>
                 </div>
