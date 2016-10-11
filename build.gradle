@@ -16,14 +16,14 @@ apply plugin: "idea-utils"
 archivesBaseName = "D3Backend"
 group = "net.doubledoordev.backend"
 
-version = "0.9.1"
+version = "0.9.2"
 if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD_NUMBER
 
 def vendor = "DoubleDoorDevelopment"
 def gitURL = "github.com/DoubleDoorDevelopment/D3Backend"
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 //noinspection GroovyAssignabilityCheck
 configurations {

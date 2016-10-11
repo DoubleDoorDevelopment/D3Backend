@@ -8,7 +8,7 @@
     <button type="button" id="startServerBtn" class="btn btn-success">Start</button>
     <button type="button" class="btn btn-info" onclick="openPopup('/serverconsole?server=${server.ID?js_string}')">Console</button>
     <button type="button" id="stopServerBtn" class="btn btn-warning">Stop</button>
-    <button type="button" id="killServerBtn" class="btn btn-danger">Kill</button>
+    <button type="button" id="killServerBtn" class="btn btn-danger" title="Hold shift to Force Kill. Only use as a last resort.">Kill</button>
 </div>
 <div class="row">
     <div class="col-sm-6">
@@ -257,9 +257,13 @@
         } : null;
         document.getElementById("stopServerBtn").disabled = !data.online;
 
-        document.getElementById("killServerBtn").onclick = data.online ? function ()
+        document.getElementById("killServerBtn").onclick = data.online ? function (e)
         {
-            if (confirm('Are you sure?')) call('servercmd/${server.ID?js_string}', "forceStopServer")
+            if (!!e.shiftKey) {
+                if (confirm('Are you sure you want to FORCE kill?\nTry a regular kill first!'))
+                    call('servercmd/${server.ID?js_string}', "murderServer")
+            }
+            else if (confirm('Are you sure?')) call('servercmd/${server.ID?js_string}', "forceStopServer")
         } : null;
         document.getElementById("killServerBtn").disabled = !data.online;
 

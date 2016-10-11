@@ -1017,27 +1017,15 @@ public class Server
         if (!getOnline()) throw new ServerOfflineException();
         printLine("----=====##### KILLING SERVER #####=====-----");
         process.destroy();
-        try
-        {
-            process.getOutputStream().close();
-        }
-        catch (IOException ignored)
-        {
-        }
-        try
-        {
-            process.getErrorStream().close();
-        }
-        catch (IOException ignored)
-        {
-        }
-        try
-        {
-            process.getInputStream().close();
-        }
-        catch (IOException ignored)
-        {
-        }
+        return true;
+    }
+
+    public boolean murderServer() throws Exception
+    {
+        if (!getOnline()) throw new ServerOfflineException();
+        printLine("----=====##### FORCIBLY KILLING SERVER #####=====-----");
+        printLine("Begone, foul process, away with thee!");
+        process.destroyForcibly();
         return true;
     }
 

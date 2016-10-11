@@ -122,7 +122,7 @@ public class Main
         LOGGER.info("\n\n    D3Backend  Copyright (C) 2015 - 2016  Dries007 & Double Door Development\n" +
                 "    This program comes with ABSOLUTELY NO WARRANTY;\n" +
                 "    This is free software, and you are welcome to redistribute it under certain conditions;\n" +
-                "    Type `license' for details.\n\n");
+                "    Type 'license' for details.\n\n");
 
         LOGGER.info("System Properties");
         Properties properties = System.getProperties();
@@ -164,7 +164,15 @@ public class Main
         }
         webserver.addListener(networkListener);
         networkListener.registerAddOn(new WebSocketAddOn());
-        webserver.start();
+        try
+        {
+            webserver.start();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Runtime.getRuntime().exit(-1);
+        }
 
         LOGGER.info("Setting up caching...");
         Cache.init();
