@@ -13,11 +13,15 @@
 <div class="panel panel-info">
     <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
     <div class="panel-body">
-        <div class="btn-group">
-            <button type="button" onclick="{var n = prompt('New file name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFile', [n]);}" class="btn btn-default btn-xs">New file</button>
-            <button type="button" onclick="{var n = prompt('New folder name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFolder', [n]);}" class="btn btn-default btn-xs">New folder</button>
-            <button type="button" onclick="fileSelector.click();" class="btn btn-default btn-xs">Upload file</button>
-        </div>
+        <form class="form-inline" enctype="multipart/form-data" method="post" id="uploadform">
+            <div class="form-group">
+                <input type="file" name="fileName" onchange="uploadFile()">
+            </div>
+            <div class="form-group btn-group">
+                <button type="button" onclick="{var n = prompt('New file name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFile', [n]);}" class="btn btn-default btn-xs">New file</button>
+                <button type="button" onclick="{var n = prompt('New folder name?', ''); if (n != null) call('filemanager/${fm.server.ID?url}/${fm.stripServer(fm.file)?url}', 'newFolder', [n]);}" class="btn btn-default btn-xs">New folder</button>
+            </div>
+        </form>
     </div>
     <table class="table table-hover table-condensed tablesorter" id="servers">
 
@@ -122,7 +126,7 @@
 
     function uploadFile()
     {
-        fileForm.submit();
+        $('#uploadform').submit();
     }
 
     function del(urlpart)
@@ -141,17 +145,6 @@
             call('filemanager/${fm.server.ID?url}/' + urlpart, 'rename', [n]);
         }
     }
-
-    var fileSelector = document.createElement("input");
-    fileSelector.setAttribute("type", "file");
-    fileSelector.setAttribute("name", "fileName");
-    fileSelector.onchange = uploadFile;
-
-    var fileForm = document.createElement("form");
-    fileForm.setAttribute("enctype", "multipart/form-data");
-    fileForm.setAttribute("method", "post");
-
-    fileForm.appendChild(fileSelector);
 </script>
 <#else >
     <#assign readonly = !fm.file.canWrite()>

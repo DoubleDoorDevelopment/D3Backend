@@ -1064,6 +1064,11 @@ public class Server
 
     public void sendChat(String message)
     {
+        if (!getOnline())
+        {
+            printLine("Server offline.");
+            return;
+        }
         PrintWriter printWriter = new PrintWriter(process.getOutputStream());
         printWriter.print("say ");//send command /say <message>
         printWriter.println(message);
@@ -1072,6 +1077,11 @@ public class Server
 
     public void sendCmd(String s)
     {
+        if (!getOnline())
+        {
+            printLine("Server offline.");
+            return;
+        }
         PrintWriter printWriter = new PrintWriter(process.getOutputStream());
         printWriter.println(s);
         printWriter.flush();
