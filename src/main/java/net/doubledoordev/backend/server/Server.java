@@ -191,7 +191,7 @@ public class Server
 
     public MCQuery getQuery()
     {
-        if (query == null) query = new MCQuery(LOCALHOST, serverPort);
+        if (query == null) query = new MCQuery(ip != null && ip.trim().length() != 0 ? ip : LOCALHOST, serverPort);
         return query;
     }
 
