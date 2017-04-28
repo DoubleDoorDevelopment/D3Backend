@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -30,11 +30,13 @@ import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
-import net.doubledoordev.cmd.CurseModpackDownloader;
+import net.dries007.cmd.Arguments;
+import net.dries007.cmd.Worker;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.progress.ProgressMonitor;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.TeeOutputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.util.Strings;
@@ -424,7 +426,7 @@ public class Server
         return jvmData;
     }
 
-    public Collection<String> getPossibleJarnames()
+    public Set<String> getPossibleJarnames()
     {
         LinkedHashSet<String> names = new LinkedHashSet<>();
         names.addAll(Arrays.asList(folder.list(ACCEPT_FORGE_FILTER)));
@@ -515,7 +517,7 @@ public class Server
 
                     // Downloading new file
 
-                    Download download = new Download(new URL(Constants.MC_SERVER_JAR_URL.replace("%ID%", version)), tempFile);
+                    Download download = new Download(Helper.getFinalURL(Constants.MC_SERVER_JAR_URL.replace("%ID%", version)), tempFile);
 
                     long lastTime = System.currentTimeMillis();
                     int lastInfo = 0;
@@ -528,7 +530,7 @@ public class Server
                             printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             break;
                         }
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
 
                     //methodCaller.sendProgress(0);
@@ -544,7 +546,7 @@ public class Server
                             printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
 
                     if (download.getStatus() == Download.Status.Error)
@@ -630,7 +632,8 @@ public class Server
                         e.printStackTrace();
                     }
 
-                    for (String name : folder.list(ACCEPT_FORGE_FILTER)) getJvmData().jarName = name;
+                    String[] jars = folder.list(ACCEPT_FORGE_FILTER);
+                    if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
 
                     FileUtils.forceDelete(forge);
 
@@ -670,6 +673,7 @@ public class Server
 
                     worldManager.doMakeAllOfTheBackup(methodCaller);
 
+                    if (!folder.exists()) folder.mkdirs();
                     if (purge)
                     {
                         for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
@@ -677,7 +681,50 @@ public class Server
                             FileUtils.forceDelete(file);
                         }
                     }
-                    if (!folder.exists()) folder.mkdirs();
+
+                    if (cuseZip)
+                    {
+                        Arguments arguments = new Arguments();
+                        arguments.server.eula = true;
+                        arguments.isClient = false;
+                        arguments.magic = true;
+                        arguments.delete = true;
+                        arguments.input = zipURL;
+                        arguments.output = folder;
+                        arguments.validate("server");
+
+                        Worker worker = new Worker(arguments);
+
+                        PipedInputStream in = new PipedInputStream();
+                        PipedOutputStream out = new PipedOutputStream(in);
+                        PrintStream ps = new PrintStream(out);
+                        worker.setLogger(ps);
+
+                        new Thread(worker, ID.concat("-curseDownloader")).start();
+
+                        BufferedReader inReader = new BufferedReader(new InputStreamReader(in));
+                        while (!worker.isDone())
+                        {
+                            String line = inReader.readLine();
+                            if (line == null) break;
+                            instance.printLine(line);
+                            methodCaller.sendMessage(line);
+                        }
+                        out.flush();
+                        while (inReader.ready())
+                        {
+                            String line = inReader.readLine();
+                            if (line == null) break;
+                            instance.printLine(line);
+                            methodCaller.sendMessage(line);
+                        }
+                        inReader.close();
+
+                        String[] jars = folder.list(ACCEPT_FORGE_FILTER);
+                        if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
+
+                        return;
+                    }
 
                     final File zip = new File(folder, "modpack.zip");
 
@@ -686,7 +733,7 @@ public class Server
 
                     printLine("Downloading zip...");
 
-                    Download download = new Download(new URL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+                    Download download = new Download(Helper.getFinalURL(URLDecoder.decode(zipURL, "UTF-8")), zip);
 
                     long lastTime = System.currentTimeMillis();
                     int lastInfo = 0;
@@ -699,7 +746,7 @@ public class Server
                             printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                             break;
                         }
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
 
                     //methodCaller.sendProgress(0);
@@ -716,7 +763,7 @@ public class Server
                             printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                         }
 
-                        Thread.sleep(10);
+                        Thread.sleep(100);
                     }
 
                     if (download.getStatus() == Download.Status.Error)
@@ -724,52 +771,31 @@ public class Server
                         throw new Exception(download.getMessage());
                     }
 
-                    if (cuseZip)
+                    printLine("Downloading zip done, extracting...");
+
+                    ZipFile zipFile = new ZipFile(zip);
+                    zipFile.setRunInThread(true);
+                    zipFile.extractAll(folder.getCanonicalPath());
+                    lastTime = System.currentTimeMillis();
+                    lastInfo = 0;
+                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
                     {
-                        CurseModpackDownloader curseModpackDownloader = new CurseModpackDownloader();
-                        curseModpackDownloader.eula = true;
-                        curseModpackDownloader.server = true;
-                        curseModpackDownloader.input = zip;
-                        curseModpackDownloader.output = folder;
-                        curseModpackDownloader.ignoreExistingMods = true;
-                        curseModpackDownloader.logger = new OutWrapper(System.out, methodCaller, instance);
-
-                        curseModpackDownloader.run();
-
-                        FileUtils.forceDelete(zip);
-
-                        printLine("Done extracting & installing zip.");
-                    }
-                    else
-                    {
-                        printLine("Downloading zip done, extracting...");
-
-                        ZipFile zipFile = new ZipFile(zip);
-                        zipFile.setRunInThread(true);
-                        zipFile.extractAll(folder.getCanonicalPath());
-                        lastTime = System.currentTimeMillis();
-                        lastInfo = 0;
-                        while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
                         {
-                            if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
-                            {
-                                lastInfo = zipFile.getProgressMonitor().getPercentDone();
-                                lastTime = System.currentTimeMillis();
+                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
+                            lastTime = System.currentTimeMillis();
 
-                                printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
-                            }
-
-                            Thread.sleep(10);
+                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
                         }
 
-                        //methodCaller.sendProgress(100);
-
-                        FileUtils.forceDelete(zip);
-
-                        printLine("Done extracting zip.");
+                        Thread.sleep(10);
                     }
 
-                    methodCaller.sendDone();
+                    //methodCaller.sendProgress(100);
+
+                    FileUtils.forceDelete(zip);
+
+                    printLine("Done extracting zip.");
                 }
                 catch (Exception e)
                 {
@@ -780,7 +806,11 @@ public class Server
                     methodCaller.sendError(Helper.getStackTrace(e));
                     e.printStackTrace();
                 }
-                downloading = false;
+                finally
+                {
+                    methodCaller.sendDone();
+                    downloading = false;
+                }
             }
         }, getID() + "-modpack-installer").start();
     }

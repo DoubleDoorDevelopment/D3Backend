@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -109,7 +109,7 @@ public class Cache extends TimerTask
                             String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", forgeBuild.id);
                             HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
                             urlConnection.setRequestMethod("GET");
-                            urlConnection.setRequestProperty("User-Agent", USER_AGENT);
+                            urlConnection.setRequestProperty("User-Agent", FORGE_USER_AGENT);
                             urlConnection.connect();
                             if (urlConnection.getResponseCode() != 200) forgeBuild.hasInstaller = false;
                             urlConnection.disconnect();

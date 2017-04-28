@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -29,7 +29,6 @@ import net.doubledoordev.backend.web.socket.FileMonitorSocketApplication;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.glassfish.grizzly.http.util.MimeType;
 
 import java.io.File;

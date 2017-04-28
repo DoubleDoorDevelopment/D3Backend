@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -45,7 +45,11 @@ public class Settings
         try
         {
             if (CONFIG_FILE.exists()) SETTINGS = Constants.GSON.fromJson(new FileReader(CONFIG_FILE), Settings.class);
-            else SETTINGS = new Settings();
+            else
+            {
+                SETTINGS = new Settings();
+                save();
+            }
         }
         catch (IOException e)
         {

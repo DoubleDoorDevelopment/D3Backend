@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -32,10 +32,7 @@ import org.glassfish.grizzly.websockets.WebSocket;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -58,6 +55,7 @@ public class Helper
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
     private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    private static final int MAX_REDIRECTS = 25;
 
     private Helper()
     {
@@ -347,5 +345,33 @@ public class Helper
     public static String stripColor(String txt)
     {
         return txt.replaceAll("(?i)\u00a7[0-9a-fk-or]", "");
+    }
+
+    public static URL getFinalURL(String url) throws IOException
+    {
+        for (int i = 0; i < MAX_REDIRECTS; i++)
+        {
+            HttpURLConnection con = null;
+            try
+            {
+                con = (HttpURLConnection) new URL(url).openConnection();
+                con.setInstanceFollowRedirects(false);
+                con.connect();
+                if (con.getHeaderField("Location") == null)
+                {
+                    return new URL(url.replace("?cookieTest=1", ""));
+                }
+                url = con.getHeaderField("Location");
+            }
+            catch (IOException e)
+            {
+                return new URL(url.replace("?cookieTest=1", ""));
+            }
+            finally
+            {
+                if (con != null) con.disconnect();
+            }
+        }
+        throw new IOException("Redirect limit (" + MAX_REDIRECTS + ") exceeded on url: " + url);
     }
 }

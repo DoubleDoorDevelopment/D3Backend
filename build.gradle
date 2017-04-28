@@ -25,17 +25,9 @@ def gitURL = "github.com/DoubleDoorDevelopment/D3Backend"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-//noinspection GroovyAssignabilityCheck
 configurations {
     compile
     deployJars
-}
-
-repositories {
-    maven {
-         name "DDD repo"
-         url "http://doubledoordev.net/maven/"
-     }
 }
 
 idea {
@@ -59,13 +51,12 @@ idea {
 
 repositories {
     mavenCentral()
-//    maven {
-//	    name = 'sk89q'
-//        url = "http://maven.sk89q.com/repo/"
-//    }
 	maven {
         name = 'sonatype-nexus'
         url = 'https://oss.sonatype.org/content/groups/public/'
+    }
+    flatDir {
+        dirs 'libs'
     }
 }
 
@@ -78,11 +69,10 @@ dependencies {
     compile group: "org.freemarker", name: "freemarker", version: "2.3.20"
     compile group: "org.apache.logging.log4j", name: "log4j-core", version: "2.0.2"
     compile group: "net.lingala.zip4j", name: "zip4j", version: "1.3.2"
-    //compile group: "com.sk89q", name: "intake", version: "3.1.1-SNAPSHOT"
     compile group: "org.glassfish.grizzly", name: "grizzly-http-all", version: "2.3.17"
     compile group: "com.flowpowered", name: "flow-nbt", version: "1.0.0"
-    compile group: "net.doubledoordev.cmd", name: "CurseModpackDownloader", version: "0.+"
     compile group: "com.google.guava", name: "guava", version: "18.0"
+    compile group: "net.dries007.cmd", name: "CurseModpackDownloader", version: "1.+"
 }
 
 processResources {

@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -60,7 +60,7 @@ public class Constants
     public static final String DATA = "data";
     public static final String DIM = "DIM";
     public static final String OVERWORLD = "Overworld";
-    public static final String USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)";
+    public static final String FORGE_USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)";
     /*
      * FilenameFilter constants
      */
@@ -157,7 +157,7 @@ public class Constants
         @Override
         public boolean accept(File dir, String name)
         {
-            return name.startsWith("forge");
+            return name.startsWith("forge") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
         }
     };
     public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = new FilenameFilter()
@@ -165,7 +165,7 @@ public class Constants
         @Override
         public boolean accept(File dir, String name)
         {
-            return name.startsWith("minecraft_server");
+            return name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
         }
     };
     /*

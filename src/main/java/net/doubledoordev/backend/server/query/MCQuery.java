@@ -1,6 +1,6 @@
 /*
  * D3Backend
- * Copyright (C) 2015 - 2016  Dries007 & Double Door Development
+ * Copyright (C) 2015 - 2017  Dries007 & Double Door Development
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
@@ -19,11 +19,12 @@
 package net.doubledoordev.backend.server.query;
 
 import com.google.common.base.Charsets;
-import net.doubledoordev.backend.Main;
-import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.BindException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 
 import static net.doubledoordev.backend.util.Constants.LOCALHOST;
 
