@@ -133,7 +133,7 @@ public class Constants
         @Override
         public boolean accept(File dir, String name)
         {
-            return FilenameUtils.getExtension(name).equals(".jar");
+            return FilenameUtils.getExtension(name).equals("jar");
         }
     };
     public final static FilenameFilter ACCEPT_ALL_FILTER = new FilenameFilter()
