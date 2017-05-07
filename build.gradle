@@ -72,7 +72,7 @@ dependencies {
     compile group: "org.glassfish.grizzly", name: "grizzly-http-all", version: "2.3.17"
     compile group: "com.flowpowered", name: "flow-nbt", version: "1.0.0"
     compile group: "com.google.guava", name: "guava", version: "18.0"
-    compile group: "net.dries007.cmd", name: "CurseModpackDownloader", version: "1.+"
+    compile group: "net.dries007.cmd", name: "CurseModpackDownloader", classifier: "all", version: "1.+"
 }
 
 processResources {
