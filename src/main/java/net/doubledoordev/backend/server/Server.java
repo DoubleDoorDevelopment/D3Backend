@@ -18,6 +18,7 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
@@ -496,73 +497,85 @@ public class Server
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         final Server instance = this;
 
-        new Thread(new Runnable()
+        new Thread(() ->
         {
-            @Override
-            public void run()
+            downloading = true;
+            try
             {
-                downloading = true;
+                worldManager.doMakeAllOfTheBackup(methodCaller);
+
+                // delete old files
+                for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
+                for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
+
+                File jarfile = new File(folder, getJvmData().jarName);
+                if (jarfile.exists()) FileUtils.forceDelete(jarfile);
+                File tempFile = new File(folder, getJvmData().jarName + ".tmp");
+
+                // Getting new file final URL
+
+                JsonObject versionJson;
                 try
                 {
-                    worldManager.doMakeAllOfTheBackup(methodCaller);
-
-                    // delete old files
-                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
-                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
-
-                    File jarfile = new File(folder, getJvmData().jarName);
-                    if (jarfile.exists()) FileUtils.forceDelete(jarfile);
-                    File tempFile = new File(folder, getJvmData().jarName + ".tmp");
-
-                    // Downloading new file
-
-                    Download download = new Download(Helper.getFinalURL(Constants.MC_SERVER_JAR_URL.replace("%ID%", version)), tempFile);
-
-                    long lastTime = System.currentTimeMillis();
-                    int lastInfo = 0;
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if (download.getSize() != -1)
-                        {
-                            methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
-                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
-                            break;
-                        }
-                        Thread.sleep(100);
-                    }
-
-                    //methodCaller.sendProgress(0);
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
-                        {
-                            lastInfo = (int) download.getProgress();
-                            lastTime = System.currentTimeMillis();
-
-                            //methodCaller.sendProgress(download.getProgress());
-                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
-                        }
-
-                        Thread.sleep(100);
-                    }
-
-                    if (download.getStatus() == Download.Status.Error)
-                    {
-                        throw new Exception(download.getMessage());
-                    }
-                    methodCaller.sendDone();
-
-                    tempFile.renameTo(jarfile);
-                    instance.update();
+                    Reader sr = new InputStreamReader(Cache.getMcVersions().get(version).openStream());
+                    versionJson = Constants.JSONPARSER.parse(sr).getAsJsonObject().getAsJsonObject("downloads").getAsJsonObject("server");
+                    sr.close();
                 }
-                catch (Exception e)
+                catch (IOException e)
                 {
-                    error(e);
+                    e.printStackTrace();
+                    return;
                 }
-                downloading = false;
+
+                // Downloading new file
+
+                Download download = new Download(new URL(versionJson.get("url").getAsString()), tempFile);
+                download.setSize(versionJson.get("size").getAsLong());
+
+                long lastTime = System.currentTimeMillis();
+                int lastInfo = 0;
+
+                while (download.getStatus() == Download.Status.DOWNLOADING)
+                {
+                    if (download.getSize() != -1)
+                    {
+                        methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        break;
+                    }
+                    Thread.sleep(100);
+                }
+
+                //methodCaller.sendProgress(0);
+
+                while (download.getStatus() == Download.Status.DOWNLOADING)
+                {
+                    if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
+                    {
+                        lastInfo = (int) download.getProgress();
+                        lastTime = System.currentTimeMillis();
+
+                        //methodCaller.sendProgress(download.getProgress());
+                        printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                    }
+
+                    Thread.sleep(100);
+                }
+
+                if (download.getStatus() == Download.Status.ERROR)
+                {
+                    throw new Exception(download.getMessage());
+                }
+                methodCaller.sendDone();
+
+                tempFile.renameTo(jarfile);
+                instance.update();
             }
+            catch (Exception e)
+            {
+                error(e);
+            }
+            downloading = false;
         }, getID() + "-jar-downloader").start();
     }
 
@@ -578,240 +591,275 @@ public class Server
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         final Server instance = this;
 
-        new Thread(new Runnable()
+        new Thread(() ->
         {
-            @Override
-            public void run()
+            downloading = true;
+            try
             {
-                downloading = true;
+                worldManager.doMakeAllOfTheBackup(methodCaller);
+
+                // delete old files
+                for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
+                for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
+
+                // download new files
+                String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", version);
+                String forgeName = url.substring(url.lastIndexOf('/'));
+                File forge = new File(folder, forgeName);
+                FileUtils.copyURLToFile(new URL(url), forge);
+
+                // run installer
+                List<String> arguments = new ArrayList<>();
+
+                arguments.add(Constants.getJavaPath());
+                arguments.add("-Xmx1G");
+
+                arguments.add("-jar");
+                arguments.add(forge.getName());
+
+                arguments.add("--installServer");
+
+                ProcessBuilder builder = new ProcessBuilder(arguments);
+                builder.directory(folder);
+                builder.redirectErrorStream(true);
+                final Process process = builder.start();
+                printLine(arguments.toString());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    methodCaller.sendMessage(line);
+                    printLine(line);
+                }
+
                 try
                 {
-                    worldManager.doMakeAllOfTheBackup(methodCaller);
-
-                    // delete old files
-                    for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
-                    for (File file : folder.listFiles(ACCEPT_FORGE_FILTER)) FileUtils.forceDelete(file);
-
-                    // download new files
-                    String url = Constants.FORGE_INSTALLER_URL.replace("%ID%", version);
-                    String forgeName = url.substring(url.lastIndexOf('/'));
-                    File forge = new File(folder, forgeName);
-                    FileUtils.copyURLToFile(new URL(url), forge);
-
-                    // run installer
-                    List<String> arguments = new ArrayList<>();
-
-                    arguments.add(Constants.getJavaPath());
-                    arguments.add("-Xmx1G");
-
-                    arguments.add("-jar");
-                    arguments.add(forge.getName());
-
-                    arguments.add("--installServer");
-
-                    ProcessBuilder builder = new ProcessBuilder(arguments);
-                    builder.directory(folder);
-                    builder.redirectErrorStream(true);
-                    final Process process = builder.start();
-                    printLine(arguments.toString());
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                    String line;
-                    while ((line = reader.readLine()) != null)
-                    {
-                        methodCaller.sendMessage(line);
-                        printLine(line);
-                    }
-
-                    try
-                    {
-                        process.waitFor();
-                    }
-                    catch (InterruptedException e)
-                    {
-                        e.printStackTrace();
-                    }
-
-                    String[] jars = folder.list(ACCEPT_FORGE_FILTER);
-                    if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
-
-                    FileUtils.forceDelete(forge);
-
-                    methodCaller.sendDone();
-                    printLine("Forge installer done.");
-
-                    instance.update();
+                    process.waitFor();
                 }
-                catch (IOException e)
+                catch (InterruptedException e)
                 {
-                    printLine("##################################################################");
-                    printLine("Error installing a new forge version (version " + version + ")");
-                    printLine(e.toString());
-                    printLine("##################################################################");
-                    methodCaller.sendError(Helper.getStackTrace(e));
                     e.printStackTrace();
                 }
-                downloading = false;
+
+                String[] jars = folder.list(ACCEPT_FORGE_FILTER);
+                if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
+
+                FileUtils.forceDelete(forge);
+
+                methodCaller.sendDone();
+                printLine("Forge installer done.");
+
+                instance.update();
             }
+            catch (IOException e)
+            {
+                printLine("##################################################################");
+                printLine("Error installing a new forge version (version " + version + ")");
+                printLine(e.toString());
+                printLine("##################################################################");
+                methodCaller.sendError(Helper.getStackTrace(e));
+                e.printStackTrace();
+            }
+            downloading = false;
         }, getID() + "-forge-installer").start();
     }
 
-    public void downloadModpack(final IMethodCaller methodCaller, final String zipURL, final boolean purge, final boolean cuseZip) throws IOException, ZipException, BackupException
+    public void installModpack(IMethodCaller methodCaller, String fileName, boolean purge, boolean cuseZip) throws IOException, ZipException, BackupException
     {
         if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
         final Server instance = this;
 
-        new Thread(new Runnable()
+        File modpackFile = new File(getFolder(), fileName);
+        if (!modpackFile.exists()) throw new FileNotFoundException("File not found: " + modpackFile);
+        new Thread(() ->
         {
-            @Override
-            public void run()
+            try
             {
-                try
-                {
-                    downloading = true;
-
-                    worldManager.doMakeAllOfTheBackup(methodCaller);
-
-                    if (!folder.exists()) folder.mkdirs();
-                    if (purge)
-                    {
-                        for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
-                        {
-                            FileUtils.forceDelete(file);
-                        }
-                    }
-
-                    if (cuseZip)
-                    {
-                        Arguments arguments = new Arguments();
-                        arguments.server.eula = true;
-                        arguments.isClient = false;
-                        arguments.magic = true;
-                        arguments.delete = true;
-                        arguments.input = zipURL;
-                        arguments.output = folder;
-                        arguments.validate("server");
-
-                        Worker worker = new Worker(arguments);
-
-                        PipedInputStream in = new PipedInputStream();
-                        PipedOutputStream out = new PipedOutputStream(in);
-                        PrintStream ps = new PrintStream(out);
-                        worker.setLogger(ps);
-
-                        new Thread(worker, ID.concat("-curseDownloader")).start();
-
-                        BufferedReader inReader = new BufferedReader(new InputStreamReader(in));
-                        while (!worker.isDone())
-                        {
-                            String line = inReader.readLine();
-                            if (line == null) break;
-                            instance.printLine(line);
-                            methodCaller.sendMessage(line);
-                        }
-                        out.flush();
-                        while (inReader.ready())
-                        {
-                            String line = inReader.readLine();
-                            if (line == null) break;
-                            instance.printLine(line);
-                            methodCaller.sendMessage(line);
-                        }
-                        inReader.close();
-
-                        String[] jars = folder.list(ACCEPT_FORGE_FILTER);
-                        if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
-
-                        return;
-                    }
-
-                    final File zip = new File(folder, "modpack.zip");
-
-                    if (zip.exists()) FileUtils.forceDelete(zip);
-                    zip.createNewFile();
-
-                    printLine("Downloading zip...");
-
-                    Download download = new Download(Helper.getFinalURL(URLDecoder.decode(zipURL, "UTF-8")), zip);
-
-                    long lastTime = System.currentTimeMillis();
-                    int lastInfo = 0;
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if (download.getSize() != -1)
-                        {
-                            methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
-                            printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
-                            break;
-                        }
-                        Thread.sleep(100);
-                    }
-
-                    //methodCaller.sendProgress(0);
-
-                    while (download.getStatus() == Download.Status.Downloading)
-                    {
-                        if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
-                        {
-                            lastInfo = (int) download.getProgress();
-                            lastTime = System.currentTimeMillis();
-
-                            //methodCaller.sendProgress(download.getProgress());
-
-                            printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
-                        }
-
-                        Thread.sleep(100);
-                    }
-
-                    if (download.getStatus() == Download.Status.Error)
-                    {
-                        throw new Exception(download.getMessage());
-                    }
-
-                    printLine("Downloading zip done, extracting...");
-
-                    ZipFile zipFile = new ZipFile(zip);
-                    zipFile.setRunInThread(true);
-                    zipFile.extractAll(folder.getCanonicalPath());
-                    lastTime = System.currentTimeMillis();
-                    lastInfo = 0;
-                    while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
-                    {
-                        if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
-                        {
-                            lastInfo = zipFile.getProgressMonitor().getPercentDone();
-                            lastTime = System.currentTimeMillis();
-
-                            printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
-                        }
-
-                        Thread.sleep(10);
-                    }
-
-                    //methodCaller.sendProgress(100);
-
-                    FileUtils.forceDelete(zip);
-
-                    printLine("Done extracting zip.");
-                }
-                catch (Exception e)
-                {
-                    printLine("##################################################################");
-                    printLine("Error installing a modpack");
-                    printLine(e.toString());
-                    printLine("##################################################################");
-                    methodCaller.sendError(Helper.getStackTrace(e));
-                    e.printStackTrace();
-                }
-                finally
-                {
-                    methodCaller.sendDone();
-                    downloading = false;
-                }
+                installDownloadedModpack(methodCaller, modpackFile, purge, cuseZip);
+            }
+            catch (Exception e)
+            {
+                printLine("##################################################################");
+                printLine("Error installing a modpack from file");
+                printLine(e.toString());
+                printLine("##################################################################");
+                instance.error(e);
+                methodCaller.sendError(Helper.getStackTrace(e));
+                e.printStackTrace();
+            }
+            finally
+            {
+                methodCaller.sendDone();
+                downloading = false;
             }
         }, getID() + "-modpack-installer").start();
+    }
+
+    public void downloadModpack(IMethodCaller methodCaller, String zipURL, boolean purge, boolean cuseZip) throws IOException, ZipException, BackupException
+    {
+        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (downloading) throw new IllegalStateException("Already downloading something.");
+        final Server instance = this;
+
+        new Thread(() ->
+        {
+            try
+            {
+                final File zip = new File(folder, "modpack.zip");
+
+                if (zip.exists()) FileUtils.forceDelete(zip);
+                zip.createNewFile();
+
+                printLine("Downloading zip...");
+
+                Download download = new Download(Helper.getFinalURL(URLDecoder.decode(zipURL, "UTF-8")), zip);
+
+                long lastTime = System.currentTimeMillis();
+                int lastInfo = 0;
+
+                while (download.getStatus() == Download.Status.DOWNLOADING)
+                {
+                    if (download.getSize() != -1)
+                    {
+                        methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        break;
+                    }
+                    Thread.sleep(100);
+                }
+
+                //methodCaller.sendProgress(0);
+
+                while (download.getStatus() == Download.Status.DOWNLOADING)
+                {
+                    if ((download.getProgress() - lastInfo >= 5) || (System.currentTimeMillis() - lastTime > 1000 * 10))
+                    {
+                        lastInfo = (int) download.getProgress();
+                        lastTime = System.currentTimeMillis();
+
+                        //methodCaller.sendProgress(download.getProgress());
+
+                        printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
+                    }
+
+                    Thread.sleep(100);
+                }
+
+                if (download.getStatus() == Download.Status.ERROR)
+                {
+                    throw new Exception(download.getMessage());
+                }
+
+                printLine("Downloading zip done, extracting...");
+
+                installDownloadedModpack(methodCaller, zip, purge, cuseZip);
+            }
+            catch (Exception e)
+            {
+                printLine("##################################################################");
+                printLine("Error installing a modpack from URL");
+                printLine(e.toString());
+                printLine("##################################################################");
+                instance.error(e);
+                methodCaller.sendError(Helper.getStackTrace(e));
+                e.printStackTrace();
+            }
+                finally
+            {
+                methodCaller.sendDone();
+                downloading = false;
+            }
+        }, getID() + "-modpack-installer").start();
+    }
+
+    private void installDownloadedModpack(final IMethodCaller methodCaller, final File zip, final boolean purge, final boolean cuseZip) throws Exception
+    {
+        downloading = true;
+
+        worldManager.doMakeAllOfTheBackup(methodCaller);
+
+        if (!folder.exists()) folder.mkdirs();
+        if (purge)
+        {
+            for (File file : folder.listFiles(Constants.ACCEPT_ALL_FILTER))
+            {
+                if (file.equals(zip)) continue;
+                FileUtils.forceDelete(file);
+            }
+        }
+
+        if (cuseZip)
+        {
+            Arguments arguments = new Arguments();
+            arguments.server.eula = true;
+            arguments.isClient = false;
+            arguments.magic = true;
+            arguments.delete = true;
+            arguments.input = zip.getAbsolutePath();
+            arguments.output = folder;
+            arguments.validate("server");
+
+            Worker worker = new Worker(arguments);
+
+            PipedOutputStream out = new PipedOutputStream();
+            BufferedReader inReader = new BufferedReader(new InputStreamReader(new PipedInputStream(out)));
+            worker.setLogger(new PrintStream(out));
+
+            new Thread(worker, ID.concat("-curseDownloader")).start();
+
+            while (!worker.isDone())
+            {
+                String line = inReader.readLine();
+                if (line == null) break;
+                this.printLine(line);
+                methodCaller.sendMessage(line);
+            }
+            while (inReader.ready())
+            {
+                String line = inReader.readLine();
+                if (line == null) break;
+                this.printLine(line);
+                methodCaller.sendMessage(line);
+            }
+            inReader.close();
+
+            if (worker.getError() != null)
+            {
+                throw new Exception("Cannot run Curse Modpack downloader.", worker.getError());
+            }
+
+            String[] jars = folder.list(ACCEPT_FORGE_FILTER);
+            if (jars != null && jars.length != 0) getJvmData().jarName = jars[0];
+        }
+        else
+        {
+            ZipFile zipFile = new ZipFile(zip);
+            zipFile.setRunInThread(true);
+            zipFile.extractAll(folder.getCanonicalPath());
+            long lastTime = System.currentTimeMillis();
+            int lastInfo = 0;
+            while (zipFile.getProgressMonitor().getState() == ProgressMonitor.STATE_BUSY)
+            {
+                if (zipFile.getProgressMonitor().getPercentDone() - lastInfo >= 10 || System.currentTimeMillis() - lastTime > 1000 * 10)
+                {
+                    lastInfo = zipFile.getProgressMonitor().getPercentDone();
+                    lastTime = System.currentTimeMillis();
+
+                    printLine(String.format("Extracting %d%%", zipFile.getProgressMonitor().getPercentDone()));
+                }
+
+                Thread.sleep(10);
+            }
+
+            //methodCaller.sendProgress(100);
+
+            FileUtils.forceDelete(zip);
+
+            printLine("Done extracting zip.");
+        }
+
+        zip.delete();
     }
 
     /*
@@ -922,84 +970,76 @@ public class Server
             e.printStackTrace();
         }
 
-        new Thread(new Runnable()
+        new Thread(() ->
         {
-            @Override
-            public void run()
+            printLine("Starting server ................");
+            try
             {
-                printLine("Starting server ................");
-                try
+                /**
+                 * Build arguments list.
+                 */
+                List<String> arguments = new ArrayList<>();
+                arguments.add(Constants.getJavaPath());
+                arguments.add("-DServerOwner=\"" + owner + '"');
+                arguments.add("-server");
                 {
-                    /**
-                     * Build arguments list.
-                     */
-                    List<String> arguments = new ArrayList<>();
-                    arguments.add(Constants.getJavaPath());
-                    arguments.add("-DServerOwner=\"" + owner + '"');
-                    arguments.add("-server");
-                    {
-                        int amount = getJvmData().ramMin;
-                        if (amount > 0) arguments.add(String.format("-Xms%dM", amount));
-                        amount = getJvmData().ramMax;
-                        if (amount > 0) arguments.add(String.format("-Xmx%dM", amount));
-                        amount = getJvmData().permGen;
-                        if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
-                    }
-                    if (Strings.isNotBlank(getJvmData().extraJavaParameters))
-                    {
-                        for (String arg : getJvmData().extraJavaParameters.split(" ")) arguments.add(arg);
-                    }
-                    arguments.add("-jar");
-                    arguments.add(getJvmData().jarName);
-                    arguments.add("nogui");
-                    if (Strings.isNotBlank(getJvmData().extraMCParameters))
-                    {
-                        for (String arg : getJvmData().extraMCParameters.split(" ")) arguments.add(arg);
-                    }
+                    int amount = getJvmData().ramMin;
+                    if (amount > 0) arguments.add(String.format("-Xms%dM", amount));
+                    amount = getJvmData().ramMax;
+                    if (amount > 0) arguments.add(String.format("-Xmx%dM", amount));
+                    amount = getJvmData().permGen;
+                    if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
+                }
+                if (Strings.isNotBlank(getJvmData().extraJavaParameters))
+                {
+                    for (String arg : getJvmData().extraJavaParameters.split(" ")) arguments.add(arg);
+                }
+                arguments.add("-jar");
+                arguments.add(getJvmData().jarName);
+                arguments.add("nogui");
+                if (Strings.isNotBlank(getJvmData().extraMCParameters))
+                {
+                    for (String arg : getJvmData().extraMCParameters.split(" ")) arguments.add(arg);
+                }
 
-                    // Debug printout
-                    printLine("Arguments: " + arguments.toString());
+                // Debug printout
+                printLine("Arguments: " + arguments.toString());
 
-                    /**
-                     * Make ProcessBuilder, set rundir, and make sure the io gets redirected
-                     */
-                    ProcessBuilder pb = new ProcessBuilder(arguments);
-                    pb.directory(folder);
-                    pb.redirectErrorStream(true);
-                    if (!new File(folder, getJvmData().jarName).exists()) return; // for reasons of WTF?
-                    process = pb.start();
-                    startTime = System.currentTimeMillis();
-                    new Thread(new Runnable()
+                /**
+                 * Make ProcessBuilder, set rundir, and make sure the io gets redirected
+                 */
+                ProcessBuilder pb = new ProcessBuilder(arguments);
+                pb.directory(folder);
+                pb.redirectErrorStream(true);
+                if (!new File(folder, getJvmData().jarName).exists()) return; // for reasons of WTF?
+                process = pb.start();
+                startTime = System.currentTimeMillis();
+                new Thread(() ->
+                {
+                    try
                     {
-                        @Override
-                        public void run()
+                        printLine("----=====##### STARTING SERVER #####=====-----");
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                        String line;
+                        while ((line = reader.readLine()) != null)
                         {
-                            try
-                            {
-                                printLine("----=====##### STARTING SERVER #####=====-----");
-                                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                                String line;
-                                while ((line = reader.readLine()) != null)
-                                {
-                                    printLine(line);
-                                }
-                                printLine("----=====##### SERVER PROCESS HAS ENDED #####=====-----");
-                                instance.update();
-                            }
-                            catch (IOException e)
-                            {
-                                error(e);
-                            }
+                            printLine(line);
                         }
-                    }, ID.concat("-streamEater")).start();
-                    instance.update();
-                }
-                catch (IOException e)
-                {
-                    error(e);
-                }
-                starting = false;
+                        printLine("----=====##### SERVER PROCESS HAS ENDED #####=====-----");
+                        instance.update();
+                    }
+                    catch (IOException e)
+                    {
+                        error(e);
+                    }
+                }, ID.concat("-streamEater")).start();
+                instance.update();
             }
+            catch (IOException e)
+            {
+                error(e);
+            }
+            starting = false;
         }, "ServerStarter-" + getID()).start(); // <-- Very important call.
     }
 

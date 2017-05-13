@@ -135,7 +135,11 @@
                 <h3 class="panel-title" style="text-align: center;">Upload modpack zip</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <input id="modpackURL" class="form-control" placeholder="URL here">
+                <div class="form-group">
+                    <input id="modpackURL" class="form-control" placeholder="URL">
+                    <input type="file" id="modpackFile" name="fileName">
+                    <p class="help-block">Pick either a URL or a direct file.</p>
+                </div>
                 <label for="modpackPurge">
                     <input id="modpackPurge" type="checkbox"> Purge the server
                 </label>
@@ -162,7 +166,7 @@
                 <pre id="modal-log"></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="modal-close">Close</button>
             </div>
         </div>
     </div>
@@ -217,11 +221,46 @@
     {
         if (confirm('Are you sure?\nThis will overide the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
         {
-            document.getElementById('modalLabel').innerHTML = 'Uploading modpack: ' + document.getElementById('modpackURL').value;
-            call('servercmd/${server.ID?js_string}', 'downloadModpack', [
-                document.getElementById('modpackURL').value,
-                document.getElementById('modpackPurge').checked,
-                document.getElementById('modpackCurse').checked], progressModal);
+            document.getElementById('modalLabel').innerHTML = 'Uploading modpack...';
+
+            var file = $('#modpackFile')[0].files[0];
+            if (file)
+            {
+                var formData = new FormData();
+                formData.append('fileName', file);
+
+                $.ajax({
+                    url: window.location.pathname + window.location.search,
+                    type: "POST",
+                    data: formData,
+                    contentType: false,
+                    cache: false,
+                    processData: false,
+                    beforeSend: function()
+                    {
+                        progressModal("Starting file uplaoad...");
+                    },
+                    success: function()
+                    {
+                        progressModal("Done uploading file.\nStarting modpack install...");
+                        call('servercmd/${server.ID?js_string}', 'installModpack', [
+                            file.name,
+                            document.getElementById('modpackPurge').checked,
+                            document.getElementById('modpackCurse').checked], progressModal);
+                    },
+                    error: function()
+                    {
+                        progressModal("Error uploading modpack...");
+                    }
+                });
+            }
+            else
+            {
+                call('servercmd/${server.ID?js_string}', 'downloadModpack', [
+                    document.getElementById('modpackURL').value,
+                    document.getElementById('modpackPurge').checked,
+                    document.getElementById('modpackCurse').checked], progressModal);
+            }
         }
     }
 
@@ -231,6 +270,7 @@
     {
         if (needsShowing)
         {
+            document.getElementById("modal-close").className = "btn btn-default";
             modal.modal("show");
             document.getElementById("modal-log").innerHTML = "";
             needsShowing = false;
@@ -239,8 +279,12 @@
         {
             needsShowing = true;
             document.getElementById("modal-log").innerHTML += "-- ALL DONE --\n";
+            document.getElementById("modal-close").className = "btn btn-success";
         }
-        document.getElementById("modal-log").innerHTML += data + "\n";
+        else
+        {
+            document.getElementById("modal-log").innerHTML += data + "\n";
+        }
     }
 
     function updateInfo(data)

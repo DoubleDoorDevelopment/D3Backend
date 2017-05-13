@@ -112,7 +112,7 @@ public class Helper
      */
     public static Collection<String> getAllMCVersions()
     {
-        return Cache.getMcVersions();
+        return Cache.getMcVersions().keySet();
     }
 
     public static Collection<String> getForgeNames()

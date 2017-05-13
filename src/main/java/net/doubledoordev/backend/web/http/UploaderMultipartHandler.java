@@ -18,7 +18,6 @@
 
 package net.doubledoordev.backend.web.http;
 
-import net.doubledoordev.backend.server.FileManager;
 import org.glassfish.grizzly.ReadHandler;
 import org.glassfish.grizzly.http.io.NIOInputStream;
 import org.glassfish.grizzly.http.multipart.ContentDisposition;
@@ -36,11 +35,11 @@ import java.io.IOException;
 public class UploaderMultipartHandler implements MultipartEntryHandler
 {
     private static final String FILENAME_ENTRY = "fileName";
-    private final FileManager fileManager;
+    private final File folder;
 
-    public UploaderMultipartHandler(FileManager fileManager)
+    public UploaderMultipartHandler(File folder)
     {
-        this.fileManager = fileManager;
+        this.folder = folder;
     }
 
     @Override
@@ -56,7 +55,7 @@ public class UploaderMultipartHandler implements MultipartEntryHandler
             final NIOInputStream inputStream = multipartEntry.getNIOInputStream();
 
             // start asynchronous non-blocking content read.
-            inputStream.notifyAvailable(new UploadReadHandler(new File(fileManager.getFile(), filename), inputStream));
+            inputStream.notifyAvailable(new UploadReadHandler(new File(folder, filename), inputStream));
         }
         else
         {

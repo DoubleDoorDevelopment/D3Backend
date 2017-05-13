@@ -64,22 +64,8 @@ public class Constants
     /*
      * FilenameFilter constants
      */
-    public final static FilenameFilter NOT_DIM_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return !name.startsWith(DIM);
-        }
-    };
-    public final static FilenameFilter DIM_ONLY_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return name.startsWith(DIM);
-        }
-    };
+    public final static FilenameFilter NOT_DIM_FILTER = (dir, name) -> !name.startsWith(DIM);
+    public final static FilenameFilter DIM_ONLY_FILTER = (dir, name) -> name.startsWith(DIM);
     public static final String RESTARTING_INFO = "RestartingInfo";
     public static final String JVM_DATA = "JvmData";
     public static final String TEMPLATE_EXTENSION = ".ftl";
@@ -97,11 +83,11 @@ public class Constants
     public static final String REGISTER_URL = "/register";
     public static final String NEWSERVER_URL = "/newserver";
     public static final String FILEMANAGER_URL = "/filemanager";
-    public static final String SERVER_URL = "/server?server=";
+    public static final String SERVER_URL = "/server";
+    public static final String SERVER_ID_URL = "/server?server=";
     public static final String FAVOTICON = "favicon.ico";
-    public static final String MC_VERIONS_URL = "https://s3.amazonaws.com/Minecraft.Download/versions/versions.json";
+    public static final String MC_VERIONS_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
     public static final String FORGE_VERIONS_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
-    public static final String MC_SERVER_JAR_URL = "https://s3.amazonaws.com/Minecraft.Download/versions/%ID%/minecraft_server.%ID%.jar";
     public static final String FORGE_INSTALLER_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
     public static final String VERSION_CHECKER_URL = "https://jenkins.dries007.net/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
     /*
@@ -128,46 +114,11 @@ public class Constants
     public static final Pattern USERNAME_PATTERN = Pattern.compile("^[\\w-]+$");
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(?:\\.\\d+)+");
     public static final String SERVER_START_ARGS_BLACKLIST_PATTERNS[] = {"-Xms", "-Xmx", "-XX:MaxPermSize"};
-    public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return FilenameUtils.getExtension(name).equals("jar");
-        }
-    };
-    public final static FilenameFilter ACCEPT_ALL_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return !name.equalsIgnoreCase("eula.txt");
-        }
-    };
-    public final static FilenameFilter ACCEPT_NONE_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return false;
-        }
-    };
-    public final static FilenameFilter ACCEPT_FORGE_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return name.startsWith("forge") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
-        }
-    };
-    public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = new FilenameFilter()
-    {
-        @Override
-        public boolean accept(File dir, String name)
-        {
-            return name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
-        }
-    };
+    public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = (dir, name) -> FilenameUtils.getExtension(name).equals("jar");
+    public final static FilenameFilter ACCEPT_ALL_FILTER = (dir, name) -> !name.equalsIgnoreCase("eula.txt");
+    public final static FilenameFilter ACCEPT_NONE_FILTER = (dir, name) -> false;
+    public final static FilenameFilter ACCEPT_FORGE_FILTER = (dir, name) -> (name.startsWith("forge") || name.startsWith("FTBserver")) && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
+    public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = (dir, name) -> name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
     /*
      * JSON constants
      */

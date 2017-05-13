@@ -36,6 +36,7 @@ import org.glassfish.grizzly.http.server.Request;
 import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.util.Parameters;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -94,6 +95,10 @@ public class PostHandler
                     return doNewserver(data, uri, request, response);
                 case FILEMANAGER_URL:
                     return doFilemanager(data, uri, request, response);
+                case SERVER_URL:
+                    return doServer(data, uri, request, response);
+                default:
+                    Main.LOGGER.warn("Unhandled Post on {}", uri);
             }
         }
         catch (RuntimeException e)
@@ -103,7 +108,7 @@ public class PostHandler
         return uri;
     }
 
-    private String doFilemanager(final HashMap<String, Object> data, final String uri, final Request request, final Response response) throws IOException
+    private String doServer(final HashMap<String, Object> data, final String uri, final Request request, final Response response) throws IOException
     {
         User user = (User) data.get(USER);
 
@@ -111,12 +116,14 @@ public class PostHandler
         final Server server = Settings.getServerByName(request.getParameter(SERVER));
         if (server == null || !server.canUserControl(user)) throw new PostException("Server doesn't exist or user doesn't have permission to edit the server.");
         data.put(SERVER, server);
-        final FileManager fileManager = new FileManager(server, request.getParameter(FILE));
-        data.put("fm", fileManager);
+        upload(server.getFolder(), request, data, uri, response);
+        return null;
+    }
 
+    private void upload(File folder, Request request, HashMap<String, Object> data, String uri, Response response)
+    {
         response.suspend();
-
-        final UploaderMultipartHandler uploader = new UploaderMultipartHandler(fileManager);
+        final UploaderMultipartHandler uploader = new UploaderMultipartHandler(folder);
         MultipartScanner.scan(request, uploader, new EmptyCompletionHandler<Request>()
         {
             @Override
@@ -148,12 +155,24 @@ public class PostHandler
             @Override
             public void failed(Throwable throwable)
             {
-                Main.LOGGER.warn("Upload failed to {}", fileManager.getFile().getAbsolutePath());
+                Main.LOGGER.warn("Upload failed to {}", folder.getAbsolutePath());
                 throwable.printStackTrace();
                 response.resume();
             }
         });
+    }
 
+    private String doFilemanager(final HashMap<String, Object> data, final String uri, final Request request, final Response response) throws IOException
+    {
+        User user = (User) data.get(USER);
+
+        if (user == null) throw new PostException("Not logged in.");
+        final Server server = Settings.getServerByName(request.getParameter(SERVER));
+        if (server == null || !server.canUserControl(user)) throw new PostException("Server doesn't exist or user doesn't have permission to edit the server.");
+        data.put(SERVER, server);
+        final FileManager fileManager = new FileManager(server, request.getParameter(FILE));
+        data.put("fm", fileManager);
+        upload(fileManager.getFile(), request, data, uri, response);
         return null;
     }
 
@@ -216,7 +235,7 @@ public class PostHandler
 
         try
         {
-            response.sendRedirect(Constants.SERVER_URL + ID);
+            response.sendRedirect(Constants.SERVER_ID_URL + ID);
         }
         catch (IOException e)
         {

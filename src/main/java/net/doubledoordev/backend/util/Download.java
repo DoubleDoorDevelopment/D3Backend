@@ -50,7 +50,7 @@ public class Download implements Runnable
         this.url = url;
         size = -1;
         downloaded = 0;
-        status = Status.Downloading;
+        status = Status.DOWNLOADING;
 
         // Begin the download.
         download();
@@ -88,7 +88,7 @@ public class Download implements Runnable
     // Mark this download as having an error.
     private void error(String message)
     {
-        status = Status.Error;
+        status = Status.ERROR;
         this.message = message;
     }
 
@@ -150,7 +150,7 @@ public class Download implements Runnable
             file.seek(downloaded);
 
             stream = connection.getInputStream();
-            while (status == Status.Downloading)
+            while (status == Status.DOWNLOADING)
             {
                 // Size buffer according to how much of the file is left to download.
                 byte buffer[];
@@ -173,9 +173,9 @@ public class Download implements Runnable
             }
 
             // Change status to complete if this point was reached because downloading has finished.
-            if (status == Status.Downloading)
+            if (status == Status.DOWNLOADING)
             {
-                status = Status.Complete;
+                status = Status.COMPLETE;
             }
         }
         catch (Exception e)
@@ -211,8 +211,13 @@ public class Download implements Runnable
         }
     }
 
-    public static enum Status
+    public void setSize(long size)
     {
-        Downloading, Complete, Error
+        this.size = size;
+    }
+
+    public enum Status
+    {
+        DOWNLOADING, COMPLETE, ERROR
     }
 }

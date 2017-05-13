@@ -41,7 +41,7 @@ public class WebSocketHelper
         JsonObject root = new JsonObject();
 
         root.addProperty(STATUS, ERROR);
-        root.addProperty(MESSAGE, message);
+        root.addProperty(DATA, message);
 
         socket.send(root.toString());
     }

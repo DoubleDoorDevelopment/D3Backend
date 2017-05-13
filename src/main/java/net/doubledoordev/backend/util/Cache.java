@@ -30,7 +30,9 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.*;
@@ -165,55 +167,57 @@ public class Cache extends TimerTask
             }
         }
     };
-    private static final ArrayList<String> CASHED_MC_VERSIONS = new ArrayList<>();
-    private static final Runnable MC_VERSIONS_DOWNLOADER = new Runnable()
+    private static final Map<String, URL> CASHED_MC_VERSIONS = new LinkedHashMap<>();
+    private static final Runnable MC_VERSIONS_DOWNLOADER = () ->
     {
-        @Override
-        public void run()
+        JsonObject versionList;
+        try
         {
-            try
-            {
-                JsonObject versionList = Constants.JSONPARSER.parse(IOUtils.toString(new URL(Constants.MC_VERIONS_URL).openStream())).getAsJsonObject();
-                JsonObject latest = versionList.getAsJsonObject("latest");
-                synchronized (CASHED_MC_VERSIONS)
-                {
-                    CASHED_MC_VERSIONS.clear();
-                    CASHED_MC_VERSIONS.add(latest.get("snapshot").getAsString());
-                    CASHED_MC_VERSIONS.add(latest.get("release").getAsString());
-                    for (JsonElement element : versionList.getAsJsonArray("versions"))
-                    {
-                        JsonObject o = element.getAsJsonObject();
-                        if (o.get("type").getAsString().equals("release") || o.get("type").getAsString().equals("snapshot")) if (!CASHED_MC_VERSIONS.contains(o.get("id").getAsString())) CASHED_MC_VERSIONS.add(o.get("id").getAsString());
-                    }
-                }
-            }
-            catch (IOException ignored)
-            {
-            }
+            Reader sr = new InputStreamReader(new URL(Constants.MC_VERIONS_URL).openStream());
+            versionList = Constants.JSONPARSER.parse(sr).getAsJsonObject();
+            sr.close();
         }
-    };
-    private static final Runnable SIZE_COUNTER = new Runnable()
-    {
-        @Override
-        public void run()
+        catch (IOException e)
         {
-            for (Server server : Settings.SETTINGS.servers.values())
+            e.printStackTrace();
+            return;
+        }
+        synchronized (CASHED_MC_VERSIONS)
+        {
+            CASHED_MC_VERSIONS.clear();
+            for (JsonElement element : versionList.getAsJsonArray("versions"))
             {
-                if (server.getFolder() == null || server.getBackupFolder() == null) continue;
+                JsonObject o = element.getAsJsonObject();
+                if (!o.get("type").getAsString().equals("release") && !o.get("type").getAsString().equals("snapshot")) continue;
                 try
                 {
-                    SizeCounter sizeCounter = new SizeCounter();
-                    if (server.getFolder().exists()) Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
-                    server.size[0] = sizeCounter.getSizeInMB();
-                    sizeCounter = new SizeCounter();
-                    if (server.getBackupFolder().exists()) Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
-                    server.size[1] = sizeCounter.getSizeInMB();
-                    server.size[2] = server.size[0] + server.size[1];
+                    CASHED_MC_VERSIONS.put(o.get("id").getAsString(), new URL(o.get("url").getAsString()));
                 }
-                catch (IOException e)
+                catch (MalformedURLException e)
                 {
                     e.printStackTrace();
                 }
+            }
+        }
+    };
+    private static final Runnable SIZE_COUNTER = () ->
+    {
+        for (Server server : Settings.SETTINGS.servers.values())
+        {
+            if (server.getFolder() == null || server.getBackupFolder() == null) continue;
+            try
+            {
+                SizeCounter sizeCounter = new SizeCounter();
+                if (server.getFolder().exists()) Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
+                server.size[0] = sizeCounter.getSizeInMB();
+                sizeCounter = new SizeCounter();
+                if (server.getBackupFolder().exists()) Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
+                server.size[1] = sizeCounter.getSizeInMB();
+                server.size[2] = server.size[0] + server.size[1];
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
             }
         }
     };
@@ -234,36 +238,32 @@ public class Cache extends TimerTask
      */
     private static boolean hasUpdate = false;
     private static String updatedVersion = "";
-    private static final Runnable UPDATE_CHECKER = new Runnable()
+    private static final Runnable UPDATE_CHECKER = () ->
     {
-        @Override
-        public void run()
+        try
         {
-            try
-            {
-                InputStream inputStream = new URL(VERSION_CHECKER_URL).openStream();
-                JsonObject object = JSONPARSER.parse(new InputStreamReader(inputStream)).getAsJsonObject().getAsJsonObject("lastStableBuild");
+            InputStream inputStream = new URL(VERSION_CHECKER_URL).openStream();
+            JsonObject object = JSONPARSER.parse(new InputStreamReader(inputStream)).getAsJsonObject().getAsJsonObject("lastStableBuild");
 
-                if (!object.get("number").getAsString().equalsIgnoreCase(Main.build))
+            if (!object.get("number").getAsString().equalsIgnoreCase(Main.build))
+            {
+                hasUpdate = true;
+                JsonArray artifacts = object.getAsJsonArray("artifacts");
+                for (int i = 0; i < artifacts.size(); i++)
                 {
-                    hasUpdate = true;
-                    JsonArray artifacts = object.getAsJsonArray("artifacts");
-                    for (int i = 0; i < artifacts.size(); i++)
-                    {
-                        Matcher matcher = Constants.VERSION_PATTERN.matcher(artifacts.get(i).getAsJsonObject().get("fileName").getAsString());
-                        if (!matcher.find()) continue;
-                        updatedVersion = matcher.group();
-                        Main.LOGGER.warn("Version out of date! New version: " + updatedVersion);
-                        break;
-                    }
+                    Matcher matcher = Constants.VERSION_PATTERN.matcher(artifacts.get(i).getAsJsonObject().get("fileName").getAsString());
+                    if (!matcher.find()) continue;
+                    updatedVersion = matcher.group();
+                    Main.LOGGER.warn("Version out of date! New version: " + updatedVersion);
+                    break;
                 }
+            }
 
-                inputStream.close();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
+            inputStream.close();
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
         }
     };
     /**
@@ -286,7 +286,7 @@ public class Cache extends TimerTask
         return FORGE_NAME_VERSION_MAP.get(name);
     }
 
-    public static Collection<String> getMcVersions()
+    public static Map<String, URL> getMcVersions()
     {
         return CASHED_MC_VERSIONS;
     }
@@ -342,23 +342,19 @@ public class Cache extends TimerTask
             lastForgeVersions = now;
         }
 
-        new Thread(new Runnable()
+        new Thread(() ->
         {
-            @Override
-            public void run()
+            for (Server server : Settings.SETTINGS.servers.values())
             {
-                for (Server server : Settings.SETTINGS.servers.values())
+                server.getRestartingInfo().run(server);
+                if (!server.getOnline()) continue;
+                try
                 {
-                    server.getRestartingInfo().run(server);
-                    if (!server.getOnline()) continue;
-                    try
-                    {
-                        server.renewQuery();
-                    }
-                    catch (Exception e)
-                    {
-                        Main.LOGGER.error("Exception while doing queryRenew on server: " + server.getID(), e);
-                    }
+                    server.renewQuery();
+                }
+                catch (Exception e)
+                {
+                    Main.LOGGER.error("Exception while doing queryRenew on server: " + server.getID(), e);
                 }
             }
         }, "cache-rConAndQuery").start();
