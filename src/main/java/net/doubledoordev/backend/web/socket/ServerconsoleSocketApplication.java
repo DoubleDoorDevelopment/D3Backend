@@ -63,6 +63,16 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
     }
 
     @Override
+    public void onConnect(WebSocket socket)
+    {
+        super.onConnect(socket);
+        for (String line : ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).lastConsoleLines)
+        {
+            WebSocketHelper.sendData(socket, line);
+        }
+    }
+
+    @Override
     public void onMessage(WebSocket socket, String text)
     {
         ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).sendCmd(text);

@@ -56,20 +56,14 @@ public abstract class ServerWebSocketApplication extends WebSocketApplication
         }
         ((DefaultWebSocket) socket).getUpgradeRequest().setAttribute(USER, session.getAttribute(USER));
         String[] serverName = ((DefaultWebSocket) socket).getUpgradeRequest().getPathInfo().substring(1).split("/");
-        if (Strings.isNullOrEmpty(serverName[0]) || Strings.isNullOrEmpty(serverName[0]))
-        {
-            WebSocketHelper.sendError(socket, "No valid server.");
-            socket.close();
-            return;
-        }
         Server server = Settings.getServerByName(serverName[0]);
-        if (server == null)
+        if (Strings.isNullOrEmpty(serverName[0]) || server == null)
         {
             WebSocketHelper.sendError(socket, "No valid server.");
             socket.close();
             return;
         }
-        else if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+        if (!server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
         {
             WebSocketHelper.sendError(socket, "You have no rights to this server.");
             socket.close();

@@ -19,22 +19,63 @@
 package net.doubledoordev.backend;
 
 import net.doubledoordev.backend.server.query.MCQuery;
-import net.doubledoordev.backend.server.query.QueryResponse;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class TestMain
 {
     public static void main(String[] args) throws Exception
     {
-        MCQuery query = new MCQuery("vps2.dries007.net", 25569);
-        QueryResponse queryResponse;
-        while (true)
+//        testMCQuery();
+        testTaskStuff();
+    }
+
+    private static void testTaskStuff()
+    {
+        Timer timer = new Timer();
+
+//        timer.schedule();
+
+//        Calendar now = Calendar.getInstance();
+        Date now = Date.from(Instant.now());
+//        Instant now = Instant.now();
+
+
+        timer.scheduleAtFixedRate(new Task(), 0, 1000 * 10); // 10 sec
+    }
+
+    private static class Task extends TimerTask
+    {
+        @Override
+        public void run()
         {
-            queryResponse = query.fullStat();
-            if (queryResponse != null) System.out.println(queryResponse.toString());
-            else System.out.println("null");
-            synchronized (Thread.currentThread())
+            System.out.println("Task run()");
+
+            Calendar now = Calendar.getInstance();
+        }
+    }
+
+    private static void testMCQuery() throws IOException
+    {
+        System.out.println(new MCQuery("vps2.dries007.net", 25501).fullStat());
+    }
+
+    private static void sleep1sec()
+    {
+        synchronized (Thread.currentThread())
+        {
+            try
             {
                 Thread.currentThread().wait(1000);
+            }
+            catch (InterruptedException ignored)
+            {
+
             }
         }
     }

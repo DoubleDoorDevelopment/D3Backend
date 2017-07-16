@@ -18,6 +18,7 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.common.collect.EvictingQueue;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.Main;
@@ -70,6 +71,7 @@ public class Server
      */
     public int[] size = new int[3];
     public QueryResponse cachedResponse;
+    public EvictingQueue<String> lastConsoleLines = EvictingQueue.create(25);
 
     @Expose
     private String ID;
@@ -1039,6 +1041,7 @@ public class Server
     {
         line = Helper.stripColor(line);
         logger.info(line);
+        lastConsoleLines.add(line);
         ServerconsoleSocketApplication.sendLine(this, line);
     }
 
@@ -1047,6 +1050,7 @@ public class Server
         logger.catching(e);
         StringWriter error = new StringWriter();
         e.printStackTrace(new PrintWriter(error));
+        lastConsoleLines.add(error.toString());
         ServerconsoleSocketApplication.sendLine(this, error.toString());
     }
 
