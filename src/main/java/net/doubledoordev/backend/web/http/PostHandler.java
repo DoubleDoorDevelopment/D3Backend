@@ -64,7 +64,6 @@ public class PostHandler
     private static final String ARE_YOU_HUMAN = "areyouhuman";
     private static final String RAM_MIN = "RAMmin";
     private static final String RAM_MAX = "RAMmax";
-    private static final String PERMGEN = "PermGen";
     private static final String EXTRA_JAVA_PARM = "extraJavaParameters";
     private static final String EXTRA_MC_PARM = "extraMCParameters";
     private static final String ADMINS = "admins";
@@ -188,7 +187,12 @@ public class PostHandler
         if (user.getMaxServers() != -1 && user.getServerCount() >= user.getMaxServers()) throw new PostException("Max server count reached.");
 
         String owner = user.getGroup() == Group.ADMIN && names.contains(OWNER) ? parameters.getParameter(OWNER) : user.getUsername();
-        String ID = owner + "_" + parameters.getParameter(NAME);
+
+        String ID = parameters.getParameter(NAME);
+        if (ID.length() > 16) throw new PostException("Name can only be 16 characters long.");
+        if (!SERVERNAME_PATTERN.matcher(ID).matches()) throw new PostException("Name contains illegal characters.");
+
+        ID = owner + "_" + ID;
         if (Settings.getServerByName(ID) != null) throw new PostException("Duplicate server ID");
 
         Server server = new Server(ID, owner);
@@ -205,10 +209,6 @@ public class PostHandler
         if (ramMax < 2 || ramMin < 2) throw new PostException("RAM settings invalid.");
         server.getJvmData().ramMin = ramMin;
         server.getJvmData().ramMax = ramMax;
-
-        int permGen = Integer.parseInt(parameters.getParameter(PERMGEN));
-        if (permGen < 2) throw new PostException("PermGen settings invalid.");
-        server.getJvmData().permGen = permGen;
 
         if (parameters.getParameter(EXTRA_JAVA_PARM).trim().length() != 0) server.getJvmData().extraJavaParameters = parameters.getParameter(EXTRA_JAVA_PARM).trim();
         if (parameters.getParameter(EXTRA_MC_PARM).trim().length() != 0) server.getJvmData().extraMCParameters = parameters.getParameter(EXTRA_MC_PARM).trim();
@@ -257,6 +257,7 @@ public class PostHandler
             if (!admin && !parameters.getParameter(ARE_YOU_HUMAN).trim().equals("4")) throw new PostException("You failed the human test...");
             User user = Settings.getUserByName(username);
             if (user != null) throw new PostException("Username taken.");
+            if (username.length() > 15) throw new PostException("Username too long");
             if (!USERNAME_PATTERN.matcher(username).matches()) throw new PostException("Username contains invalid chars.<br>Only a-Z, 0-9, _ and - please.");
             try
             {

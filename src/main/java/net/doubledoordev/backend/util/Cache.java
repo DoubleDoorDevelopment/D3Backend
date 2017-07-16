@@ -41,15 +41,27 @@ import java.util.regex.Matcher;
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
- * Contains static Runnables that are used often
+ * Contains static TimerTasks that are used often
  *
  * @author Dries007
  */
-public class Cache extends TimerTask
+public class Cache
 {
+    private static final long REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24; // 24 hours
+    private static final long LONG_CACHE_TIMEOUT = 1000 * 60 * 60; // 1 hour
+    private static final long MEDIUM_CACHE_TIMEOUT = 1000 * 60; // 1 minute
+    private static final long SHORT_CACHE_TIMEOUT = 1000 * 10; // 10 seconds
+
+    private Cache() { throw new AssertionError(); }
+
+    /**
+     * isDaemon = true, so cache won't keeps the JVM running, even if for some reason the stop function doesn't get called.
+     */
+    private static final Timer TIMER = new Timer("Cache-Timer", true);
+
     private static final int FORGE_MAP_CAPACITY = 2000;
     private static final LinkedHashMap<String, String> FORGE_NAME_VERSION_MAP = new LinkedHashMap<>(FORGE_MAP_CAPACITY);
-    private static final Runnable FORGE_VERSIONS_DOWNLOADER = new Runnable()
+    private static final TimerTask FORGE_VERSIONS_DOWNLOADER = new TimerTask()
     {
         private boolean hasInstaller(JsonObject object)
         {
@@ -168,112 +180,176 @@ public class Cache extends TimerTask
         }
     };
     private static final Map<String, URL> CASHED_MC_VERSIONS = new LinkedHashMap<>();
-    private static final Runnable MC_VERSIONS_DOWNLOADER = () ->
+    private static final TimerTask MC_VERSIONS_DOWNLOADER = new TimerTask()
     {
-        JsonObject versionList;
-        try
+        @Override
+        public void run()
         {
-            Reader sr = new InputStreamReader(new URL(Constants.MC_VERIONS_URL).openStream());
-            versionList = Constants.JSONPARSER.parse(sr).getAsJsonObject();
-            sr.close();
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return;
-        }
-        synchronized (CASHED_MC_VERSIONS)
-        {
-            CASHED_MC_VERSIONS.clear();
-            for (JsonElement element : versionList.getAsJsonArray("versions"))
+            JsonObject versionList;
+            try
             {
-                JsonObject o = element.getAsJsonObject();
-                if (!o.get("type").getAsString().equals("release") && !o.get("type").getAsString().equals("snapshot")) continue;
+                Reader sr = new InputStreamReader(new URL(Constants.MC_VERIONS_URL).openStream());
+                versionList = Constants.JSONPARSER.parse(sr).getAsJsonObject();
+                sr.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                return;
+            }
+            synchronized (CASHED_MC_VERSIONS)
+            {
+                CASHED_MC_VERSIONS.clear();
+                for (JsonElement element : versionList.getAsJsonArray("versions"))
+                {
+                    JsonObject o = element.getAsJsonObject();
+                    if (!o.get("type").getAsString().equals("release") && !o.get("type").getAsString().equals("snapshot"))
+                        continue;
+                    try
+                    {
+                        CASHED_MC_VERSIONS.put(o.get("id").getAsString(), new URL(o.get("url").getAsString()));
+                    }
+                    catch (MalformedURLException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    };
+    private static final TimerTask SIZE_COUNTER = new TimerTask()
+    {
+        @Override
+        public void run()
+        {
+            for (Server server : Settings.SETTINGS.servers.values())
+            {
+                if (server.getFolder() == null || server.getBackupFolder() == null) continue;
                 try
                 {
-                    CASHED_MC_VERSIONS.put(o.get("id").getAsString(), new URL(o.get("url").getAsString()));
+                    SizeCounter sizeCounter = new SizeCounter();
+                    if (server.getFolder().exists()) Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
+                    server.size[0] = sizeCounter.getSizeInMB();
+                    sizeCounter = new SizeCounter();
+                    if (server.getBackupFolder().exists())
+                        Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
+                    server.size[1] = sizeCounter.getSizeInMB();
+                    server.size[2] = server.size[0] + server.size[1];
                 }
-                catch (MalformedURLException e)
+                catch (IOException e)
                 {
                     e.printStackTrace();
                 }
             }
         }
     };
-    private static final Runnable SIZE_COUNTER = () ->
+    private static boolean hasUpdate = false;
+    private static String updatedVersion = "";
+    private static final TimerTask UPDATE_CHECKER = new TimerTask()
     {
-        for (Server server : Settings.SETTINGS.servers.values())
+        @Override
+        public void run()
         {
-            if (server.getFolder() == null || server.getBackupFolder() == null) continue;
             try
             {
-                SizeCounter sizeCounter = new SizeCounter();
-                if (server.getFolder().exists()) Files.walkFileTree(server.getFolder().toPath(), sizeCounter);
-                server.size[0] = sizeCounter.getSizeInMB();
-                sizeCounter = new SizeCounter();
-                if (server.getBackupFolder().exists()) Files.walkFileTree(server.getBackupFolder().toPath(), sizeCounter);
-                server.size[1] = sizeCounter.getSizeInMB();
-                server.size[2] = server.size[0] + server.size[1];
+                InputStream inputStream = new URL(VERSION_CHECKER_URL).openStream();
+                JsonObject object = JSONPARSER.parse(new InputStreamReader(inputStream)).getAsJsonObject().getAsJsonObject("lastStableBuild");
+
+                if (!object.get("number").getAsString().equalsIgnoreCase(Main.build))
+                {
+                    hasUpdate = true;
+                    JsonArray artifacts = object.getAsJsonArray("artifacts");
+                    for (int i = 0; i < artifacts.size(); i++)
+                    {
+                        Matcher matcher = Constants.VERSION_PATTERN.matcher(artifacts.get(i).getAsJsonObject().get("fileName").getAsString());
+                        if (!matcher.find()) continue;
+                        updatedVersion = matcher.group();
+                        Main.LOGGER.warn("Version out of date! New version: " + updatedVersion);
+                        break;
+                    }
+                }
+
+                inputStream.close();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    private static final TimerTask SERVER_INFO_CHECKER = new TimerTask()
+    {
+        @Override
+        public void run()
+        {
+            try
+            {
+                for (Server server : Settings.SETTINGS.servers.values())
+                {
+                    if (!server.getOnline())
+                    {
+                        server.cachedResponse = null;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            server.renewQuery();
+                        }
+                        catch (Exception e)
+                        {
+                            Main.LOGGER.error("Exception while doing queryRenew on server: " + server.getID(), e);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
+
+    public static void init()
+    {
+        if (FORGE_FILE.exists())
+        {
+            try
+            {
+                //noinspection unchecked
+                FORGE_NAME_VERSION_MAP.putAll(GSON.fromJson(FileUtils.readFileToString(FORGE_FILE), Map.class));
             }
             catch (IOException e)
             {
                 e.printStackTrace();
             }
         }
-    };
-    /**
-     * Forge version related things
-     */
-    private static long lastForgeVersions = 0L;
-    /**
-     * MC version related things
-     */
-    private static long lastMCVersions = 0L;
-    /**
-     * Size counter related things
-     */
-    private static long lastSize = 0L;
-    /**
-     *
-     */
-    private static boolean hasUpdate = false;
-    private static String updatedVersion = "";
-    private static final Runnable UPDATE_CHECKER = () ->
+
+        TIMER.scheduleAtFixedRate(UPDATE_CHECKER, 1000 * Constants.RANDOM.nextInt(300), REALLY_LONG_CACHE_TIMEOUT);
+        TIMER.scheduleAtFixedRate(MC_VERSIONS_DOWNLOADER, 1000 * Constants.RANDOM.nextInt(300), REALLY_LONG_CACHE_TIMEOUT);
+
+        TIMER.scheduleAtFixedRate(FORGE_VERSIONS_DOWNLOADER, 100 * Constants.RANDOM.nextInt(300), LONG_CACHE_TIMEOUT);
+
+        TIMER.scheduleAtFixedRate(SIZE_COUNTER, 10 * Constants.RANDOM.nextInt(300), MEDIUM_CACHE_TIMEOUT);
+
+        TIMER.scheduleAtFixedRate(SERVER_INFO_CHECKER, Constants.RANDOM.nextInt(300), SHORT_CACHE_TIMEOUT);
+    }
+
+    public static void stop()
     {
-        try
-        {
-            InputStream inputStream = new URL(VERSION_CHECKER_URL).openStream();
-            JsonObject object = JSONPARSER.parse(new InputStreamReader(inputStream)).getAsJsonObject().getAsJsonObject("lastStableBuild");
+        TIMER.cancel();
+        TIMER.purge();
+    }
 
-            if (!object.get("number").getAsString().equalsIgnoreCase(Main.build))
-            {
-                hasUpdate = true;
-                JsonArray artifacts = object.getAsJsonArray("artifacts");
-                for (int i = 0; i < artifacts.size(); i++)
-                {
-                    Matcher matcher = Constants.VERSION_PATTERN.matcher(artifacts.get(i).getAsJsonObject().get("fileName").getAsString());
-                    if (!matcher.find()) continue;
-                    updatedVersion = matcher.group();
-                    Main.LOGGER.warn("Version out of date! New version: " + updatedVersion);
-                    break;
-                }
-            }
-
-            inputStream.close();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    };
-    /**
-     * Timer related things
-     */
-    private static Cache instance;
-
-    private Cache()
+    public static void forceUpdateForge()
     {
+        new Thread(FORGE_VERSIONS_DOWNLOADER, "forced-forgeVersionDownloader").start();
+    }
 
+    public static void forceUpdateMC()
+    {
+        new Thread(MC_VERSIONS_DOWNLOADER, "forced-mcVersionDownloader").start();
     }
 
     public static Collection<String> getForgeNames()
@@ -299,74 +375,5 @@ public class Cache extends TimerTask
     public static String getUpdateVersion()
     {
         return updatedVersion;
-    }
-
-    public static void init()
-    {
-        if (instance != null) return;
-        instance = new Cache();
-        if (FORGE_FILE.exists())
-        {
-            try
-            {
-                //noinspection unchecked
-                FORGE_NAME_VERSION_MAP.putAll(GSON.fromJson(FileUtils.readFileToString(FORGE_FILE), Map.class));
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-        TIMER.scheduleAtFixedRate(instance, 0, SHORT_CACHE_TIMEOUT);
-    }
-
-    @Override
-    public void run()
-    {
-        long now = System.currentTimeMillis();
-
-        if (now - lastMCVersions > REALLY_LONG_CACHE_TIMEOUT)
-        {
-            new Thread(MC_VERSIONS_DOWNLOADER, "cache-mcVersionDownloader").start();
-            new Thread(UPDATE_CHECKER, "cache-updateChecking").start();
-            lastMCVersions = now;
-        }
-        if (now - lastSize > MEDIUM_CACHE_TIMEOUT)
-        {
-            new Thread(SIZE_COUNTER, "cache-sizeCounter").start();
-            lastSize = now;
-        }
-        if (now - lastForgeVersions > LONG_CACHE_TIMEOUT)
-        {
-            new Thread(FORGE_VERSIONS_DOWNLOADER, "cache-forgeVersionDownloader").start();
-            lastForgeVersions = now;
-        }
-
-        new Thread(() ->
-        {
-            for (Server server : Settings.SETTINGS.servers.values())
-            {
-                server.getRestartingInfo().run(server);
-                if (!server.getOnline()) continue;
-                try
-                {
-                    server.renewQuery();
-                }
-                catch (Exception e)
-                {
-                    Main.LOGGER.error("Exception while doing queryRenew on server: " + server.getID(), e);
-                }
-            }
-        }, "cache-rConAndQuery").start();
-    }
-
-    public static void forceUpdateForge()
-    {
-        new Thread(FORGE_VERSIONS_DOWNLOADER, "forced-forgeVersionDownloader").start();
-    }
-
-    public static void forceUpdateMC()
-    {
-        new Thread(MC_VERSIONS_DOWNLOADER, "forced-mcVersionDownloader").start();
     }
 }

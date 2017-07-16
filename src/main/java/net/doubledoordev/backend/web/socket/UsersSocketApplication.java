@@ -19,13 +19,10 @@
 package net.doubledoordev.backend.web.socket;
 
 import com.google.common.base.Strings;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
-import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import org.glassfish.grizzly.http.server.DefaultSessionManager;
 import org.glassfish.grizzly.http.server.Session;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
@@ -33,8 +30,6 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
@@ -49,14 +44,14 @@ public class UsersSocketApplication extends WebSocketApplication
 
     private UsersSocketApplication()
     {
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        ServerWebSocketApplication.TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()
             {
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
-        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+        }, ServerWebSocketApplication.SOCKET_PING_TIME, ServerWebSocketApplication.SOCKET_PING_TIME);
     }
 
     public static void register()
@@ -68,24 +63,7 @@ public class UsersSocketApplication extends WebSocketApplication
     public void onMessage(WebSocket socket, String text)
     {
         User user = (User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER);
-        try
-        {
-            JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
-            String name = object.get("method").getAsString();
-            ArrayList<String> args = new ArrayList<>();
-            if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
-            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, user, name, args);
-            if (methodCaller == null)
-            {
-                WebSocketHelper.sendOk(socket);
-                socket.close();
-            }
-        }
-        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
-        {
-            WebSocketHelper.sendError(socket, e);
-            socket.close();
-        }
+        Helper.doWebMethodCall(socket, text, user);
     }
 
     @Override

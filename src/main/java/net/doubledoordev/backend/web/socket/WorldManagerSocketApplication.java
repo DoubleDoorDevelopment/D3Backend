@@ -18,19 +18,15 @@
 
 package net.doubledoordev.backend.web.socket;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.server.WorldManager;
 import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.WebSocketHelper;
-import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
-import java.util.ArrayList;
 import java.util.TimerTask;
 
 import static net.doubledoordev.backend.util.Constants.*;
@@ -45,7 +41,7 @@ public class WorldManagerSocketApplication extends ServerWebSocketApplication
 
     private WorldManagerSocketApplication()
     {
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()
@@ -57,7 +53,7 @@ public class WorldManagerSocketApplication extends ServerWebSocketApplication
 
     public static void register()
     {
-        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
+//        WebSocketEngine.getEngine().register(SOCKET_CONTEXT, URL_PATTERN, APPLICATION);
     }
 
     @Override
@@ -78,23 +74,6 @@ public class WorldManagerSocketApplication extends ServerWebSocketApplication
             socket.close();
             return;
         }
-        try
-        {
-            JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
-            String name = object.get("method").getAsString();
-            ArrayList<String> args = new ArrayList<>();
-            if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
-            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, worldManager, name, args);
-            if (methodCaller == null)
-            {
-                WebSocketHelper.sendOk(socket);
-                socket.close();
-            }
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            WebSocketHelper.sendError(socket, e);
-        }
+        Helper.doWebMethodCall(socket, text, worldManager);
     }
 }

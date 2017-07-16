@@ -16,17 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package net.doubledoordev.backend.util.exceptions;
+package net.doubledoordev.backend.util;
 
-import java.io.IOException;
+import com.google.gson.JsonObject;
 
 /**
  * @author Dries007
  */
-public class OutOfPortsException extends IOException
+public interface IUpdateFromJson
 {
-    public OutOfPortsException()
-    {
-        super("We have run out of available ports...");
-    }
+    void updateFrom(JsonObject json);
 }

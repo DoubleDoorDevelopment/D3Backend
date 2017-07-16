@@ -22,6 +22,8 @@ import com.flowpowered.nbt.Tag;
 import com.flowpowered.nbt.stream.NBTInputStream;
 import com.flowpowered.nbt.stream.NBTOutputStream;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.server.Server;
@@ -38,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static net.doubledoordev.backend.util.Constants.JSONPARSER;
-import static net.doubledoordev.backend.util.Constants.RANDOM;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
 /**
@@ -50,7 +51,7 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 @SuppressWarnings("UnusedDeclaration")
 public class Helper
 {
-    public static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
+    private static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
     private static final SimpleDateFormat BAN_SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
@@ -103,7 +104,7 @@ public class Helper
 
         final char[] buf = new char[length];
 
-        for (int idx = 0; idx < buf.length; ++idx) buf[idx] = symbols[RANDOM.nextInt(symbols.length)];
+        for (int idx = 0; idx < buf.length; ++idx) buf[idx] = symbols[Constants.RANDOM.nextInt(symbols.length)];
         return buf;
     }
 
@@ -373,5 +374,27 @@ public class Helper
             }
         }
         throw new IOException("Redirect limit (" + MAX_REDIRECTS + ") exceeded on url: " + url);
+    }
+
+    public static void doWebMethodCall(WebSocket socket, String text, Object o)
+    {
+        try
+        {
+            JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
+            String name = object.get("method").getAsString();
+            ArrayList<String> args = new ArrayList<>();
+            if (object.has("args")) for (JsonElement arg : object.getAsJsonArray("args")) args.add(arg.getAsString());
+            IMethodCaller methodCaller = Helper.invokeWithRefectionMagic(socket, o, name, args);
+            if (methodCaller == null)
+            {
+                WebSocketHelper.sendOk(socket);
+                socket.close();
+            }
+        }
+        catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException e)
+        {
+            WebSocketHelper.sendError(socket, e);
+            socket.close();
+        }
     }
 }

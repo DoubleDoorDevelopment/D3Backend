@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.TimerTask;
 
 /**
- * todo: reimplement
+ * TODO: fix
  * @author Dries007
  */
 public class BackupTask extends TimerTask

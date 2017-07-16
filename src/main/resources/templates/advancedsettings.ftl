@@ -10,7 +10,8 @@
                 <h3 class="panel-title" style="text-align: center;">Restart info</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <p>Last autorestart: ${restartInfo.getLastRestart("YYYY-MM-dd hh:mm:ss")}</p>
+                <p>Last Auto Restart: ${restartInfo.getLastRestart("YYYY-MM-dd hh:mm:ss")}</p>
+                <p>Next Auto Restart: ${restartInfo.getNextRestart("YYYY-MM-dd hh:mm:ss")}</p>
 
                 <div class="form-group">
                     <label>
@@ -18,28 +19,6 @@
                     </label>
                     <span for="RestartingInfo_autoStart" class="help-block">Start the server when the backend starts.</span>
                 </div>
-                <!--
-                <div class="form-group">
-                    <label for="RestartingInfo_globalTimeout">Global Restart Timout</label>
-
-                    <div class="input-group">
-                        <input id="RestartingInfo_globalTimeout" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
-
-                        <div class="input-group-addon">hours</div>
-                    </div>
-                    <span for="RestartingInfo_globalTimeout" class="help-block">Minimun time inbetween automated restarts.</span>
-                </div>
-                <div class="form-group">
-                    <label for="RestartingInfo_whenEmptyTimeout">Timout when empty</label>
-
-                    <div class="input-group">
-                        <input id="RestartingInfo_whenEmptyTimeout" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
-
-                        <div class="input-group-addon">minutes</div>
-                    </div>
-                    <span for="RestartingInfo_whenEmptyTimeout" class="help-block">If not -1, the server will restart x minutes after the last person leaves.</span>
-                </div>
-                -->
                 <div class="form-group">
                     <label>
                         <input id="RestartingInfo_enableRestartSchedule" type="checkbox"> Use a reboot schedule
@@ -101,15 +80,6 @@
                     <div class="input-group">
                         <div class="input-group-addon">Max:</div>
                         <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
-
-                        <div class="input-group-addon">MB</div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="JvmData_permGen">Server permgen</label>
-
-                    <div class="input-group col-sm-6 col-sm-offset-3">
-                        <input id="JvmData_permGen" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
 
                         <div class="input-group-addon">MB</div>
                     </div>

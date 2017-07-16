@@ -41,14 +41,14 @@ public class ConsoleSocketApplication extends WebSocketApplication
 
     private ConsoleSocketApplication()
     {
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        ServerWebSocketApplication.TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()
             {
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
-        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+        }, ServerWebSocketApplication.SOCKET_PING_TIME, ServerWebSocketApplication.SOCKET_PING_TIME);
     }
 
     public static void register()

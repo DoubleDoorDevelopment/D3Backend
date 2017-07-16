@@ -6,11 +6,12 @@
 <h1>World Manager
     <small><a href="/server?server=${server.ID?js_string}">${server.ID?js_string}</a> <span id="online"></span></small>
 </h1>
-<!-- TODO
+
 <p>
-    <b>None of the buttons on this page work as the socket connection handler hasn't been ported to the new version.</b><br>
-    Also, extra functionality is to be added.
-</p> -->
+    <b>Broken.</b><br>
+</p>
+
+<#--
 <div class="panel panel-info">
     <div class="panel-heading">
         <h3 class="panel-title" style="text-align: center;">World information</h3>
@@ -57,7 +58,6 @@
     </div>
 </#list>
 </div>
-<!-- Modal -->
 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -115,4 +115,5 @@
         document.getElementById("modal-log").innerHTML += data + "\n";
     }
 </script>
+-->
 <#include "footer.ftl">

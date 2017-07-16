@@ -61,18 +61,10 @@ public class Constants
     public static final String DIM = "DIM";
     public static final String OVERWORLD = "Overworld";
     public static final String FORGE_USER_AGENT = "Mozilla/5.0 (Windows; U; Windows NT 6.0; en-US; rv:1.9.1.2) Gecko/20090729 Firefox/3.5.2 (.NET CLR 3.5.30729)";
-    /*
-     * FilenameFilter constants
-     */
-    public final static FilenameFilter NOT_DIM_FILTER = (dir, name) -> !name.startsWith(DIM);
-    public final static FilenameFilter DIM_ONLY_FILTER = (dir, name) -> name.startsWith(DIM);
     public static final String RESTARTING_INFO = "RestartingInfo";
     public static final String JVM_DATA = "JvmData";
     public static final String TEMPLATE_EXTENSION = ".ftl";
     public static final String ERROR_TEMPLATE = "error.ftl";
-    /*
-     * URL and PATH constants
-     */
     public static final String SLASH_STR = "/";
     public static final String STATIC_PATH = "/static/";
     public static final String TEMPLATES_PATH = "/templates/";
@@ -90,9 +82,16 @@ public class Constants
     public static final String FORGE_VERIONS_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/json";
     public static final String FORGE_INSTALLER_URL = "http://files.minecraftforge.net/maven/net/minecraftforge/forge/%ID%/forge-%ID%-installer.jar";
     public static final String VERSION_CHECKER_URL = "https://jenkins.dries007.net/job/D3Backend/api/json?tree=lastStableBuild[number,artifacts[*]]";
-    /*
-     * File constants
-     */
+
+    public final static FilenameFilter NOT_DIM_FILTER = (dir, name) -> !name.startsWith(DIM);
+    public final static FilenameFilter DIM_ONLY_FILTER = (dir, name) -> name.startsWith(DIM);
+
+    public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = (dir, name) -> FilenameUtils.getExtension(name).equals("jar");
+    public final static FilenameFilter ACCEPT_ALL_FILTER = (dir, name) -> !name.equalsIgnoreCase("eula.txt");
+    public final static FilenameFilter ACCEPT_NONE_FILTER = (dir, name) -> false;
+    public final static FilenameFilter ACCEPT_FORGE_FILTER = (dir, name) -> (name.startsWith("forge") || name.startsWith("FTBserver")) && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
+    public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = (dir, name) -> name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
+
     public static final File ROOT = getRootFile();
     public static final File CONFIG_FILE = new File(ROOT, "config.json");
     public static final File SERVERS_FILE = new File(ROOT, "servers.json");
@@ -100,48 +99,20 @@ public class Constants
     public static final File FORGE_FILE = new File(ROOT, "forge.json");
     public static final File SERVERS = new File(ROOT, "servers");
     public static final File BACKUPS = new File(ROOT, "backups");
-    /*
-     * Time constants
-     */
-    public static final long SOCKET_PING_TIME = 1000 * 50; // 50 seconds
-    public static final long REALLY_LONG_CACHE_TIMEOUT = 1000 * 60 * 60 * 24; // 24 hours
-    public static final long LONG_CACHE_TIMEOUT = 1000 * 60 * 60; // 1 hour
-    public static final long MEDIUM_CACHE_TIMEOUT = 1000 * 60; // 1 minute
-    public static final long SHORT_CACHE_TIMEOUT = 1000 * 10; // 10 seconds
-    /*
-     * Pattern constants
-     */
-    public static final Pattern USERNAME_PATTERN = Pattern.compile("^[\\w-]+$");
+
+    public static final Pattern USERNAME_PATTERN = Pattern.compile("^[0-9A-Za-z]+$");
+    public static final Pattern SERVERNAME_PATTERN = Pattern.compile("^\\w+$");
     public static final Pattern VERSION_PATTERN = Pattern.compile("\\d+(?:\\.\\d+)+");
+
     public static final String SERVER_START_ARGS_BLACKLIST_PATTERNS[] = {"-Xms", "-Xmx", "-XX:MaxPermSize"};
-    public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = (dir, name) -> FilenameUtils.getExtension(name).equals("jar");
-    public final static FilenameFilter ACCEPT_ALL_FILTER = (dir, name) -> !name.equalsIgnoreCase("eula.txt");
-    public final static FilenameFilter ACCEPT_NONE_FILTER = (dir, name) -> false;
-    public final static FilenameFilter ACCEPT_FORGE_FILTER = (dir, name) -> (name.startsWith("forge") || name.startsWith("FTBserver")) && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
-    public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = (dir, name) -> name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
-    /*
-     * JSON constants
-     */
     public static final Gson GSON = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().disableHtmlEscaping().setPrettyPrinting().create();
     public static final JsonParser JSONPARSER = new JsonParser();
-    /*
-     * Joiner constants
-     */
     public static final Joiner JOINER_COMMA_SPACE = Joiner.on(", ");
-    public static final Joiner JOINER_COMMA = Joiner.on(',');
-    public static final Joiner JOINER_SPACE = Joiner.on(' ');
-    /*
-     * Special constants
-     * Can be order sensitive!
-     */
-    public static final Random RANDOM = new Random();
     public static final SimpleDateFormat BACKUP_SDF = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-    public static final Timer TIMER = new Timer();
-    public static String javaPath;
+    public static final Random RANDOM = new Random();
 
-    /**
-     * Methods that only get called to init the Constants
-     */
+    private static String javaPath;
+
     private Constants()
     {
     }

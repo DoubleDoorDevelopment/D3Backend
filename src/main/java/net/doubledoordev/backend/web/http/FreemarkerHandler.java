@@ -94,7 +94,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
         // Put all session data in map, take 1
         data.putAll(request.getSession().attributes());
 
-        /**
+        /*
          * Data processing
          */
         if (request.getMethod() == Method.GET)
@@ -117,7 +117,7 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
 
         if (uri == null) return true;
 
-        /**
+        /*
          * fix up the url to match template
          */
         if (uri.endsWith(SLASH_STR)) uri += INDEX;

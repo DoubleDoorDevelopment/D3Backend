@@ -21,24 +21,13 @@ Typos? [Go here.](https://github.com/DoubleDoorDevelopment/D3Backend/issues/10)
 1. Tell us what you clicked exactly (if applicable)
 1. If we ask you for more information and you don't replay within 14 days, the issue will be considerer inactive.
 
-ToDo
-----
-
-- [ ]  Implement email system
-- [ ]  Implement a server wrapper
-    - [ ] Shut the actual server down if empty, restart if someone connects.
-    - [ ] Keep clients connected during server restart
-- [ ]  Multi 'node' support
-- [ ]  Add a 'look and feel' config (change name, add bootstrap theme, ...)
-- [ ]  In release: Use minified js and css
-
-HttpS
------
+Http**S**
+---------
 
 Step 1: Make a jks file.<br>
     Option 1: [Self signed certificate](https://www.sslshopper.com/article-how-to-create-a-self-signed-certificate-using-java-keytool.html) Please use this for internal network or testing only.<br>
     Option 2: [Proper, CA signed certificate](https://docs.oracle.com/cd/E19798-01/821-1751/ghlgv/index.html)<br>
-**Protip:** [CA signed certificates don't have to be expensive...](https://www.startssl.com/)<br>
+**ProTip:** Have a look at LetsEncrypt for a free signed SSL cert. There is no support for it in our backend, but you can run the tool externally.
 
 Step 2: Put the path (relative to run dir or absolute) and password in the config file.
 

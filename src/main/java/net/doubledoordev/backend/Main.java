@@ -118,7 +118,6 @@ public class Main
         if (debug) LOGGER.info("DEBUG MODE");
         if (safe) LOGGER.info("SAFE MODE");
 
-        // todo: get JDK and classload tools.jar + native library; if not jdk: disable warmroast
         LOGGER.info("\n\n    D3Backend  Copyright (C) 2015 - 2016  Dries007 & Double Door Development\n" +
                 "    This program comes with ABSOLUTELY NO WARRANTY;\n" +
                 "    This is free software, and you are welcome to redistribute it under certain conditions;\n" +
@@ -129,7 +128,10 @@ public class Main
         for (Object key : properties.keySet()) LOGGER.info("-   {} = {}", key, properties.get(key));
 
         LOGGER.info("Making necessary folders...");
-        mkdirs();
+        //noinspection ResultOfMethodCallIgnored
+        Constants.SERVERS.mkdir();
+        //noinspection ResultOfMethodCallIgnored
+        Constants.BACKUPS.mkdir();
         LOGGER.info("Starting webserver...");
 
         final HttpServer webserver = new HttpServer();
@@ -182,7 +184,7 @@ public class Main
             adminKey = UUID.randomUUID().toString();
             LOGGER.warn("Your userlist is empty.");
             LOGGER.warn("Make a new account and use the special admin token in the '2 + 2 = ?' field.");
-            LOGGER.warn("You can only use this key once. It will be regenerated if the userlist is empty when the backend starts.");
+            LOGGER.warn("You can only use this key once. It will be regenerated if the user list is empty when the backend starts.");
             LOGGER.warn("Admin token: " + adminKey);
         }
 
@@ -204,17 +206,11 @@ public class Main
         }
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void mkdirs()
-    {
-        Constants.SERVERS.mkdir();
-    }
-
     public static synchronized void shutdown()
     {
         running = false;
+        Cache.stop();
         Settings.save();
-        Cache.init();
         LOGGER.info("Attempting graceful shutdown of all servers...");
         for (final Server server : SETTINGS.servers.values())
         {

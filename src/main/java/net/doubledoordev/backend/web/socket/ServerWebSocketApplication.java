@@ -29,6 +29,8 @@ import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketApplication;
 
+import java.util.Timer;
+
 import static net.doubledoordev.backend.util.Constants.SERVER;
 import static net.doubledoordev.backend.util.Constants.USER;
 
@@ -39,6 +41,9 @@ import static net.doubledoordev.backend.util.Constants.USER;
  */
 public abstract class ServerWebSocketApplication extends WebSocketApplication
 {
+    protected static final Timer TIMER_NETWORK = new Timer();
+    protected static final long SOCKET_PING_TIME = 1000 * 50; // 50 seconds
+
     @Override
     public void onConnect(WebSocket socket)
     {

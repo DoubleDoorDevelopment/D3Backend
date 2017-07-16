@@ -41,7 +41,7 @@ public class ServerPropertiesSocketApplication extends ServerWebSocketApplicatio
 
     private ServerPropertiesSocketApplication()
     {
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()

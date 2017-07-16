@@ -28,7 +28,6 @@ package net.doubledoordev.backend.util.winreg;
 
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.util.OSUtils;
-import net.doubledoordev.backend.util.Settings;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -221,7 +220,6 @@ public class JavaFinder
             {
                 for (JavaInfo aJava64 : java64)
                 {
-                    if (aJava64.isJava8() && Settings.SETTINGS.useJava8) continue;
                     if (!preferred.is64bits || aJava64.compareTo(preferred) == 1) preferred = aJava64;
                 }
             }
@@ -229,7 +227,6 @@ public class JavaFinder
             {
                 for (JavaInfo aJava32 : java32)
                 {
-                    if (aJava32.isJava8() && Settings.SETTINGS.useJava8) continue;
                     if (!preferred.is64bits && aJava32.compareTo(preferred) == 1) preferred = aJava32;
                 }
             }
@@ -242,7 +239,7 @@ public class JavaFinder
         }
         else
         {
-            Main.LOGGER.debug("No Java versions found!");
+            Main.LOGGER.fatal("No Java versions found!");
             return null;
         }
     }

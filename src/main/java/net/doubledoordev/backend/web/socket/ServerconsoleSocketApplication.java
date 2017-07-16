@@ -38,7 +38,7 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
 
     private ServerconsoleSocketApplication()
     {
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()

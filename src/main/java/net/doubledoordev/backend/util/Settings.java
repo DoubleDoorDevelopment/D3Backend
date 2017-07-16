@@ -66,8 +66,6 @@ public class Settings
     @Expose
     public int portHTTPS = 443;
     @Expose
-    public boolean useJava8 = false;
-    @Expose
     public boolean fixedPorts = false;
     @Expose
     public boolean fixedIP = false;
@@ -166,11 +164,6 @@ public class Settings
     public String getHostname()
     {
         return hostname;
-    }
-
-    public boolean isUseJava8()
-    {
-        return useJava8;
     }
 
     public boolean isFixedPorts()

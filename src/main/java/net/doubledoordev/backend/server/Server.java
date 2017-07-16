@@ -65,16 +65,12 @@ public class Server
     public static final String QUERY_PORT = "query.port";
     public static final String QUERY_ENABLE = "enable-query";
     public static final String SERVER_IP = "server-ip";
-    @Expose
-    private final Map<String, Dimension> dimensionMap = new HashMap<>();
     /**
      * Diskspace var + timer to avoid long page load times.
      */
     public int[] size = new int[3];
     public QueryResponse cachedResponse;
-    /*
-     * START exposed Json data
-     */
+
     @Expose
     private String ID;
     @Expose
@@ -87,15 +83,11 @@ public class Server
     private List<String> admins = new ArrayList<>();
     @Expose
     private List<String> coOwners = new ArrayList<>();
-    /*
-     * END exposed Json data
-     */
     @Expose
     private RestartingInfo restartingInfo = new RestartingInfo();
     @Expose
     private JvmData jvmData = new JvmData();
-    //@Expose
-    //private RoastOptions roastOptions = new RoastOptions();
+
     /**
      * Used to reroute server output to our console.
      * NOT LOGGED TO FILE!
@@ -146,6 +138,8 @@ public class Server
 
         if (!backupFolder.exists()) backupFolder.mkdirs();
         if (!folder.exists()) folder.mkdir();
+
+        getRestartingInfo().init(this);
 
         try
         {
@@ -219,7 +213,14 @@ public class Server
                 e.printStackTrace();
             }
         }
-        normalizeProperties();
+        try
+        {
+            normalizeProperties();
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
         return properties;
     }
 
@@ -256,16 +257,8 @@ public class Server
      */
     public boolean getOnline()
     {
-        try
-        {
-            if (process == null) return false;
-            process.exitValue();
-            return false;
-        }
-        catch (IllegalThreadStateException e)
-        {
-            return true;
-        }
+        if (process == null) return false;
+        return process.isAlive();
     }
 
     /**
@@ -398,11 +391,6 @@ public class Server
         return worldManager;
     }
 
-    public Map<String, Dimension> getDimensionMap()
-    {
-        return dimensionMap;
-    }
-
     public File getFolder()
     {
         return folder;
@@ -471,6 +459,7 @@ public class Server
     public void setServerPort(IMethodCaller caller, int serverPort) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        if (!Settings.SETTINGS.portRange.isInRange(serverPort)) throw new IOException("Illegal port. Must be in range: " + Settings.SETTINGS.portRange);
         this.serverPort = serverPort;
         normalizeProperties();
     }
@@ -951,11 +940,11 @@ public class Server
         if (user == null) throw new Exception("No owner set??");
         if (user.getMaxRamLeft() != -1 && getJvmData().ramMax > user.getMaxRamLeft()) throw new Exception("Out of usable RAM. Lower your max RAM.");
         saveProperties();
-        starting = true;
         final Server instance = this;
         for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
         for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraMCParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
 
+        starting = true;
         File eula = new File(getFolder(), "eula.txt");
         try
         {
@@ -975,20 +964,18 @@ public class Server
             printLine("Starting server ................");
             try
             {
-                /**
-                 * Build arguments list.
+                /*
+                  Build arguments list.
                  */
                 List<String> arguments = new ArrayList<>();
                 arguments.add(Constants.getJavaPath());
-                arguments.add("-DServerOwner=\"" + owner + '"');
+                arguments.add("-DServerID=\"" + ID + '"');
                 arguments.add("-server");
                 {
                     int amount = getJvmData().ramMin;
                     if (amount > 0) arguments.add(String.format("-Xms%dM", amount));
                     amount = getJvmData().ramMax;
                     if (amount > 0) arguments.add(String.format("-Xmx%dM", amount));
-                    amount = getJvmData().permGen;
-                    if (amount > 0) arguments.add(String.format("-XX:MaxPermSize=%dm", amount));
                 }
                 if (Strings.isNotBlank(getJvmData().extraJavaParameters))
                 {
@@ -1005,15 +992,19 @@ public class Server
                 // Debug printout
                 printLine("Arguments: " + arguments.toString());
 
-                /**
-                 * Make ProcessBuilder, set rundir, and make sure the io gets redirected
+                /*
+                  Make ProcessBuilder, set rundir, and make sure the io gets redirected
                  */
                 ProcessBuilder pb = new ProcessBuilder(arguments);
                 pb.directory(folder);
                 pb.redirectErrorStream(true);
-                if (!new File(folder, getJvmData().jarName).exists()) return; // for reasons of WTF?
+                if (!new File(folder, getJvmData().jarName).exists())
+                {
+                    throw new FileNotFoundException("JarFile went missing in the 0.2 sec it takes for the server to start.");
+                }
                 process = pb.start();
                 startTime = System.currentTimeMillis();
+                getRestartingInfo().start();
                 new Thread(() ->
                 {
                     try
@@ -1032,6 +1023,7 @@ public class Server
                     {
                         error(e);
                     }
+                    getRestartingInfo().stop();
                 }, ID.concat("-streamEater")).start();
                 instance.update();
             }
@@ -1040,7 +1032,7 @@ public class Server
                 error(e);
             }
             starting = false;
-        }, "ServerStarter-" + getID()).start(); // <-- Very important call.
+        }, "ServerStarter-" + getID()).start();
     }
 
     public void printLine(String line)
@@ -1162,7 +1154,7 @@ public class Server
      * PRIVATE METHODS
      */
 
-    private void normalizeProperties()
+    private void normalizeProperties() throws IOException
     {
         if (!properties.containsKey(SERVER_IP)) properties.setProperty(SERVER_IP, ip);
         if (!properties.containsKey(SERVER_PORT)) properties.setProperty(SERVER_PORT, String.valueOf(serverPort));
@@ -1176,6 +1168,11 @@ public class Server
         else
         {
             serverPort = Integer.parseInt(properties.getProperty(SERVER_PORT, String.valueOf(serverPort)));
+            if (!Settings.SETTINGS.portRange.isInRange(serverPort))
+            {
+                serverPort = Settings.SETTINGS.portRange.getNextAvailablePort();
+
+            }
             properties.setProperty(QUERY_PORT, String.valueOf(serverPort));
         }
 

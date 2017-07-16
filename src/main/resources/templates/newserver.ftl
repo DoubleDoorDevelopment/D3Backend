@@ -59,13 +59,6 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="PermGen" class="col-sm-2 control-label">PermGen (in MB)</label>
-
-        <div class="col-sm-10">
-            <input type="number" min="64" max="512" value="64" class="form-control" id="PermGen" name="PermGen" required>
-        </div>
-    </div>
-    <div class="form-group">
         <label for="extraJavaParameters" class="col-sm-2 control-label">Extra Java parameters</label>
 
         <div class="col-sm-10">
@@ -121,13 +114,20 @@
     function checkName()
     {
         var name = document.getElementById("name").value;
-        while (!name.match(/^[\w]+$/))
+        while (!name.match(/^\w+$/) || name.length > 16)
         {
-            name = prompt('Your server ID contains non allowed characters.\nPlease remove all spaces and special characters.', name);
+            if (name.length > 16)
+            {
+                name = prompt('Your server ID is too long.\nIt can only be 16 characters long.', name);
+            }
+            else
+            {
+                name = prompt('Your server ID contains non allowed characters.\nPlease remove all spaces and special characters.', name);
+            }
             if (name == null) break;
         }
 
-        if (name == null || !name.match(/^[\w]+$/))
+        if (name == null || !name.match(/^\w+$/) || name.length > 16)
         {
             document.getElementById("submit").disabled = true;
             document.getElementById("name-div").className = "form-group has-error";

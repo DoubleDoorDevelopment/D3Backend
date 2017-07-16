@@ -1,4 +1,14 @@
 <#include "header.ftl">
+<#if !Helper.usingHttps()>
+<div id="httpsWarning" class="alert alert-danger" role="alert"><b>This server is not using HTTPS</b>, your password will be send over the network in plaintext!</div>
+<script>
+    var httpsWarning = document.getElementById("httpsWarning");
+    if (location.protocol == 'https:' && httpsWarning != null)
+    {
+        httpsWarning.setAttribute("hidden", "hidden")
+    }
+</script>
+</#if>
 <#if !user??>
 <link href="/static/css/signin.css" rel="stylesheet">
 <form class="form-signin" role="form" method="post">
@@ -6,14 +16,37 @@
         <div class="alert alert-danger" role="alert">${message}</div>
     </#if>
     <h2 class="form-signin-heading">Make account</h2>
-    <input name="username" type="text" class="form-control" placeholder="Username" required autofocus
-           style="margin-bottom: -1px; border-bottom-right-radius: 0; border-bottom-left-radius: 0;">
-    <input name="password" type="password" class="form-control" placeholder="Password" required
-           style="margin-bottom: 10px; border-top-left-radius: 0; border-top-right-radius: 0;">
-    <input name="areyouhuman" type="text" class="form-control" placeholder="2 + 2 = ?" required>
-    <br>
-    <button class="btn btn-lg btn-primary btn-block" type="submit">Register!</button>
+    <div id="name-div" class="form-group">
+        <input name="username" type="text" class="form-control" placeholder="Username" required autofocus onchange="checkName()" id="username">
+        <span class="help-block">Alphanumerical, max 15 characters.</span>
+    </div>
+    <div class="form-group">
+        <input name="password" type="password" class="form-control" placeholder="Password" required>
+    </div>
+    <div class="form-group">
+        <input name="areyouhuman" type="text" class="form-control" placeholder="2 + 2 = ?" required>
+    </div>
+    <div class="form-group">
+        <button class="btn btn-lg btn-primary btn-block" type="submit" id="submit">Register!</button>
+    </div>
 </form>
+<script>
+    function checkName()
+    {
+        var name = document.getElementById("username").value;
+
+        if (name == null || !name.match(/^[0-9A-Za-z]+$/) || name.length > 16)
+        {
+            document.getElementById("submit").disabled = true;
+            document.getElementById("name-div").className = "form-group has-error";
+        }
+        else
+        {
+            document.getElementById("submit").disabled = false;
+            document.getElementById("name-div").className = "form-group";
+        }
+    }
+</script>
 <#else>
 <h1>Account registered!</h1>
 </#if>

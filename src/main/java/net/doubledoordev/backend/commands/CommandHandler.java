@@ -153,8 +153,7 @@ public class CommandHandler implements Runnable
             return;
         }
 
-        //todo: open gui
-        JOptionPane.showMessageDialog(null, "You opened D3Backend without a console. Since we don't have a gui yet, and we need input for commands, this is not supported.\nUse a commandline enviroment to open the jar for now.");
+        JOptionPane.showMessageDialog(null, "You opened D3Backend without a console. Use a commandline environment to open the jar for now.");
         System.exit(1);
     }
 

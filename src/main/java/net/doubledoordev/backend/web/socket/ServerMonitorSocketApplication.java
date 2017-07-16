@@ -53,14 +53,14 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
     private ServerMonitorSocketApplication(boolean allServers)
     {
         this.allServers = allServers;
-        TIMER.scheduleAtFixedRate(new TimerTask()
+        ServerWebSocketApplication.TIMER_NETWORK.scheduleAtFixedRate(new TimerTask()
         {
             @Override
             public void run()
             {
                 for (WebSocket socket : getWebSockets()) socket.sendPing("ping".getBytes());
             }
-        }, SOCKET_PING_TIME, SOCKET_PING_TIME);
+        }, ServerWebSocketApplication.SOCKET_PING_TIME, ServerWebSocketApplication.SOCKET_PING_TIME);
     }
 
     public static void sendUpdateToAll(Server server)
@@ -159,7 +159,7 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         root.add("diskspace", object);
         root.add("coOwners", GSON.toJsonTree(server.getCoOwners()));
         root.add("admins", GSON.toJsonTree(server.getAdmins()));
-        root.addProperty("ram", Helper.DECIMAL_FORMAT.format(server.getJvmData().ramMin / 1024.0) + " GB to " + Helper.DECIMAL_FORMAT.format(server.getJvmData().ramMax / 1024.0) + " GB");
+        root.addProperty("ram", server.getJvmData().ramMin + " MB to " + server.getJvmData().ramMax + " MB");
 
         return root;
     }

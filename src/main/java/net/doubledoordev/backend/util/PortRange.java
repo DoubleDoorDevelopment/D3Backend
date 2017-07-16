@@ -40,7 +40,7 @@ public class PortRange
         {
             usedPorts.add(server.getServerPort());
         }
-        for (int port = min; port < max; port++)
+        for (int port = min; port <= max; port++)
         {
             if (!usedPorts.contains(port) && port != ignored) return port;
         }
@@ -50,5 +50,10 @@ public class PortRange
     public int getNextAvailablePort() throws OutOfPortsException
     {
         return getNextAvailablePort(-1);
+    }
+
+    public boolean isInRange(int serverPort)
+    {
+        return serverPort >= min && serverPort <= max;
     }
 }

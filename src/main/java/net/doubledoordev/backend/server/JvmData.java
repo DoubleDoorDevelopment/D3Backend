@@ -18,23 +18,33 @@
 
 package net.doubledoordev.backend.server;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
+import net.doubledoordev.backend.util.IUpdateFromJson;
 
 /**
  * @author Dries007
  */
-public class JvmData
+public class JvmData implements IUpdateFromJson
 {
     @Expose
-    public int ramMin = 1024;
+    public int ramMin = 512;
     @Expose
     public int ramMax = 2048;
-    @Expose
-    public int permGen = 128;
     @Expose
     public String extraJavaParameters = "";
     @Expose
     public String extraMCParameters = "";
     @Expose
     public String jarName = "minecraft_server.jar";
+
+    @Override
+    public void updateFrom(JsonObject json)
+    {
+        if (json.has("ramMin")) ramMin = json.get("ramMin").getAsInt();
+        if (json.has("ramMax")) ramMax = json.get("ramMax").getAsInt();
+        if (json.has("extraJavaParameters")) extraJavaParameters = json.get("extraJavaParameters").getAsString();
+        if (json.has("extraMCParameters")) extraMCParameters = json.get("extraMCParameters").getAsString();
+        if (json.has("jarName")) jarName = json.get("jarName").getAsString();
+    }
 }

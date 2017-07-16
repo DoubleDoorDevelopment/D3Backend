@@ -45,7 +45,11 @@ public class Bindings extends BindingHelper
     @BindingMatch(type = Server[].class, behavior = BindingBehavior.CONSUMES)
     public Server[] getServers(ArgumentStack context) throws ParameterException
     {
-        Pattern pattern = Pattern.compile(context.next());
+        String selector = context.next();
+        if (Settings.getServerByName(selector) != null) return new Server[]{Settings.getServerByName(selector)};
+        if (selector.equals("*")) return Settings.SETTINGS.servers.values().toArray(new Server[0]);
+
+        Pattern pattern = Pattern.compile(selector);
         List<Server> servers = new ArrayList<>();
         for (Server server : Settings.SETTINGS.servers.values()) if (pattern.matcher(server.getID()).matches()) servers.add(server);
         return servers.toArray(new Server[servers.size()]);
@@ -60,7 +64,11 @@ public class Bindings extends BindingHelper
     @BindingMatch(type = User[].class, behavior = BindingBehavior.CONSUMES, consumedCount = 1)
     public User[] getUsers(ArgumentStack context) throws ParameterException
     {
-        Pattern pattern = Pattern.compile(context.next());
+        String selector = context.next();
+        if (Settings.getUserByName(selector) != null) return new User[]{Settings.getUserByName(selector)};
+        if (selector.equals("*")) return Settings.SETTINGS.users.values().toArray(new User[0]);
+
+        Pattern pattern = Pattern.compile(selector);
         List<User> users = new ArrayList<>();
         for (User server : Settings.SETTINGS.users.values()) if (pattern.matcher(server.getUsername()).matches()) users.add(server);
         return users.toArray(new User[users.size()]);

@@ -41,7 +41,6 @@ public class JavaInfo implements Comparable<JavaInfo>
     public String version; //! Version string.
     public String origVersion = "";
     public boolean supportedVersion = false;
-    public boolean hasJava8;
     public boolean is64bits; //! true for 64-bit javas, false for 32
     public int major, minor, revision, build;
 

@@ -55,7 +55,7 @@
                 <div class="btn-group">
                     <a type="button" class="btn btn-default" href='/filemanager?server=${server.ID?js_string}'>File Manager</a>
                     <a type="button" class="btn btn-default" href="/filemanager?server=${server.ID?js_string}&file=server.properties">server.properties</a>
-                    <a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID?js_string}">World Manager</a>
+                    <#--<a type="button" class="btn btn-default" href="/worldmanager?server=${server.ID?js_string}">World Manager</a>-->
                 </div>
                 <hr>
                 <a type="button" class="btn btn-warning" href="/advancedsettings?server=${server.ID?js_string}">Advanced Settings</a>

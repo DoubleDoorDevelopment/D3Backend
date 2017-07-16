@@ -38,9 +38,10 @@ import static net.doubledoordev.backend.util.Constants.*;
 /**
  * Handles backups and dimension related stuff
  *
+ * TODO: fix
+ *
  * @author Dries007
  */
-@SuppressWarnings("UnusedDeclaration")
 public class WorldManager
 {
     public final Server server;
@@ -54,13 +55,6 @@ public class WorldManager
     public void update()
     {
         worldFolder = new File(server.getFolder(), getWorldName());
-        if (!worldFolder.exists()) return;
-        if (worldFolder.list().length == 0) return;
-        if (!server.getDimensionMap().containsKey(OVERWORLD)) server.getDimensionMap().put(OVERWORLD, new Dimension(OVERWORLD));
-        for (String file : worldFolder.list(DIM_ONLY_FILTER))
-        {
-            if (!server.getDimensionMap().containsKey(file)) server.getDimensionMap().put(file, new Dimension(file));
-        }
     }
 
     public String getWorldName()
