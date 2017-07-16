@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import static net.doubledoordev.backend.Main.LOGGER;
+import static net.doubledoordev.backend.commands.CommandHandler.CMDCALLER;
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
@@ -118,9 +119,9 @@ public class WorldManager
         LOGGER.info(String.format("'%s' is making a backup from '%s' to '%s'", server.getID(), folder.getPath(), zip.getPath()));
         if (server.getOnline())
         {
-            server.sendChat("Making backup....");
-            server.sendCmd("save-off");
-            server.sendCmd("save-all");
+            server.sendChat(CMDCALLER, "Making backup....");
+            server.sendCmd(CMDCALLER, "save-off");
+            server.sendCmd(CMDCALLER, "save-all");
         }
         try
         {
@@ -162,14 +163,14 @@ public class WorldManager
         }
         catch (IOException | ZipException e)
         {
-            if (server.getOnline()) server.sendChat("Error when making backup");
+            if (server.getOnline()) server.sendChat(CMDCALLER, "Error when making backup");
             methodCaller.sendError(Throwables.getStackTraceAsString(e));
             server.error(e);
         }
         if (server.getOnline())
         {
-            server.sendCmd("save-on");
-            server.sendCmd("save-all");
+            server.sendCmd(CMDCALLER, "save-on");
+            server.sendCmd(CMDCALLER, "save-all");
         }
     }
 

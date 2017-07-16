@@ -118,7 +118,7 @@ public class Main
         if (debug) LOGGER.info("DEBUG MODE");
         if (safe) LOGGER.info("SAFE MODE");
 
-        LOGGER.info("\n\n    D3Backend  Copyright (C) 2015 - 2016  Dries007 & Double Door Development\n" +
+        LOGGER.info("\n\n    " + Constants.NAME + "  Copyright (C) 2015 - 2016  Dries007 & Double Door Development\n" +
                 "    This program comes with ABSOLUTELY NO WARRANTY;\n" +
                 "    This is free software, and you are welcome to redistribute it under certain conditions;\n" +
                 "    Type 'license' for details.\n\n");
@@ -196,7 +196,7 @@ public class Main
             try
             {
                 server.init();
-                if (!safe && server.getRestartingInfo().autoStart) server.startServer();
+                if (!safe && server.getRestartingInfo().autoStart) server.startServer(CommandHandler.CMDCALLER);
             }
             catch (Exception ignored)
             {
@@ -221,7 +221,7 @@ public class Main
                 {
                     try
                     {
-                        server.stopServer(NAME + " shutdown!");
+                        server.stopServer(CommandHandler.CMDCALLER, NAME + " shutdown!");
                     }
                     catch (Exception e)
                     {

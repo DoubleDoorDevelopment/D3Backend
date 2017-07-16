@@ -34,6 +34,7 @@ import net.doubledoordev.backend.permissions.Group;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Cache;
+import net.doubledoordev.backend.util.Constants;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,14 +57,13 @@ public class CommandHandler implements Runnable
 {
     public static final CommandHandler INSTANCE = new CommandHandler();
     public static final Logger CMDLOGGER = LogManager.getLogger("cmd");
-    public static final User CMDUSER = new User("CMD", "_noPass_")
+    public static final User CMDUSER = new User(null, null)
     {
         //@formatter:off
         @Override public boolean verify(String password) { return false; }
         @Override public boolean updatePassword(String oldPass, String newPass) { return false; }
         @Override public void setPass(String newPass) {}
-        @Override public String getUsername() { return "CMD"; }
-        @Override public String getPasshash() { return "_noPass_"; }
+        @Override public String getUsername() { return "[" + Constants.NAME + "]"; }
         @Override public Group getGroup() { return Group.ADMIN; }
         @Override public void setGroup(Group group) {}
         @Override public void setGroup(String group) {}
@@ -198,7 +198,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            server.sendChat(msg);
+            server.sendChat(CMDCALLER, msg);
         }
     }
 
@@ -217,7 +217,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            if (server.stopServer(msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getID()));
+            if (server.stopServer(CMDCALLER, msg)) CMDLOGGER.info(String.format("Shutdown command send to %s", server.getID()));
             else CMDLOGGER.warn(String.format("Server %s did not shutdown with a message.", server.getID()));
         }
     }
@@ -230,7 +230,7 @@ public class CommandHandler implements Runnable
             if (server.getOnline()) continue;
             try
             {
-                server.startServer();
+                server.startServer(CMDCALLER);
             }
             catch (Exception e)
             {
@@ -260,7 +260,7 @@ public class CommandHandler implements Runnable
         for (Server server : servers)
         {
             if (!server.getOnline()) continue;
-            server.sendCmd(cmd);
+            server.sendCmd(CMDCALLER, cmd);
         }
     }
 

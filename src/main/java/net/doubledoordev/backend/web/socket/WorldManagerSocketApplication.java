@@ -25,7 +25,6 @@ import net.doubledoordev.backend.util.Helper;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
-import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.util.TimerTask;
 

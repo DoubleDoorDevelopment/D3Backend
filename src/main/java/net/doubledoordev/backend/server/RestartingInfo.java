@@ -30,6 +30,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static java.time.temporal.ChronoField.*;
+import static net.doubledoordev.backend.commands.CommandHandler.CMDCALLER;
 
 /**
  * The auto-restart doesn't need to be on a repeated timer, because the shutdown and boot will stop and restart the timer.
@@ -100,7 +101,7 @@ public class RestartingInfo implements IUpdateFromJson
                 @Override
                 public void run()
                 {
-                    server.sendChat(restartScheduleMessage.replace("%time", Integer.toString(minuteOffset)));
+                    server.sendChat(CMDCALLER, restartScheduleMessage.replace("%time", Integer.toString(minuteOffset)));
                 }
             }, Date.from(warningTime.toInstant()));
         }
@@ -112,14 +113,14 @@ public class RestartingInfo implements IUpdateFromJson
             {
                 lastRestart = new Date();
                 server.printLine("[AutoRestart] Sending stop command...");
-                server.stopServer("[AutoRestart] Restarting on schedule.");
+                server.stopServer(CMDCALLER, "[AutoRestart] Restarting on schedule.");
                 waitForShutdown(150);
                 if (server.getOnline())
                 {
                     server.printLine("[AutoRestart] Force-stopping server...");
                     try
                     {
-                        server.forceStopServer();
+                        server.forceStopServer(CMDCALLER);
                         waitForShutdown(30);
                     }
                     catch (Exception ignored)
@@ -131,7 +132,7 @@ public class RestartingInfo implements IUpdateFromJson
                         server.printLine("[AutoRestart] Murdering server...");
                         try
                         {
-                            server.murderServer();
+                            server.murderServer(CMDCALLER);
                             waitForShutdown(30);
                         }
                         catch (Exception ignored)
@@ -151,7 +152,7 @@ public class RestartingInfo implements IUpdateFromJson
                 {
                     server.printLine("[AutoRestart] Restarting the server...");
                     Thread.sleep(1000);
-                    server.startServer();
+                    server.startServer(CMDCALLER);
                 }
                 catch (Exception e)
                 {

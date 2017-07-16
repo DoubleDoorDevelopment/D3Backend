@@ -29,7 +29,8 @@ import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.util.TimerTask;
 
-import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Constants.SOCKET_CONTEXT;
+import static net.doubledoordev.backend.util.Constants.USER;
 
 /**
  * @author Dries007

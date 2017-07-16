@@ -27,6 +27,8 @@ import java.io.File;
 import java.util.Date;
 import java.util.TimerTask;
 
+import static net.doubledoordev.backend.commands.CommandHandler.CMDCALLER;
+
 /**
  * TODO: fix
  * @author Dries007
@@ -45,9 +47,9 @@ public class BackupTask extends TimerTask
     {
         if (server.getOnline())
         {
-            server.sendChat("Making backup....");
-            server.sendCmd("save-off");
-            server.sendCmd("save-all");
+            server.sendChat(CMDCALLER, "Making backup....");
+            server.sendCmd(CMDCALLER, "save-off");
+            server.sendCmd(CMDCALLER, "save-all");
 
             try
             {
@@ -58,11 +60,11 @@ public class BackupTask extends TimerTask
             }
             catch (ZipException e)
             {
-                server.sendChat("Error when making backup");
+                server.sendChat(CMDCALLER, "Error when making backup");
                 server.printLine(e.toString());
             }
 
-            server.sendCmd("save-on");
+            server.sendCmd(CMDCALLER, "save-on");
         }
     }
 

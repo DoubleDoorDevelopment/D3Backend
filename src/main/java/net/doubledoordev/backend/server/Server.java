@@ -22,6 +22,7 @@ import com.google.common.collect.EvictingQueue;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import net.doubledoordev.backend.Main;
+import net.doubledoordev.backend.commands.CommandHandler;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.query.MCQuery;
 import net.doubledoordev.backend.server.query.QueryResponse;
@@ -50,6 +51,7 @@ import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.util.*;
 
+import static net.doubledoordev.backend.commands.CommandHandler.CMDCALLER;
 import static net.doubledoordev.backend.util.Constants.*;
 
 /**
@@ -72,6 +74,7 @@ public class Server
     public int[] size = new int[3];
     public QueryResponse cachedResponse;
     public EvictingQueue<String> lastConsoleLines = EvictingQueue.create(25);
+    public EvictingQueue<String> actionLog = EvictingQueue.create(50);
 
     @Expose
     private String ID;
@@ -124,12 +127,6 @@ public class Server
     {
     }
 
-    /*
-     * ========================================================================================
-     * ========================================================================================
-     * PUBLIC METHODS
-     */
-
     public void init()
     {
         if (this.logger != null) return; // don't do this twice.
@@ -166,11 +163,6 @@ public class Server
             e.printStackTrace();
         }
     }
-
-    /*
-     * ========================================================================================
-     * GETTERS
-     */
 
     public String getIp()
     {
@@ -323,7 +315,7 @@ public class Server
 
     public ArrayList<String> getPlayerList()
     {
-        return cachedResponse == null ? new ArrayList<String>() : cachedResponse.getPlayerList();
+        return cachedResponse == null ? new ArrayList<>() : cachedResponse.getPlayerList();
     }
 
     public String getPlugins()
@@ -430,10 +422,59 @@ public class Server
         return startTime;
     }
 
-    /*
-     * ========================================================================================
-     * SETTERS
-     */
+    public void renewQuery()
+    {
+        try
+        {
+            cachedResponse = getQuery().fullStat();
+        }
+        catch (SocketTimeoutException ignored)
+        {
+
+        }
+        catch (IOException e)
+        {
+            Main.LOGGER.error("Caught IOException from server {} (on port {})", ID, serverPort);
+            Main.LOGGER.catching(e);
+        }
+    }
+
+    private void saveProperties() throws IOException
+    {
+        if (!propertiesFile.exists()) propertiesFile.createNewFile();
+
+        FileOutputStream outputStream = new FileOutputStream(propertiesFile);
+        Properties properties = getProperties();
+        properties.store(outputStream, "Modified by the backend");
+        propertiesFileLastModified = propertiesFile.lastModified();
+        outputStream.close();
+    }
+
+    public void printLine(String line)
+    {
+        line = Helper.stripColor(line);
+        logger.info(line);
+        lastConsoleLines.add(line);
+        ServerconsoleSocketApplication.sendLine(this, line);
+    }
+
+    public void error(Throwable e)
+    {
+        logger.catching(e);
+        StringWriter error = new StringWriter();
+        e.printStackTrace(new PrintWriter(error));
+        lastConsoleLines.add(error.toString());
+        ServerconsoleSocketApplication.sendLine(this, error.toString());
+    }
+
+    public void logAction(IMethodCaller caller, String action)
+    {
+        if (caller == CommandHandler.CMDCALLER) return;
+        printLine("[" + Constants.NAME + "] " + caller.getUser().getUsername() + ": " + action);
+        actionLog.add(caller.getUser().getUsername() + ": " + action);
+        // Logs to disk, otherwise it would be useless, since the printLine already logs to console.
+        Main.LOGGER.info("Action on {} by {}: {}", ID, caller.getUser().getUsername(), action);
+    }
 
     /**
      * Set a server.properties property and save the file.
@@ -445,14 +486,16 @@ public class Server
     public void setProperty(IMethodCaller caller, String key, String value) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Set property: " + key + " to " + value);
         properties.put(key, value);
         normalizeProperties();
         saveProperties();
     }
 
-    public void setOwner(IMethodCaller methodCaller, String username)
+    public void setOwner(IMethodCaller caller, String username)
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Set owner to " + username);
         ownerObject = null;
         owner = username;
         update();
@@ -461,6 +504,7 @@ public class Server
     public void setServerPort(IMethodCaller caller, int serverPort) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Set server port to " + serverPort);
         if (!Settings.SETTINGS.portRange.isInRange(serverPort)) throw new IOException("Illegal port. Must be in range: " + Settings.SETTINGS.portRange);
         this.serverPort = serverPort;
         normalizeProperties();
@@ -469,23 +513,20 @@ public class Server
     public void setIP(IMethodCaller caller, String IP) throws IOException
     {
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Set server ip to " + IP);
         this.ip = IP;
         normalizeProperties();
     }
 
-    /*
-     * ========================================================================================
-     * SETTERS VIA DOWNLOADERS
-     */
-
     /**
      * Remove the old and download the new server jar file
      */
-    public void setVersion(final IMethodCaller methodCaller, final String version) throws BackupException
+    public void setVersion(final IMethodCaller caller, final String version) throws BackupException
     {
         if (getOnline()) throw new ServerOnlineException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Install Vanilla Minecraft version: " + version);
         final Server instance = this;
 
         new Thread(() ->
@@ -493,7 +534,7 @@ public class Server
             downloading = true;
             try
             {
-                worldManager.doMakeAllOfTheBackup(methodCaller);
+                worldManager.doMakeAllOfTheBackup(caller);
 
                 // delete old files
                 for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
@@ -530,7 +571,7 @@ public class Server
                 {
                     if (download.getSize() != -1)
                     {
-                        methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        caller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                         printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                         break;
                     }
@@ -557,7 +598,7 @@ public class Server
                 {
                     throw new Exception(download.getMessage());
                 }
-                methodCaller.sendDone();
+                caller.sendDone();
 
                 tempFile.renameTo(jarfile);
                 instance.update();
@@ -573,13 +614,16 @@ public class Server
     /**
      * Downloads and uses specific forge installer
      */
-    public void installForge(final IMethodCaller methodCaller, final String name) throws BackupException
+    public void installForge(final IMethodCaller caller, final String name) throws BackupException
     {
         if (getOnline()) throw new ServerOnlineException();
         final String version = Helper.getForgeVersionForName(name);
         if (version == null) throw new IllegalArgumentException("Forge with ID " + name + " not found.");
         if (downloading) throw new IllegalStateException("Already downloading something.");
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+
+        logAction(caller, "Install Forge version: " + version);
+
         final Server instance = this;
 
         new Thread(() ->
@@ -587,7 +631,7 @@ public class Server
             downloading = true;
             try
             {
-                worldManager.doMakeAllOfTheBackup(methodCaller);
+                worldManager.doMakeAllOfTheBackup(caller);
 
                 // delete old files
                 for (File file : folder.listFiles(ACCEPT_MINECRAFT_SERVER_FILTER)) FileUtils.forceDelete(file);
@@ -619,7 +663,7 @@ public class Server
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
-                    methodCaller.sendMessage(line);
+                    caller.sendMessage(line);
                     printLine(line);
                 }
 
@@ -637,7 +681,7 @@ public class Server
 
                 FileUtils.forceDelete(forge);
 
-                methodCaller.sendDone();
+                caller.sendDone();
                 printLine("Forge installer done.");
 
                 instance.update();
@@ -648,18 +692,20 @@ public class Server
                 printLine("Error installing a new forge version (version " + version + ")");
                 printLine(e.toString());
                 printLine("##################################################################");
-                methodCaller.sendError(Helper.getStackTrace(e));
+                caller.sendError(Helper.getStackTrace(e));
                 e.printStackTrace();
             }
             downloading = false;
         }, getID() + "-forge-installer").start();
     }
 
-    public void installModpack(IMethodCaller methodCaller, String fileName, boolean purge, boolean cuseZip) throws IOException, ZipException, BackupException
+    public void installModpack(final IMethodCaller caller, String fileName, boolean purge, boolean twitchAppZip) throws IOException, ZipException, BackupException
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
         final Server instance = this;
+
+        logAction(caller, "Install Modpack: " + fileName + " Purge: " + purge + " TwitchApp: " + twitchAppZip);
 
         File modpackFile = new File(getFolder(), fileName);
         if (!modpackFile.exists()) throw new FileNotFoundException("File not found: " + modpackFile);
@@ -667,7 +713,7 @@ public class Server
         {
             try
             {
-                installDownloadedModpack(methodCaller, modpackFile, purge, cuseZip);
+                installDownloadedModpack(caller, modpackFile, purge, twitchAppZip);
             }
             catch (Exception e)
             {
@@ -676,22 +722,24 @@ public class Server
                 printLine(e.toString());
                 printLine("##################################################################");
                 instance.error(e);
-                methodCaller.sendError(Helper.getStackTrace(e));
+                caller.sendError(Helper.getStackTrace(e));
                 e.printStackTrace();
             }
             finally
             {
-                methodCaller.sendDone();
+                caller.sendDone();
                 downloading = false;
             }
         }, getID() + "-modpack-installer").start();
     }
 
-    public void downloadModpack(IMethodCaller methodCaller, String zipURL, boolean purge, boolean cuseZip) throws IOException, ZipException, BackupException
+    public void downloadModpack(final IMethodCaller caller, String zipURL, boolean purge, boolean twitchAppZip) throws IOException, ZipException, BackupException
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
         if (downloading) throw new IllegalStateException("Already downloading something.");
         final Server instance = this;
+
+        logAction(caller, "Download Modpack: " + zipURL + " Purge: " + purge + " TwitchApp: " + twitchAppZip);
 
         new Thread(() ->
         {
@@ -713,14 +761,14 @@ public class Server
                 {
                     if (download.getSize() != -1)
                     {
-                        methodCaller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
+                        caller.sendMessage(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                         printLine(String.format("Download is %dMB", (download.getSize() / (1024 * 1024))));
                         break;
                     }
                     Thread.sleep(100);
                 }
 
-                //methodCaller.sendProgress(0);
+                //caller.sendProgress(0);
 
                 while (download.getStatus() == Download.Status.DOWNLOADING)
                 {
@@ -729,7 +777,7 @@ public class Server
                         lastInfo = (int) download.getProgress();
                         lastTime = System.currentTimeMillis();
 
-                        //methodCaller.sendProgress(download.getProgress());
+                        //caller.sendProgress(download.getProgress());
 
                         printLine(String.format("Downloaded %2.0f%% (%dMB / %dMB)", download.getProgress(), (download.getDownloaded() / (1024 * 1024)), (download.getSize() / (1024 * 1024))));
                     }
@@ -744,7 +792,7 @@ public class Server
 
                 printLine("Downloading zip done, extracting...");
 
-                installDownloadedModpack(methodCaller, zip, purge, cuseZip);
+                installDownloadedModpack(caller, zip, purge, twitchAppZip);
             }
             catch (Exception e)
             {
@@ -753,18 +801,18 @@ public class Server
                 printLine(e.toString());
                 printLine("##################################################################");
                 instance.error(e);
-                methodCaller.sendError(Helper.getStackTrace(e));
+                caller.sendError(Helper.getStackTrace(e));
                 e.printStackTrace();
             }
                 finally
             {
-                methodCaller.sendDone();
+                caller.sendDone();
                 downloading = false;
             }
         }, getID() + "-modpack-installer").start();
     }
 
-    private void installDownloadedModpack(final IMethodCaller methodCaller, final File zip, final boolean purge, final boolean cuseZip) throws Exception
+    private void installDownloadedModpack(final IMethodCaller methodCaller, final File zip, final boolean purge, final boolean twitchAppZip) throws Exception
     {
         downloading = true;
 
@@ -780,7 +828,7 @@ public class Server
             }
         }
 
-        if (cuseZip)
+        if (twitchAppZip)
         {
             Arguments arguments = new Arguments();
             arguments.server.eula = true;
@@ -853,14 +901,10 @@ public class Server
         zip.delete();
     }
 
-    /*
-     * ========================================================================================
-     * REMOVE and ADD methods
-     */
-
-    public void removeAdmin(IMethodCaller methodCaller, String name)
+    public void removeAdmin(IMethodCaller caller, String name)
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Remove admin: " + name);
         Iterator<String> i = admins.iterator();
         while (i.hasNext())
         {
@@ -869,23 +913,26 @@ public class Server
         update();
     }
 
-    public void addAdmin(IMethodCaller methodCaller, String name)
+    public void addAdmin(IMethodCaller caller, String name)
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Add admin: " + name);
         admins.add(name);
         update();
     }
 
-    public void addCoowner(IMethodCaller methodCaller, String name)
+    public void addCoowner(IMethodCaller caller, String name)
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Add coowner: " + name);
         coOwners.add(name);
         update();
     }
 
-    public void removeCoowner(IMethodCaller methodCaller, String name)
+    public void removeCoowner(IMethodCaller caller, String name)
     {
-        if (!isCoOwner(methodCaller.getUser())) throw new AuthenticationException();
+        if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+        logAction(caller, "Remove coowner: " + name);
         Iterator<String> i = coOwners.iterator();
         while (i.hasNext())
         {
@@ -894,46 +941,16 @@ public class Server
         update();
     }
 
-    /*
-     * ========================================================================================
-     * MAKE or RENEW methods
-     */
-    public void renewQuery()
-    {
-        try
-        {
-            cachedResponse = getQuery().fullStat();
-        }
-        catch (SocketTimeoutException ignored)
-        {
-
-        }
-        catch (IOException e)
-        {
-            Main.LOGGER.error("Caught IOException from server {} (on port {})", ID, serverPort);
-            Main.LOGGER.catching(e);
-        }
-    }
-
-    private void saveProperties() throws IOException
-    {
-        if (!propertiesFile.exists()) propertiesFile.createNewFile();
-
-        FileOutputStream outputStream = new FileOutputStream(propertiesFile);
-        Properties properties = getProperties();
-        properties.store(outputStream, "Modified by the backend");
-        propertiesFileLastModified = propertiesFile.lastModified();
-        outputStream.close();
-    }
-
     /**
      * Start the server in a process controlled by us.
      * Threaded to avoid haning.
      *
      * @throws ServerOnlineException
      */
-    public void startServer() throws Exception
+    public void startServer(IMethodCaller caller) throws Exception
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
+
         if (getOnline() || starting) throw new ServerOnlineException();
         if (downloading) throw new Exception("Still downloading something. You can see the progress in the server console.");
         if (new File(folder, getJvmData().jarName + ".tmp").exists()) throw new Exception("Minecraft server jar still downloading...");
@@ -945,6 +962,8 @@ public class Server
         final Server instance = this;
         for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraJavaParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
         for (String blocked : SERVER_START_ARGS_BLACKLIST_PATTERNS) if (getJvmData().extraMCParameters.contains(blocked)) throw new Exception("JVM/MC options contain a blocked option: " + blocked);
+
+        logAction(caller, "Starting server");
 
         starting = true;
         File eula = new File(getFolder(), "eula.txt");
@@ -1037,56 +1056,51 @@ public class Server
         }, "ServerStarter-" + getID()).start();
     }
 
-    public void printLine(String line)
-    {
-        line = Helper.stripColor(line);
-        logger.info(line);
-        lastConsoleLines.add(line);
-        ServerconsoleSocketApplication.sendLine(this, line);
-    }
-
-    public void error(Throwable e)
-    {
-        logger.catching(e);
-        StringWriter error = new StringWriter();
-        e.printStackTrace(new PrintWriter(error));
-        lastConsoleLines.add(error.toString());
-        ServerconsoleSocketApplication.sendLine(this, error.toString());
-    }
-
     /**
      * Stop the server gracefully
      */
-    public boolean stopServer(String message)
+    public boolean stopServer(IMethodCaller caller, String message)
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
         if (!getOnline()) return false;
+
+        logAction(caller, "Stopping server");
+
         try
         {
-            sendChat(message);
+            sendChat(CMDCALLER, message);
             renewQuery();
             printLine("----=====##### STOPPING SERVER WITH WITH KICK #####=====-----");
-            for (String user : getPlayerList()) sendCmd(String.format("kick %s %s", user, message));
-            sendCmd("stop");
+            for (String user : getPlayerList()) sendCmd(CMDCALLER, String.format("kick %s %s", user, message));
+            sendCmd(CMDCALLER, "stop");
             return true;
         }
         catch (Exception e)
         {
             printLine("----=====##### STOPPING SERVER #####=====-----");
-            sendCmd("stop");
+            sendCmd(CMDCALLER, "stop");
             return false;
         }
     }
 
-    public boolean forceStopServer() throws Exception
+    public boolean forceStopServer(IMethodCaller caller) throws Exception
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
+
+        logAction(caller, "Forced stopping server");
+
         if (!getOnline()) throw new ServerOfflineException();
         printLine("----=====##### KILLING SERVER #####=====-----");
         process.destroy();
         return true;
     }
 
-    public boolean murderServer() throws Exception
+    public boolean murderServer(IMethodCaller caller) throws Exception
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
+
+        logAction(caller, "Murdering server");
+
         if (!getOnline()) throw new ServerOfflineException();
         printLine("----=====##### FORCIBLY KILLING SERVER #####=====-----");
         printLine("Begone, foul process, away with thee!");
@@ -1097,9 +1111,8 @@ public class Server
     public boolean canUserControl(User user)
     {
         if (user == null) return false;
-        if (user.isAdmin() || user.getUsername().equalsIgnoreCase(getOwner())) return true;
+        if (isCoOwner(user)) return true;
         for (String admin : getAdmins()) if (admin.equalsIgnoreCase(user.getUsername())) return true;
-        for (String admin : getCoOwners()) if (admin.equalsIgnoreCase(user.getUsername())) return true;
         return false;
     }
 
@@ -1111,12 +1124,15 @@ public class Server
         return false;
     }
 
-    public void delete(final IMethodCaller methodCaller) throws IOException
+    public void delete(IMethodCaller caller) throws IOException
     {
         try
         {
             if (getOnline()) throw new ServerOnlineException();
-            if (!methodCaller.getUser().isAdmin() && methodCaller.getUser() != getOwnerObject()) throw new AuthenticationException();
+            if (!caller.getUser().isAdmin() && caller.getUser() != getOwnerObject()) throw new AuthenticationException();
+
+            logAction(caller, "Deleting server");
+
             Settings.SETTINGS.servers.remove(getID()); // Needs to happen first because
             FileUtils.deleteDirectory(folder);
             FileUtils.deleteDirectory(backupFolder);
@@ -1127,36 +1143,40 @@ public class Server
         }
     }
 
-    public void sendChat(String message)
+    public void sendChat(IMethodCaller caller, String message)
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
+
         if (!getOnline())
         {
             printLine("Server offline.");
             return;
         }
+
+        logAction(caller, "Send chat: " + message);
+
         PrintWriter printWriter = new PrintWriter(process.getOutputStream());
         printWriter.print("say ");//send command /say <message>
         printWriter.println(message);
         printWriter.flush();
     }
 
-    public void sendCmd(String s)
+    public void sendCmd(IMethodCaller caller, String cmd)
     {
+        if (!canUserControl(caller.getUser())) throw new AuthenticationException();
+
         if (!getOnline())
         {
             printLine("Server offline.");
             return;
         }
+
+        logAction(caller, "Send command: " + cmd);
+
         PrintWriter printWriter = new PrintWriter(process.getOutputStream());
-        printWriter.println(s);
+        printWriter.println(cmd);
         printWriter.flush();
     }
-
-    /*
-     * ========================================================================================
-     * ========================================================================================
-     * PRIVATE METHODS
-     */
 
     private void normalizeProperties() throws IOException
     {

@@ -64,7 +64,7 @@ public class ServerFileHandler extends StaticHttpHandlerBase
         if (server == null) return false;
 
         User user = (User) request.getSession().getAttribute(USER);
-        if (user == null || !(user.isAdmin() || server.canUserControl(user)))
+        if (user == null || !server.canUserControl(user))
         {
             response.setHeader(Header.Allow, Method.GET.getMethodString());
             response.sendError(HttpStatus.UNAUTHORIZED_401.getStatusCode());

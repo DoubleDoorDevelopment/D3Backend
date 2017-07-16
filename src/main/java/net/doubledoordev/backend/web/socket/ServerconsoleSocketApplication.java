@@ -20,13 +20,15 @@ package net.doubledoordev.backend.web.socket;
 
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.WebSocketHelper;
+import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 
 import java.util.TimerTask;
 
-import static net.doubledoordev.backend.util.Constants.*;
+import static net.doubledoordev.backend.util.Constants.SERVER;
+import static net.doubledoordev.backend.util.Constants.SOCKET_CONTEXT;
 
 /**
  * @author Dries007
@@ -75,6 +77,6 @@ public class ServerconsoleSocketApplication extends ServerWebSocketApplication
     @Override
     public void onMessage(WebSocket socket, String text)
     {
-        ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).sendCmd(text);
+        ((Server) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER)).sendCmd(new WebSocketCaller(socket), text);
     }
 }

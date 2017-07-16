@@ -31,7 +31,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Random;
-import java.util.Timer;
 import java.util.regex.Pattern;
 
 /**
@@ -44,7 +43,7 @@ public class Constants
     /*
      * String constants
      */
-    public static final String NAME = "D3 Backend";
+    public static final String NAME = "D3Backend";
     public static final String LOCALHOST = "localhost";
     public static final String WORLD = "world";
     public static final String SERVER = "server";

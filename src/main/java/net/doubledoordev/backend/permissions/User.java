@@ -88,11 +88,6 @@ public class User
         return username;
     }
 
-    public String getPasshash()
-    {
-        return passhash;
-    }
-
     public Group getGroup()
     {
         return group;

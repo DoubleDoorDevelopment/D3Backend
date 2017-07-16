@@ -27,6 +27,8 @@ import net.doubledoordev.backend.util.IUpdateFromJson;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.exceptions.AuthenticationException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
@@ -112,6 +114,7 @@ public class AdvancedSettingsSocketApplication extends ServerWebSocketApplicatio
         JsonObject object = JSONPARSER.parse(text).getAsJsonObject();
         DATA_TYPES.forEach((key, data) -> {
             if (!object.has(key)) return;
+            server.logAction(new WebSocketCaller(socket), "Set " + key + " to: " + text);
             data.set(server, object.getAsJsonObject(key));
         });
         doSendUpdateToAll(server);
