@@ -96,12 +96,6 @@ public class WebSocketHelper
         socket.send(root.toString());
     }
 
-    public static void sendServerUpdate(Server instance)
-    {
-        ServerMonitorSocketApplication.sendUpdateToAll(instance);
-        ServerPropertiesSocketApplication.sendUpdateToAll(instance);
-    }
-
     public static void sendOk(WebSocket socket)
     {
         JsonObject root = new JsonObject();

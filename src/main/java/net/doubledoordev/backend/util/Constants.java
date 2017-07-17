@@ -108,6 +108,7 @@ public class Constants
     public static final JsonParser JSONPARSER = new JsonParser();
     public static final Joiner JOINER_COMMA_SPACE = Joiner.on(", ");
     public static final SimpleDateFormat BACKUP_SDF = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+    public static final SimpleDateFormat ACTIONLOG_SDF = new SimpleDateFormat("HH:mm:ss");
     public static final Random RANDOM = new Random();
 
     private static String javaPath;

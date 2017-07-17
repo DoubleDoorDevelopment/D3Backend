@@ -69,6 +69,11 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         ONE_SERVER_APPLICATION.doSendUpdateToAll(server);
     }
 
+    public static void sendActionLog(Server server, String line)
+    {
+        ONE_SERVER_APPLICATION.doSendActionLog(server, line);
+    }
+
     public static void register()
     {
         WebSocketEngine.getEngine().register(SOCKET_CONTEXT, ALL_SERVERS_URL_PATTERN, ALL_SERVERS_APPLICATION);
@@ -129,7 +134,24 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         for (WebSocket socket : getWebSockets())
         {
             if (!allServers && ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER) != server) continue;
-            if (server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER))) WebSocketHelper.sendData(socket, getData(server));
+            if (server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+            {
+                WebSocketHelper.sendData(socket, getData(server));
+            }
+        }
+    }
+
+    public void doSendActionLog(Server server, String line)
+    {
+        if (allServers) return;
+
+        for (WebSocket socket : getWebSockets())
+        {
+            if (((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(SERVER) != server) continue;
+            if (server.canUserControl((User) ((DefaultWebSocket) socket).getUpgradeRequest().getAttribute(USER)))
+            {
+                WebSocketHelper.sendData(socket, line);
+            }
         }
     }
 

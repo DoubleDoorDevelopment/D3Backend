@@ -88,6 +88,9 @@
                 </#list>
                 </ul>
                 <p class="text-muted">Usernames on the backend. Can start, stop & use console.</p>
+                <hr>
+                <h4>Security log</h4>
+                <textarea title="Security log" id="security-log" class="form-control" rows="4" readonly>${server.actionLog?reverse?join('\n')}</textarea>
             </div>
         </div>
     </div>
@@ -359,7 +362,14 @@
         var temp = JSON.parse(evt.data);
         if (temp.status === "ok")
         {
-            updateInfo(temp.data);
+            if (typeof temp.data === "string")
+            {
+                document.getElementById("security-log").innerHTML = temp.data + "\n" + document.getElementById("security-log").innerHTML;
+            }
+            else
+            {
+                updateInfo(temp.data);
+            }
         }
         else
         {

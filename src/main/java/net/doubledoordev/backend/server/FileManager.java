@@ -228,38 +228,44 @@ public class FileManager
         }
     }
 
-    public void rename(String newname)
+    public void rename(IMethodCaller caller, String newname)
     {
+        server.logAction(caller, "Rename " + stripServer(file) + " to " + newname);
         file.renameTo(new File(file.getParentFile(), newname));
         FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
-    public void makeWritable()
+    public void makeWritable(IMethodCaller caller)
     {
+        server.logAction(caller, "Make " + stripServer(file) + " writable");
         file.setWritable(true);
         FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);
     }
 
-    public void delete() throws IOException
+    public void delete(IMethodCaller caller) throws IOException
     {
+        server.logAction(caller, "Delete " + stripServer(file));
         FileUtils.forceDelete(file);
         FileMonitorSocketApplication.update(getJson(file.getParentFile()), file.getParentFile());
     }
 
-    public void newFile(String name) throws IOException
+    public void newFile(IMethodCaller caller, String name) throws IOException
     {
+        server.logAction(caller, "New File " + stripServer(file));
         FileUtils.touch(new File(file, name));
         FileMonitorSocketApplication.update(getJson(file), file);
     }
 
-    public void newFolder(String name) throws IOException
+    public void newFolder(IMethodCaller caller, String name) throws IOException
     {
+        server.logAction(caller, "New Folder " + stripServer(file));
         FileUtils.forceMkdir(new File(file, name));
         FileMonitorSocketApplication.update(getJson(file), file);
     }
 
     public void set(IMethodCaller caller, String text) throws IOException
     {
+        server.logAction(caller, "Changed file " + stripServer(file));
         FileUtils.writeStringToFile(file, text);
         FileManagerSocketApplication.sendFile(file.getAbsolutePath(), text);
         FileMonitorSocketApplication.update(getJson(file.getParentFile()), file);

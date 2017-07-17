@@ -32,6 +32,8 @@ import net.doubledoordev.backend.util.exceptions.BackupException;
 import net.doubledoordev.backend.util.exceptions.ServerOfflineException;
 import net.doubledoordev.backend.util.exceptions.ServerOnlineException;
 import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
+import net.doubledoordev.backend.web.socket.ServerMonitorSocketApplication;
+import net.doubledoordev.backend.web.socket.ServerPropertiesSocketApplication;
 import net.doubledoordev.backend.web.socket.ServerconsoleSocketApplication;
 import net.dries007.cmd.Arguments;
 import net.dries007.cmd.Worker;
@@ -408,6 +410,11 @@ public class Server
         return jvmData;
     }
 
+    public EvictingQueue<String> getActionLog()
+    {
+        return actionLog;
+    }
+
     public Set<String> getPossibleJarnames()
     {
         LinkedHashSet<String> names = new LinkedHashSet<>();
@@ -448,6 +455,8 @@ public class Server
         properties.store(outputStream, "Modified by the backend");
         propertiesFileLastModified = propertiesFile.lastModified();
         outputStream.close();
+
+        ServerPropertiesSocketApplication.sendUpdateToAll(this);
     }
 
     public void printLine(String line)
@@ -470,8 +479,9 @@ public class Server
     public void logAction(IMethodCaller caller, String action)
     {
         if (caller == CommandHandler.CMDCALLER) return;
-        printLine("[" + Constants.NAME + "] " + caller.getUser().getUsername() + ": " + action);
-        actionLog.add(caller.getUser().getUsername() + ": " + action);
+        String line = String.format("%s %s: %s", Constants.ACTIONLOG_SDF.format(new Date()), caller.getUser().getUsername(), action);
+        actionLog.add(line);
+        ServerMonitorSocketApplication.sendActionLog(this, line);
         // Logs to disk, otherwise it would be useless, since the printLine already logs to console.
         Main.LOGGER.info("Action on {} by {}: {}", ID, caller.getUser().getUsername(), action);
     }
@@ -1210,7 +1220,7 @@ public class Server
 
     private void update()
     {
-        WebSocketHelper.sendServerUpdate(this);
+        ServerMonitorSocketApplication.sendUpdateToAll(this);
         Settings.save();
     }
 }
