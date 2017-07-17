@@ -45,17 +45,23 @@
 </#if>
 <#assign maxRam = user.getMaxRamLeft()>
     <div class="form-group">
-        <label for="RAMmin" class="col-sm-2 control-label">RAM min (in MB)</label>
+        <label for="RAMmin" class="col-sm-2 control-label">RAM min</label>
 
         <div class="col-sm-10">
-            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if> class="form-control" id="RAMmin" name="RAMmin" required>
+            <div class="input-group">
+                <input type="number" min="512" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"<#else>value="512"</#if> class="form-control" id="RAMmin" name="RAMmin" step="512" required>
+                <div class="input-group-addon">MB</div>
+            </div>
         </div>
     </div>
     <div class="form-group">
-        <label for="RAMmax" class="col-sm-2 control-label">RAM max (in MB)</label>
+        <label for="RAMmax" class="col-sm-2 control-label">RAM max</label>
 
         <div class="col-sm-10">
-            <input type="number" min="0" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"</#if> class="form-control" id="RAMmax" name="RAMmax" required>
+            <div class="input-group">
+                <input type="number" min="512" <#if maxRam != -1>max="${maxRam?c}" value="${maxRam?c}"<#else>value="1024"</#if> class="form-control" id="RAMmax" name="RAMmax" step="512" required>
+                <div class="input-group-addon">MB</div>
+            </div>
         </div>
     </div>
     <div class="form-group">

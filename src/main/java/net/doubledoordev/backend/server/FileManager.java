@@ -43,6 +43,7 @@ import java.util.LinkedList;
  *
  * @author Dries007
  */
+@SuppressWarnings("unused")
 public class FileManager
 {
     private final Server server;

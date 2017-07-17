@@ -63,7 +63,10 @@
             {
                 return data.id === temp.data.id;
             }).remove();
-            table.row.add(temp.data);
+            if (!temp.data.hasOwnProperty("deleted") || !temp.data['deleted'])
+            {
+                table.row.add(temp.data);
+            }
             table.draw();
         }
         else

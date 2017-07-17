@@ -71,7 +71,7 @@
 
                     <div class="input-group">
                         <div class="input-group-addon">Min:</div>
-                        <input id="JvmData_ramMin" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+                        <input id="JvmData_ramMin" class="form-control" aria-describedby="helpBlock" type="number" min="512" step="512">
 
                         <div class="input-group-addon">MB</div>
                     </div>
@@ -79,7 +79,7 @@
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">Max:</div>
-                        <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="0" placeholder="0">
+                        <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="512" step="512">
 
                         <div class="input-group-addon">MB</div>
                     </div>

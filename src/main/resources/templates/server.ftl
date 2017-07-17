@@ -147,7 +147,7 @@
                     <input id="modpackPurge" type="checkbox"> Purge the server
                 </label>
                 <label for="modpackCurse">
-                    <input id="modpackCurse" type="checkbox"> This is a curse modpack zip
+                    <input id="modpackCurse" type="checkbox"> This is a CurseForge/Twitch zip (Client side only!)
                 </label>
                 <br>
                 <button type="button" <#if isCoOwner && !server.online>onclick="packUpload()" <#else>disabled</#if> class="btn btn-warning">
@@ -292,6 +292,11 @@
 
     function updateInfo(data)
     {
+        if (data.hasOwnProperty("deleted") && data['deleted'])
+        {
+            document.location = "/servers";
+        }
+
         document.getElementById("startServerBtn").onclick = !data.online ? function ()
         {
             call('servercmd/${server.ID?js_string}', "startServer")

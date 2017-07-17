@@ -118,6 +118,7 @@ public class Server
     private WorldManager worldManager = new WorldManager(this);
     private User ownerObject;
     private boolean downloading = false;
+    private boolean deleted = false;
 
     public Server(String ID, String owner)
     {
@@ -179,6 +180,11 @@ public class Server
     public boolean isStarting()
     {
         return starting;
+    }
+
+    public boolean isDeleted()
+    {
+        return deleted;
     }
 
     public MCQuery getQuery()
@@ -1146,6 +1152,10 @@ public class Server
             Settings.SETTINGS.servers.remove(getID()); // Needs to happen first because
             FileUtils.deleteDirectory(folder);
             FileUtils.deleteDirectory(backupFolder);
+
+            deleted = true;
+
+            update();
         }
         catch (IOException e)
         {

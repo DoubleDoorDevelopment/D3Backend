@@ -160,6 +160,13 @@ public class ServerMonitorSocketApplication extends WebSocketApplication
         JsonObject root = new JsonObject();
 
         root.addProperty("id", server.getID());
+
+        if (server.isDeleted())
+        {
+            root.addProperty("deleted", true);
+            return root;
+        }
+
         root.addProperty("displayAddress", server.getDisplayAddress());
         root.addProperty("onlinePlayers", server.getOnlinePlayers());
         root.addProperty("playerList", JOINER_COMMA_SPACE.join(server.getPlayerList()));
