@@ -19,18 +19,20 @@
 
 package com.sk89q.intake.parametric.handler;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.sk89q.intake.Command;
 import com.sk89q.intake.CommandException;
-import com.sk89q.intake.SettableDescription;
-import com.sk89q.intake.context.CommandContext;
-import com.sk89q.intake.context.CommandLocals;
-import com.sk89q.intake.parametric.MissingParameterException;
-import com.sk89q.intake.parametric.ParameterData;
-import com.sk89q.intake.parametric.ParameterException;
-import com.sk89q.intake.parametric.UnconsumedParameterException;
-import com.sk89q.intake.parametric.binding.BindingBehavior;
+import com.sk89q.intake.ImmutableDescription;
+import com.sk89q.intake.argument.ArgumentException;
+import com.sk89q.intake.argument.CommandArgs;
+import com.sk89q.intake.argument.MissingArgumentException;
+import com.sk89q.intake.argument.UnusedArgumentException;
+import com.sk89q.intake.parametric.ArgumentParser;
 
-import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Handles legacy properties on {@link Command} such as {@link Command#min()} and
@@ -44,21 +46,36 @@ public class LegacyCommandsHandler extends AbstractInvokeListener implements Inv
     }
 
     @Override
-    public boolean preProcess(Object object, Method method, ParameterData[] parameters, CommandContext context, CommandLocals locals) throws CommandException, ParameterException {
+    public boolean preProcess(List<? extends Annotation> annotations, ArgumentParser parser, CommandArgs commandArgs) throws CommandException, ArgumentException {
         return true;
     }
 
     @Override
-    public boolean preInvoke(Object object, Method method, ParameterData[] parameters, Object[] args, CommandContext context, CommandLocals locals) throws ParameterException {
-        Command annotation = method.getAnnotation(Command.class);
-        
-        if (annotation != null) {
-            if (context.argsLength() < annotation.min()) {
-                throw new MissingParameterException();
-            }
-    
-            if (annotation.max() != -1 && context.argsLength() > annotation.max()) {
-                throw new UnconsumedParameterException(context.getRemainingString(annotation.max()));
+    public boolean preInvoke(List<? extends Annotation> annotations, ArgumentParser parser, Object[] args, CommandArgs commandArgs) throws CommandException, ArgumentException {
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof Command) {
+                Command command = (Command) annotation;
+
+                if (commandArgs.size() < command.min()) {
+                    throw new MissingArgumentException();
+                }
+
+                if (command.max() != -1 && commandArgs.size() > command.max()) {
+                    List<String> unconsumedArguments = Lists.newArrayList();
+
+                    while (true) {
+                        try {
+                            String value = commandArgs.next();
+                            if (commandArgs.position() >= command.max()) {
+                                unconsumedArguments.add(value);
+                            }
+                        } catch (MissingArgumentException ignored) {
+                            break;
+                        }
+                    }
+
+                    throw new UnusedArgumentException(Joiner.on(" ").join(unconsumedArguments));
+                }
             }
         }
 
@@ -66,28 +83,23 @@ public class LegacyCommandsHandler extends AbstractInvokeListener implements Inv
     }
 
     @Override
-    public void postInvoke(Object object, Method method, ParameterData[] parameters, Object[] args, CommandContext context, CommandLocals locals) {
+    public void postInvoke(List<? extends Annotation> annotations, ArgumentParser parser, Object[] args, CommandArgs commandArgs) throws CommandException, ArgumentException {
     }
 
     @Override
-    public void updateDescription(Object object, Method method, ParameterData[] parameters, SettableDescription description) {
-        Command annotation = method.getAnnotation(Command.class);
-        
-        // Handle the case for old commands where no usage is set and all of its
-        // parameters are provider bindings, so its usage information would
-        // be blank and would imply that there were no accepted parameters
-        if (annotation != null && annotation.usage().isEmpty() && (annotation.min() > 0 || annotation.max() > 0)) {
-            boolean hasUserParameters = false;
-            
-            for (ParameterData parameter : parameters) {
-                if (parameter.getBinding().getBehavior(parameter) != BindingBehavior.PROVIDES) {
-                    hasUserParameters = true;
-                    break;
+    public void updateDescription(Set<Annotation> annotations, ArgumentParser parser, ImmutableDescription.Builder builder) {
+        for (Annotation annotation : annotations) {
+            if (annotation instanceof Command) {
+                Command command = (Command) annotation;
+
+                // Handle the case for old commands where no usage is set and all of its
+                // parameters are provider bindings, so its usage information would
+                // be blank and would imply that there were no accepted parameters
+                if (command.usage().isEmpty() && (command.min() > 0 || command.max() > 0)) {
+                    if (!parser.getUserParameters().isEmpty()) {
+                        builder.setUsageOverride("(unknown usage information)");
+                    }
                 }
-            }
-            
-            if (!hasUserParameters) {
-                description.overrideUsage("(unknown usage information)");
             }
         }
     }

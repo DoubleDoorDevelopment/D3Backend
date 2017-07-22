@@ -17,35 +17,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.sk89q.intake.parametric;
+package com.sk89q.intake.internal.parametric;
+
+import com.sk89q.intake.parametric.Key;
+import com.sk89q.intake.parametric.binder.Binder;
+import com.sk89q.intake.parametric.binder.BindingBuilder;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Thrown when there are leftover parameters that were not consumed, particular in the
- * case of the user providing too many parameters.
- */
-public class UnconsumedParameterException extends ParameterException {
-    
-    private String unconsumed;
+class InternalBinder implements Binder {
 
-    /**
-     * Create a new instance.
-     *
-     * @param unconsumed the unconsumed tokens
-     */
-    public UnconsumedParameterException(String unconsumed) {
-        checkNotNull(unconsumed);
-        this.unconsumed = unconsumed;
+    private final BindingList bindings;
+
+    InternalBinder(BindingList bindings) {
+        checkNotNull(bindings, "bindings");
+        this.bindings = bindings;
     }
 
-    /**
-     * Get the unconsumed tokens.
-     *
-     * @return unconsumed tokens
-     */
-    public String getUnconsumed() {
-        return unconsumed;
+    @Override
+    public <T> BindingBuilder<T> bind(Class<T> type) {
+        return new InternalBinderBuilder<T>(bindings, Key.get(type));
+    }
+
+    @Override
+    public <T> BindingBuilder<T> bind(Key<T> type) {
+        return new InternalBinderBuilder<T>(bindings, type);
     }
 
 }

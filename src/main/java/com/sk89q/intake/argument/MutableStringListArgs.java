@@ -17,27 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.sk89q.intake.parametric.binding;
+package com.sk89q.intake.argument;
 
-import com.sk89q.intake.context.CommandContext;
-import com.sk89q.intake.parametric.argument.ArgumentStack;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Standard bindings that should be available to most configurations.
- */
-public final class StandardBindings extends BindingHelper {
+public class MutableStringListArgs extends StringListArgs {
 
-    /**
-     * Gets a {@link CommandContext} from a {@link ArgumentStack}.
-     * 
-     * @param context the context
-     * @return a selection
-     */
-    @BindingMatch(type = CommandContext.class,
-                  behavior = BindingBehavior.PROVIDES)
-    public CommandContext getCommandContext(ArgumentStack context) {
-        context.markConsumed(); // Consume entire stack
-        return context.getContext();
+    public MutableStringListArgs(List<String> arguments, Map<Character, String> flags, Namespace namespace) {
+        super(arguments, flags, namespace);
     }
-    
+
+    @Override
+    public void insert(String argument) {
+        super.insert(argument);
+    }
 }

@@ -18,14 +18,16 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>
-                    Server owner is <span id="serverOwner"></span>.<br>
-                    Server port status: <span id="serverPortAvailable"></span><br>
-                    Server uptime: ${server.online?string(Helper.getOnlineTime(server.startTime, "%2d days, ", "%2d hours, ", "%2d min and ", "%2d sec"), "offline")}<br>
-                <hr>
-                Diskspace in use:<br>
-                by server: <span id="diskspace_server"></span>MB<br>
-                by backups: <span id="diskspace_backup"></span>MB<br>
-                total: <span id="diskspace_total"></span>MB
+                    Server owner is <span id="serverOwner"></span>.<br />
+                    Server port status: <span id="serverPortAvailable"></span><br />
+                    Server uptime: ${server.online?string(Helper.getOnlineTime(server.startTime, "%2d days, ", "%2d hours, ", "%2d min and ", "%2d sec"), "offline")}<br />
+                </p>
+                <hr />
+                <p>
+                    Diskspace in use:<br>
+                    by server: <span id="diskspace_server"></span>MB<br />
+                    by backups: <span id="diskspace_backup"></span>MB<br />
+                    total: <span id="diskspace_total"></span>MB
                 </p>
                 <table class="table table-hover table-condensed">
                     <thead>
@@ -120,10 +122,18 @@
                 <h3 class="panel-title" style="text-align: center;">Install Forge</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
-                <select id="forgeVersionSelector" class="form-control">
-                <#list Helper.getForgeNames() as version>
-                    <option>${version}</option>
-                </#list>
+                <label for="forgeVersionSelectorMinecraft">
+                    Minecraft version
+                </label>
+                <select id="forgeVersionSelectorMinecraft" class="form-control" onchange="updateForges(this.value)">
+                    <option>Loading data...</option>
+                </select>
+                <br>
+                <label for="forgeVersionSelectorForge">
+                    Forge version
+                </label>
+                <select id="forgeVersionSelectorForge" class="form-control">
+                    <option>Loading data...</option>
                 </select>
                 <br>
                 <button type="button" <#if isCoOwner && !server.online>onclick="installForge()" <#else>disabled</#if> class="btn btn-warning">
@@ -147,7 +157,7 @@
                     <input id="modpackPurge" type="checkbox"> Purge the server
                 </label>
                 <label for="modpackCurse">
-                    <input id="modpackCurse" type="checkbox"> This is a CurseForge/Twitch zip (Client side only!)
+                    <input id="modpackCurse" type="checkbox"> This is a <small>CurseForge/</small>Twitch zip <small>(Client side only!)</small>
                 </label>
                 <br>
                 <button type="button" <#if isCoOwner && !server.online>onclick="packUpload()" <#else>disabled</#if> class="btn btn-warning">
@@ -204,7 +214,7 @@
 
     function changeMCJar()
     {
-        if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
+        if (confirm('Are you sure?\nThis will override the minecraft jar!'))
         {
             document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value;
             call('servercmd/${server.ID?js_string}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressModal);
@@ -213,16 +223,16 @@
 
     function installForge()
     {
-        if (confirm('Are you sure?\nThis will overide the minecraft jar!'))
+        if (confirm('Are you sure?\nThis will override the minecraft jar!'))
         {
-            document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelector').value;
-            call('servercmd/${server.ID?js_string}', 'installForge', [document.getElementById('forgeVersionSelector').value], progressModal);
+            document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelectorForge').value;
+            call('servercmd/${server.ID?js_string}', 'installForge', [document.getElementById('forgeVersionSelectorMinecraft').value, document.getElementById('forgeVersionSelectorForge').value], progressModal);
         }
     }
 
     function packUpload()
     {
-        if (confirm('Are you sure?\nThis will overide the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
+        if (confirm('Are you sure?\nThis will override the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
         {
             document.getElementById('modalLabel').innerHTML = 'Uploading modpack...';
 
@@ -241,7 +251,7 @@
                     processData: false,
                     beforeSend: function()
                     {
-                        progressModal("Starting file uplaoad...");
+                        progressModal("Starting file upload...");
                     },
                     success: function()
                     {
@@ -342,16 +352,20 @@
         document.getElementById("online").className = "label label-" + (data.online ? "success" : "danger");
 
         document.getElementById("coOwnersList").innerHTML = "";
+        var tmp = "";
         data.coOwners.forEach(function (entry)
         {
-            document.getElementById("coOwnersList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
+            tmp += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
+        document.getElementById("coOwnersList").innerHTML = tmp;
 
         document.getElementById("adminsList").innerHTML = "";
+        tmp = "";
         data.admins.forEach(function (entry)
         {
-            document.getElementById("adminsList").innerHTML += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
+            tmp += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
+        document.getElementById("adminsList").innerHTML = tmp;
     }
     websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID?js_string}"));
     websocketMonitor.onerror = function (evt)
@@ -381,5 +395,33 @@
             alert(temp.message);
         }
     };
+
+    $(function () {
+        document.getElementById("forgeVersionSelectorMinecraft").innerHTML = "";
+        var tmpMC = "";
+        for (var i in forgeVersions) {
+            if (forgeVersions.hasOwnProperty(i)) {
+                tmpMC += "<option>" + i + "</option>";
+            }
+        }
+        if (tmpMC.length === 0) tmpMC = "<option>Forge data not finished downloading.</option>";
+        else updateForges(Object.keys(forgeVersions)[0]);
+        document.getElementById("forgeVersionSelectorMinecraft").innerHTML = tmpMC;
+    });
+
+    function updateForges(val)
+    {
+        var forges = forgeVersions[val];
+        document.getElementById("forgeVersionSelectorForge").innerHTML = "";
+        var tmpForge = "";
+        for (var i in forges) {
+            if (forges.hasOwnProperty(i)) {
+                tmpForge += "<option>" + forges[i] + "</option>";
+            }
+        }
+        document.getElementById("forgeVersionSelectorForge").innerHTML = tmpForge;
+    }
+
+    var forgeVersions = ${Helper.getForgeVersionJson()};
 </script>
 <#include "footer.ftl">

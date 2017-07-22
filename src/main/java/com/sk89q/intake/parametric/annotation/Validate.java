@@ -19,7 +19,7 @@
 
 package com.sk89q.intake.parametric.annotation;
 
-import com.sk89q.intake.parametric.binding.PrimitiveBindings;
+import com.sk89q.intake.parametric.provider.PrimitivesModule;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,18 +29,18 @@ import java.util.regex.Pattern;
 
 /**
  * Used to validate a string.
- * 
- * @see PrimitiveBindings where this validation is used
+ *
+ * @see PrimitivesModule Where this validation is used
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
+@Target({ ElementType.PARAMETER, ElementType.FIELD })
 public @interface Validate {
     
     /**
      * An optional regular expression that must match the string.
      * 
-     * @see Pattern regular expression class
-     * @return the pattern
+     * @see Pattern
+     * @return The pattern
      */
     String regex() default "";
 

@@ -39,6 +39,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static net.doubledoordev.backend.util.Constants.GSON;
 import static net.doubledoordev.backend.util.Constants.JSONPARSER;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
 
@@ -116,14 +117,9 @@ public class Helper
         return Cache.getMcVersions().keySet();
     }
 
-    public static Collection<String> getForgeNames()
+    public static String getForgeVersionJson()
     {
-        return Cache.getForgeNames();
-    }
-
-    public static String getForgeVersionForName(String name)
-    {
-        return Cache.getForgeVersionForName(name);
+        return GSON.toJson(Cache.getForgeVersions());
     }
 
     public static int getTotalRamUsed()

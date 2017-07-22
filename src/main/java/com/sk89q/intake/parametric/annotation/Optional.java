@@ -27,14 +27,14 @@ import java.lang.annotation.Target;
 /**
  * Indicates an optional parameter.
  */
-@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.PARAMETER, ElementType.FIELD })
 public @interface Optional {
     
     /**
      * The default value to use if no value is set.
      * 
-     * @return a string value, or an empty list
+     * @return A string value, or an empty list
      */
     String[] value() default {};
 

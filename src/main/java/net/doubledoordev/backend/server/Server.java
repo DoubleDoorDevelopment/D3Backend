@@ -630,13 +630,13 @@ public class Server
     /**
      * Downloads and uses specific forge installer
      */
-    public void installForge(final IMethodCaller caller, final String name) throws BackupException
+    public void installForge(final IMethodCaller caller, final String mc, final String name) throws BackupException
     {
         if (getOnline()) throw new ServerOnlineException();
-        final String version = Helper.getForgeVersionForName(name);
-        if (version == null) throw new IllegalArgumentException("Forge with ID " + name + " not found.");
         if (downloading) throw new IllegalStateException("Already downloading something.");
         if (!isCoOwner(caller.getUser())) throw new AuthenticationException();
+
+        String version = Cache.getForgeVersionDownloadID(mc, name);
 
         logAction(caller, "Install Forge version: " + version);
 

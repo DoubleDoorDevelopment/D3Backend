@@ -41,9 +41,10 @@ public interface ExceptionConverter {
      * <p>If the exception is not recognized, then
      * {@link InvocationCommandException} should be thrown to wrap the exception.</p>
      * 
-     * @param t the throwable
-     * @throws CommandException a command exception
+     * @param t The throwable
+     * @throws CommandException If there is a problem with the command
+     * @throws InvocationCommandException If there is a problem with command invocation
      */
-    void convert(Throwable t) throws CommandException;
+    void convert(Throwable t) throws CommandException, InvocationCommandException;
 
 }

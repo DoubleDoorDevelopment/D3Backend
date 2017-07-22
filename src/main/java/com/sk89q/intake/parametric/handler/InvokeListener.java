@@ -19,13 +19,13 @@
 
 package com.sk89q.intake.parametric.handler;
 
-import com.sk89q.intake.CommandCallable;
+import com.sk89q.intake.ImmutableDescription;
 import com.sk89q.intake.Require;
-import com.sk89q.intake.SettableDescription;
-import com.sk89q.intake.parametric.ParameterData;
+import com.sk89q.intake.parametric.ArgumentParser;
 import com.sk89q.intake.parametric.ParametricBuilder;
 
-import java.lang.reflect.Method;
+import java.lang.annotation.Annotation;
+import java.util.Set;
 
 /**
  * Listens to events related to {@link ParametricBuilder}.
@@ -41,19 +41,17 @@ public interface InvokeListener {
      * <p>For simple {@link InvokeHandler}, an object can implement both this
      * interface and {@link InvokeHandler}.</p>
      * 
-     * @return a new invocation handler
+     * @return A new invocation handler
      */
     InvokeHandler createInvokeHandler();
 
     /**
-     * During creation of a {@link CommandCallable} by a {@link ParametricBuilder},
-     * this will be called in case the description needs to be updated.
-     * 
-     * @param object the object
-     * @param method the method
-     * @param parameters a list of parameters
-     * @param description the description to be updated
+     * Called to update the description of a command.
+     *
+     * @param annotations Annotations on the command
+     * @param parser The parser containing parameter information
+     * @param descriptionBuilder The description builder
      */
-    void updateDescription(Object object, Method method, ParameterData[] parameters, SettableDescription description);
+    void updateDescription(Set<Annotation> annotations, ArgumentParser parser, ImmutableDescription.Builder descriptionBuilder);
 
 }

@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.sk89q.intake.context;
+package com.sk89q.intake.argument;
 
 public class SuggestionContext {
 

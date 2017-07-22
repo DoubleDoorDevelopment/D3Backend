@@ -18,59 +18,145 @@
 
 package net.doubledoordev.backend.commands;
 
-import com.sk89q.intake.parametric.ParameterException;
-import com.sk89q.intake.parametric.argument.ArgumentStack;
-import com.sk89q.intake.parametric.binding.BindingBehavior;
-import com.sk89q.intake.parametric.binding.BindingHelper;
-import com.sk89q.intake.parametric.binding.BindingMatch;
+import com.sk89q.intake.CommandMapping;
+import com.sk89q.intake.argument.ArgumentException;
+import com.sk89q.intake.argument.CommandArgs;
+import com.sk89q.intake.parametric.Module;
+import com.sk89q.intake.parametric.Provider;
+import com.sk89q.intake.parametric.ProvisionException;
+import com.sk89q.intake.parametric.binder.Binder;
 import net.doubledoordev.backend.permissions.User;
 import net.doubledoordev.backend.server.Server;
 import net.doubledoordev.backend.util.Settings;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author Dries007
  */
-public class Bindings extends BindingHelper
+public class Bindings implements Module
 {
-    @BindingMatch(type = Server.class, behavior = BindingBehavior.CONSUMES, consumedCount = 1)
-    public Server getServer(ArgumentStack context) throws ParameterException
+    @Override
+    public void configure(Binder binder)
     {
-        return Settings.getServerByName(context.next());
-    }
+        binder.bind(CommandMapping.class).toProvider(new Provider<CommandMapping>() {
+            @Override
+            public boolean isProvided()
+            {
+                return false;
+            }
 
-    @BindingMatch(type = Server[].class, behavior = BindingBehavior.CONSUMES)
-    public Server[] getServers(ArgumentStack context) throws ParameterException
-    {
-        String selector = context.next();
-        if (Settings.getServerByName(selector) != null) return new Server[]{Settings.getServerByName(selector)};
-        if (selector.equals("*")) return Settings.SETTINGS.servers.values().toArray(new Server[0]);
+            @Override
+            public CommandMapping get(CommandArgs arguments, List<? extends Annotation> modifiers) throws ArgumentException, ProvisionException
+            {
+                CommandMapping c = CommandHandler.INSTANCE.dispatcher.get(arguments.next());
+                if (c == null) throw new ProvisionException("Not a valid command!");
+                return c;
+            }
 
-        Pattern pattern = Pattern.compile(selector);
-        List<Server> servers = new ArrayList<>();
-        for (Server server : Settings.SETTINGS.servers.values()) if (pattern.matcher(server.getID()).matches()) servers.add(server);
-        return servers.toArray(new Server[servers.size()]);
-    }
+            @Override
+            public List<String> getSuggestions(String prefix)
+            {
+                return CommandHandler.INSTANCE.dispatcher.getPrimaryAliases().stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+            }
+        });
 
-    @BindingMatch(type = User.class, behavior = BindingBehavior.CONSUMES, consumedCount = 1)
-    public User getUser(ArgumentStack context) throws ParameterException
-    {
-        return Settings.getUserByName(context.next());
-    }
+        binder.bind(Server.class).toProvider(new Provider<Server>() {
+            @Override
+            public boolean isProvided()
+            {
+                return false;
+            }
 
-    @BindingMatch(type = User[].class, behavior = BindingBehavior.CONSUMES, consumedCount = 1)
-    public User[] getUsers(ArgumentStack context) throws ParameterException
-    {
-        String selector = context.next();
-        if (Settings.getUserByName(selector) != null) return new User[]{Settings.getUserByName(selector)};
-        if (selector.equals("*")) return Settings.SETTINGS.users.values().toArray(new User[0]);
+            @Override
+            public Server get(CommandArgs arguments, List<? extends Annotation> modifiers) throws ArgumentException, ProvisionException
+            {
+                return Settings.getServerByName(arguments.next());
+            }
 
-        Pattern pattern = Pattern.compile(selector);
-        List<User> users = new ArrayList<>();
-        for (User server : Settings.SETTINGS.users.values()) if (pattern.matcher(server.getUsername()).matches()) users.add(server);
-        return users.toArray(new User[users.size()]);
+            @Override
+            public List<String> getSuggestions(String prefix)
+            {
+                return Settings.SETTINGS.servers.keySet().stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+            }
+        });
+
+        binder.bind(Server[].class).toProvider(new Provider<Server[]>() {
+            @Override
+            public boolean isProvided()
+            {
+                return false;
+            }
+
+            @Override
+            public Server[] get(CommandArgs arguments, List<? extends Annotation> modifiers) throws ArgumentException, ProvisionException
+            {
+                String selector = arguments.next();
+                if (Settings.getServerByName(selector) != null) return new Server[]{Settings.getServerByName(selector)};
+                if (selector.equals("*")) return Settings.SETTINGS.servers.values().toArray(new Server[0]);
+
+                Pattern pattern = Pattern.compile(selector);
+                List<Server> servers = new ArrayList<>();
+                for (Server server : Settings.SETTINGS.servers.values()) if (pattern.matcher(server.getID()).matches()) servers.add(server);
+                return servers.toArray(new Server[servers.size()]);
+            }
+
+            @Override
+            public List<String> getSuggestions(String prefix)
+            {
+                return Settings.SETTINGS.servers.keySet().stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+            }
+        });
+
+        binder.bind(User.class).toProvider(new Provider<User>() {
+            @Override
+            public boolean isProvided()
+            {
+                return false;
+            }
+
+            @Override
+            public User get(CommandArgs arguments, List<? extends Annotation> modifiers) throws ArgumentException, ProvisionException
+            {
+                return Settings.getUserByName(arguments.next());
+            }
+
+            @Override
+            public List<String> getSuggestions(String prefix)
+            {
+                return Settings.SETTINGS.users.keySet().stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+            }
+        });
+
+        binder.bind(User[].class).toProvider(new Provider<User[]>() {
+            @Override
+            public boolean isProvided()
+            {
+                return false;
+            }
+
+            @Override
+            public User[] get(CommandArgs arguments, List<? extends Annotation> modifiers) throws ArgumentException, ProvisionException
+            {
+                String selector = arguments.next();
+                if (Settings.getUserByName(selector) != null) return new User[]{Settings.getUserByName(selector)};
+                if (selector.equals("*")) return Settings.SETTINGS.users.values().toArray(new User[0]);
+
+                Pattern pattern = Pattern.compile(selector);
+                List<User> users = new ArrayList<>();
+                for (User server : Settings.SETTINGS.users.values()) if (pattern.matcher(server.getUsername()).matches()) users.add(server);
+                return users.toArray(new User[users.size()]);
+            }
+
+            @Override
+            public List<String> getSuggestions(String prefix)
+            {
+                return Settings.SETTINGS.users.keySet().stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toList());
+            }
+        });
     }
 }

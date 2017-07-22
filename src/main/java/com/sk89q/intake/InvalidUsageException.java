@@ -19,7 +19,8 @@
 
 package com.sk89q.intake;
 
-
+import java.util.Collections;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,6 +39,7 @@ public class InvalidUsageException extends CommandException {
 
     private final CommandCallable command;
     private final boolean fullHelpSuggested;
+    private final List<String> aliasStack;
 
     /**
      * Create a new instance with no error message and with no suggestion
@@ -45,9 +47,10 @@ public class InvalidUsageException extends CommandException {
      * result in a generic error message.
      *
      * @param command the command
+     * @param aliasStack the command text that was typed, including parent commands
      */
-    public InvalidUsageException(CommandCallable command) {
-        this(null, command);
+    public InvalidUsageException(CommandCallable command, List<String> aliasStack) {
+        this(null, command, aliasStack);
     }
 
     /**
@@ -56,9 +59,10 @@ public class InvalidUsageException extends CommandException {
      *
      * @param message the message
      * @param command the command
+     * @param aliasStack the command text that was typed, including parent commands
      */
-    public InvalidUsageException( String message, CommandCallable command) {
-        this(message, command, false);
+    public InvalidUsageException( String message, CommandCallable command, List<String> aliasStack) {
+        this(message, command, aliasStack, false);
     }
 
     /**
@@ -66,12 +70,27 @@ public class InvalidUsageException extends CommandException {
      *
      * @param message the message
      * @param command the command
+     * @param aliasStack the command text that was typed, including parent commands
      * @param fullHelpSuggested true if the full help for the command should be shown
      */
-    public InvalidUsageException( String message, CommandCallable command, boolean fullHelpSuggested) {
-        super(message);
+    public InvalidUsageException( String message, CommandCallable command, List<String> aliasStack, boolean fullHelpSuggested) {
+        this(message, command, aliasStack, fullHelpSuggested, null);
+    }
+
+    /**
+     * Create a new instance with a message.
+     *
+     * @param message the message
+     * @param command the command
+     * @param aliasStack the command text that was typed, including parent commands
+     * @param fullHelpSuggested true if the full help for the command should be shown
+     * @param cause the original cause
+     */
+    public InvalidUsageException( String message, CommandCallable command, List<String> aliasStack, boolean fullHelpSuggested,  Throwable cause) {
+        super(message, cause);
         checkNotNull(command);
         this.command = command;
+        this.aliasStack = Collections.unmodifiableList(aliasStack);
         this.fullHelpSuggested = fullHelpSuggested;
     }
 
@@ -85,13 +104,17 @@ public class InvalidUsageException extends CommandException {
     }
 
     /**
-     * Get a simple usage string.
+     * Get a list of command names that were invoked, with the first-most
+     * listed command being the most "top-level" command.
      *
-     * @param prefix the command shebang (such as "/") -- may be blank
-     * @return a usage string
+     * <p>For example, if {@code /party add} was invoked but this exception
+     * was raised, then the aliases list would consist of
+     * {@code [party, add]}.</p>
+     *
+     * @return a list of aliases
      */
-    public String getSimpleUsageString(String prefix) {
-        return getCommandUsed(prefix, command.getDescription().getUsage());
+    public List<String> getAliasStack() {
+        return aliasStack;
     }
 
     /**

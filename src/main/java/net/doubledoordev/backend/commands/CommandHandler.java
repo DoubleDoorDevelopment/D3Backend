@@ -18,16 +18,18 @@
 
 package net.doubledoordev.backend.commands;
 
-import com.sk89q.intake.Command;
-import com.sk89q.intake.CommandException;
-import com.sk89q.intake.CommandMapping;
-import com.sk89q.intake.context.CommandLocals;
+import com.google.common.collect.ImmutableList;
+import com.sk89q.intake.*;
+import com.sk89q.intake.argument.Namespace;
 import com.sk89q.intake.dispatcher.Dispatcher;
-import com.sk89q.intake.fluent.CommandGraph;
+import com.sk89q.intake.dispatcher.SimpleDispatcher;
+import com.sk89q.intake.parametric.Injector;
 import com.sk89q.intake.parametric.ParametricBuilder;
 import com.sk89q.intake.parametric.annotation.Optional;
 import com.sk89q.intake.parametric.annotation.Switch;
 import com.sk89q.intake.parametric.annotation.Text;
+import com.sk89q.intake.parametric.provider.DefaultModule;
+import com.sk89q.intake.parametric.provider.PrimitivesModule;
 import com.sk89q.intake.util.auth.AuthorizationException;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.Group;
@@ -44,6 +46,7 @@ import java.io.BufferedReader;
 import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.Executors;
 
 import static net.doubledoordev.backend.util.Constants.JOINER_COMMA_SPACE;
 import static net.doubledoordev.backend.util.Settings.SETTINGS;
@@ -100,10 +103,14 @@ public class CommandHandler implements Runnable
 
     private CommandHandler()
     {
-        ParametricBuilder parametricBuilder = new ParametricBuilder();
-        parametricBuilder.addBinding(new Bindings());
-
-        dispatcher = new CommandGraph().builder(parametricBuilder).commands().registerMethods(this).graph().getDispatcher();
+        Injector i = Intake.createInjector();
+        i.install(new Bindings());
+        i.install(new DefaultModule());
+        i.install(new PrimitivesModule());
+        ParametricBuilder parametricBuilder = new ParametricBuilder(i);
+        parametricBuilder.setCommandExecutor(Executors.newSingleThreadExecutor());
+        dispatcher = new SimpleDispatcher();
+        parametricBuilder.registerMethodsAsCommands(dispatcher, this);
     }
 
     public static void init()
@@ -119,17 +126,7 @@ public class CommandHandler implements Runnable
         {
             while (Main.running)
             {
-                try
-                {
-                    String command = console.readLine();
-                    if (dispatcher.get(command.split(" ")[0]) != null) dispatcher.call(command, new CommandLocals(), new String[0]);
-                    else throw new CommandNotFoundException(command);
-                }
-                catch (CommandException | AuthorizationException e)
-                {
-                    CMDLOGGER.warn(e);
-                    e.printStackTrace();
-                }
+                command(console.readLine());
             }
             return;
         }
@@ -140,13 +137,10 @@ public class CommandHandler implements Runnable
             {
                 try
                 {
-                    String command = in.readLine();
-                    if (dispatcher.get(command.split(" ")[0]) != null) dispatcher.call(command, new CommandLocals(), new String[0]);
-                    else throw new CommandNotFoundException(command);
+                    command(in.readLine());
                 }
-                catch (IOException | CommandException | AuthorizationException e)
+                catch (IOException e)
                 {
-                    CMDLOGGER.warn(e);
                     e.printStackTrace();
                 }
             }
@@ -157,8 +151,23 @@ public class CommandHandler implements Runnable
         System.exit(1);
     }
 
+    private void command(String command)
+    {
+        try
+        {
+
+            if (dispatcher.get(command.split(" ")[0]) != null) dispatcher.call(command, new Namespace(), ImmutableList.of());
+            else throw new CommandNotFoundException(command);
+        }
+        catch (CommandException | InvocationCommandException | AuthorizationException e)
+        {
+            CMDLOGGER.warn(e);
+            e.printStackTrace();
+        }
+    }
+
     @Command(aliases = {"help", "?"}, desc = "Get a list of commands", help = "Use this to get help", usage = "[Command]", max = 1)
-    public void cmdHelp(@Optional String command) throws CommandException
+    public void cmdHelp(@Optional CommandMapping command) throws CommandException
     {
         // Command list
         if (command == null)
@@ -171,15 +180,11 @@ public class CommandHandler implements Runnable
         }
         else
         {
-            CommandMapping cmd = dispatcher.get(command);
-
-            if (cmd == null) throw new CommandNotFoundException(command);
-
-            CMDLOGGER.info(String.format("--==## Help for %s ##==--", command));
-            CMDLOGGER.info(String.format("Name: %s \t Aliases: %s", cmd.getPrimaryAlias(), JOINER_COMMA_SPACE.join(cmd.getAllAliases())));
-            CMDLOGGER.info(String.format("Usage: %s %s", cmd.getPrimaryAlias(), cmd.getDescription().getUsage()));
-            CMDLOGGER.info(String.format("Short description: %s", cmd.getDescription().getShortDescription()));
-            CMDLOGGER.info(String.format("Help text: %s", cmd.getDescription().getHelp()));
+            CMDLOGGER.info(String.format("--==## Help for %s ##==--", command.getPrimaryAlias()));
+            CMDLOGGER.info(String.format("Name: %s \t Aliases: %s", command.getPrimaryAlias(), JOINER_COMMA_SPACE.join(command.getAllAliases())));
+            CMDLOGGER.info(String.format("Usage: %s %s", command.getPrimaryAlias(), command.getDescription().getUsage()));
+            CMDLOGGER.info(String.format("Short description: %s", command.getDescription().getShortDescription()));
+            CMDLOGGER.info(String.format("Help text: %s", command.getDescription().getHelp()));
         }
     }
 
@@ -212,7 +217,7 @@ public class CommandHandler implements Runnable
     }
 
     @Command(aliases = "stop", desc = "Stop one or more servers", usage = "<server ID (regex)> [-f (force the stop)] [message ...]", min = 1)
-    public void cmdStop(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    public void cmdStop(Server[] servers, @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
     {
         for (Server server : servers)
         {
@@ -223,7 +228,7 @@ public class CommandHandler implements Runnable
     }
 
     @Command(aliases = "start", desc = "Start one or more servers", usage = "<server ID (regex)>", min = 1)
-    public void cmdStart(Server[] servers, @Optional @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
+    public void cmdStart(Server[] servers, @Switch('f') boolean force, @Optional("Stopping the server.") @Text String msg) throws CommandException
     {
         for (Server server : servers)
         {
@@ -248,7 +253,7 @@ public class CommandHandler implements Runnable
     }
 
     @Command(aliases = {"shutdown", "exit"}, usage = "", desc = "Stop the backend", max = 0, flags = "f")
-    public void cmdShutdown(@Optional @Switch('f') boolean force) throws CommandException
+    public void cmdShutdown(@Switch('f') boolean force) throws CommandException
     {
         if (force) System.exit(0);
         Main.shutdown();

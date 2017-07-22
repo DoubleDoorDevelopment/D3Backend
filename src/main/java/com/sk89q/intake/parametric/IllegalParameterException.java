@@ -20,8 +20,24 @@
 package com.sk89q.intake.parametric;
 
 /**
- * Thrown when there is a missing parameter.
+ * Thrown if there is an error with a parameter.
  */
-public class MissingParameterException extends ParameterException {
+public class IllegalParameterException extends ParametricException {
+
+    public IllegalParameterException() {
+        super();
+    }
+
+    public IllegalParameterException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public IllegalParameterException(String message) {
+        super(message);
+    }
+
+    public IllegalParameterException(Throwable cause) {
+        super(cause);
+    }
 
 }

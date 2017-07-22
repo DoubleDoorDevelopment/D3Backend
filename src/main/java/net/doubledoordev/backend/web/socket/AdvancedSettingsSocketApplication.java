@@ -27,7 +27,6 @@ import net.doubledoordev.backend.util.IUpdateFromJson;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.WebSocketHelper;
 import net.doubledoordev.backend.util.exceptions.AuthenticationException;
-import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.util.methodCaller.WebSocketCaller;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
 import org.glassfish.grizzly.websockets.WebSocket;

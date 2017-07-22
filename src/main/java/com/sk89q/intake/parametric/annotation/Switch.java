@@ -31,13 +31,13 @@ import java.lang.annotation.Target;
  * used on any other type, then the flag will be a value flag.</p>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
+@Target({ ElementType.PARAMETER, ElementType.FIELD })
 public @interface Switch {
 
     /**
      * The flag character.
      * 
-     * @return the flag character (A-Z a-z 0-9 is acceptable)
+     * @return The flag character (A-Z a-z 0-9 is acceptable)
      */
     char value();
 
