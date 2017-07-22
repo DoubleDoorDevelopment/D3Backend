@@ -336,6 +336,7 @@ public class Helper
 
     public static String formatDate(long time)
     {
+        if (time == -1) time = new Date().getTime();
         return SIMPLE_DATE_FORMAT.format(time);
     }
 

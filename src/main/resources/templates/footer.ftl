@@ -1,7 +1,7 @@
 <footer>
     <p class="text-center">
     <#if Helper.hasUpdate()><span class="text-danger"><b>Backend is out of date!</b> Latest version: ${Helper.getUpdateVersion()}</span><br></#if>
-        <span class="text-muted">Build with D3 Backend ${Helper.getVersionString()}.</span>
+        <span class="text-muted">D3 Backend ${Helper.getVersionString()} Server Time: <b>${Helper.formatDate(-1)}</b></span>
     </p>
 </footer>
 </div>
