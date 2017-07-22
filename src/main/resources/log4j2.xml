@@ -20,13 +20,13 @@
     <Appenders>
         <!-- Normal -->
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d [%p - %c] %m%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%p] %c: %m%n"/>
         </Console>
         <CustomLogAppender name="CustomLogAppender">
-            <PatternLayout pattern="%d [%p - %c] %enc{%m}%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%p] %c: %enc{%m}%n"/>
         </CustomLogAppender>
         <RollingRandomAccessFile name="FileMain" fileName="logs/latest.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
-            <PatternLayout pattern="%d [%p - %c] %m%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss} [%p] %c: %m%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
                 <OnStartupTriggeringPolicy/>
@@ -38,6 +38,13 @@
         </Console>
         <CustomLogAppender name="CustomLogAppenderCmd">
             <PatternLayout pattern="%enc{%m}%n"/>
+        </CustomLogAppender>
+        <!-- Servers -->
+        <Console name="ConsoleServers" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss} %c: %replace{%m}{^(?:\s*\[(?:\d\d[-:.]?)+\]\s*)}{}%n"/>
+        </Console>
+        <CustomLogAppender name="CustomLogAppenderServers">
+            <PatternLayout pattern="%d{HH:mm:ss} %c: %enc{%replace{%m}{^(?:\s*\[(?:\d\d[-:.]?)+\]\s*)}{}}%n"/>
         </CustomLogAppender>
     </Appenders>
     <Loggers>
@@ -55,8 +62,8 @@
             <AppenderRef ref="FileAccess"/>
         </Logger>
         <Root level="trace" additivity="false">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="CustomLogAppender"/>
+            <AppenderRef ref="ConsoleServers"/>
+            <AppenderRef ref="CustomLogAppenderServers"/>
         </Root>
     </Loggers>
 </Configuration>

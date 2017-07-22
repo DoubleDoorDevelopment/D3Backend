@@ -54,7 +54,7 @@ import static net.doubledoordev.backend.util.Settings.SETTINGS;
 public class Main
 {
     public static final long STARTTIME = System.currentTimeMillis();
-    public static final Logger LOGGER = LogManager.getLogger(Main.class.getSimpleName());
+    public static final Logger LOGGER = LogManager.getLogger("Main");
     public static final String build, version;
     public static String adminKey;
     public static boolean running = true;
