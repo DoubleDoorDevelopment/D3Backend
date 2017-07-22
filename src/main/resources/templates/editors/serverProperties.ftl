@@ -19,7 +19,7 @@
     {
         if ($.inArray(field.id, readOnlyProperties) != -1)
         {
-            alert("Read only value.");
+            addAlert("Read only value.", true);
         }
         else
         {
@@ -37,20 +37,20 @@
     {
         Object.keys(data).forEach(function (key)
         {
-            var element = document.getElementById(key);
+            var element = get(key);
             if (element != null)
             {
                 element.innerHTML = data[key];
             }
             else
             {
-                document.getElementById("tableBody").innerHTML += "<tr><td style=\"text-align: right;\" id=\"key_" + key + "\">" + key + " = </td><td style=\"cursor: pointer; text-align: left;\" id=\"" + key + "\" onclick=\"change(this)\">" + data[key] + "</td></tr>";
-                element = document.getElementById(key);
+                get("tableBody").innerHTML += "<tr><td style=\"text-align: right;\" id=\"key_" + key + "\">" + key + " = </td><td style=\"cursor: pointer; text-align: left;\" id=\"" + key + "\" onclick=\"change(this)\">" + data[key] + "</td></tr>";
+                element = get(key);
             }
 
             if ($.inArray(element.id, readOnlyProperties) != -1)
             {
-                element.className = document.getElementById("key_" + key).className = "text-danger";
+                element.className = get("key_" + key).className = "text-danger";
             }
         });
     }
@@ -65,16 +65,16 @@
         }
         else
         {
-            alert(temp.message);
+            addAlert(temp.message, true);
         }
     };
     websocket.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocket.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     };
 
     $('[rel=tooltip]').tooltip()

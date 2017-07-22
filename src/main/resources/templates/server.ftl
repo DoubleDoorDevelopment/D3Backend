@@ -104,9 +104,14 @@
                 <h3 class="panel-title" style="text-align: center;">MC jar installer</h3>
             </div>
             <div class="panel-body" style="text-align: center;">
+                <label for="mcVersionSelector">
+                    Minecraft version
+                </label>
                 <select id="mcVersionSelector" class="form-control">
-                <#list Helper.getAllMCVersions() as version>
+                <#list Helper.getAllMCVersions() as version >
                     <option>${version}</option>
+                <#else>
+                    <option>Data not yet downloaded...</option>
                 </#list>
                 </select>
                 <br>
@@ -161,7 +166,7 @@
                 </label>
                 <br>
                 <button type="button" <#if isCoOwner && !server.online>onclick="packUpload()" <#else>disabled</#if> class="btn btn-warning">
-                    Upload modpack
+                    Install Modpack
                 </button>
             </div>
         </div>
@@ -216,8 +221,8 @@
     {
         if (confirm('Are you sure?\nThis will override the minecraft jar!'))
         {
-            document.getElementById('modalLabel').innerHTML = 'Installing MC ' + document.getElementById('mcVersionSelector').value;
-            call('servercmd/${server.ID?js_string}', 'setVersion', [document.getElementById('mcVersionSelector').value], progressModal);
+            get('modalLabel').innerHTML = 'Installing MC ' + get('mcVersionSelector').value;
+            call('servercmd/${server.ID?js_string}', 'setVersion', [get('mcVersionSelector').value], progressModal);
         }
     }
 
@@ -225,16 +230,16 @@
     {
         if (confirm('Are you sure?\nThis will override the minecraft jar!'))
         {
-            document.getElementById('modalLabel').innerHTML = 'Installing Forge ' + document.getElementById('forgeVersionSelectorForge').value;
-            call('servercmd/${server.ID?js_string}', 'installForge', [document.getElementById('forgeVersionSelectorMinecraft').value, document.getElementById('forgeVersionSelectorForge').value], progressModal);
+            get('modalLabel').innerHTML = 'Installing Forge ' + get('forgeVersionSelectorForge').value;
+            call('servercmd/${server.ID?js_string}', 'installForge', [get('forgeVersionSelectorMinecraft').value, get('forgeVersionSelectorForge').value], progressModal);
         }
     }
 
     function packUpload()
     {
-        if (confirm('Are you sure?\nThis will override the minecraft jar!\nPurge server: ' + document.getElementById('modpackPurge').checked + '\nCurse Pack: ' + document.getElementById('modpackCurse').checked))
+        if (confirm('Are you sure?\nThis will override the minecraft jar!\nPurge server: ' + get('modpackPurge').checked + '\nCurse Pack: ' + get('modpackCurse').checked))
         {
-            document.getElementById('modalLabel').innerHTML = 'Uploading modpack...';
+            get('modalLabel').innerHTML = 'Uploading modpack...';
 
             var file = $('#modpackFile')[0].files[0];
             if (file)
@@ -258,8 +263,8 @@
                         progressModal("Done uploading file.\nStarting modpack install...");
                         call('servercmd/${server.ID?js_string}', 'installModpack', [
                             file.name,
-                            document.getElementById('modpackPurge').checked,
-                            document.getElementById('modpackCurse').checked], progressModal);
+                            get('modpackPurge').checked,
+                            get('modpackCurse').checked], progressModal);
                     },
                     error: function()
                     {
@@ -270,9 +275,9 @@
             else
             {
                 call('servercmd/${server.ID?js_string}', 'downloadModpack', [
-                    document.getElementById('modpackURL').value,
-                    document.getElementById('modpackPurge').checked,
-                    document.getElementById('modpackCurse').checked], progressModal);
+                    get('modpackURL').value,
+                    get('modpackPurge').checked,
+                    get('modpackCurse').checked], progressModal);
             }
         }
     }
@@ -283,20 +288,20 @@
     {
         if (needsShowing)
         {
-            document.getElementById("modal-close").className = "btn btn-default";
+            get("modal-close").className = "btn btn-default";
             modal.modal("show");
-            document.getElementById("modal-log").innerHTML = "";
+            get("modal-log").innerHTML = "";
             needsShowing = false;
         }
         if (data === "done")
         {
             needsShowing = true;
-            document.getElementById("modal-log").innerHTML += "-- ALL DONE --\n";
-            document.getElementById("modal-close").className = "btn btn-success";
+            get("modal-log").innerHTML += "-- ALL DONE --\n";
+            get("modal-close").className = "btn btn-success";
         }
         else
         {
-            document.getElementById("modal-log").innerHTML += data + "\n";
+            get("modal-log").innerHTML += data + "\n";
         }
     }
 
@@ -307,19 +312,19 @@
             document.location = "/servers";
         }
 
-        document.getElementById("startServerBtn").onclick = !data.online ? function ()
+        get("startServerBtn").onclick = !data.online ? function ()
         {
             call('servercmd/${server.ID?js_string}', "startServer")
         } : null;
-        document.getElementById("startServerBtn").disabled = data.online;
+        get("startServerBtn").disabled = data.online;
 
-        document.getElementById("stopServerBtn").onclick = data.online ? function ()
+        get("stopServerBtn").onclick = data.online ? function ()
         {
             call('servercmd/${server.ID?js_string}', "stopServer", [prompt('Message?', 'Server is stopping.')])
         } : null;
-        document.getElementById("stopServerBtn").disabled = !data.online;
+        get("stopServerBtn").disabled = !data.online;
 
-        document.getElementById("killServerBtn").onclick = data.online ? function (e)
+        get("killServerBtn").onclick = data.online ? function (e)
         {
             if (!!e.shiftKey) {
                 if (confirm('Are you sure you want to FORCE kill?\nTry a regular kill first!'))
@@ -327,54 +332,54 @@
             }
             else if (confirm('Are you sure?')) call('servercmd/${server.ID?js_string}', "forceStopServer")
         } : null;
-        document.getElementById("killServerBtn").disabled = !data.online;
+        get("killServerBtn").disabled = !data.online;
 
-        document.getElementById("onlinePlayers").innerHTML = data.onlinePlayers;
-        document.getElementById("slots").innerHTML = data.slots;
-        document.getElementById("motd").innerHTML = data.motd;
-        document.getElementById("mapName").innerHTML = data.mapName;
-        document.getElementById("playerList").innerHTML = data.playerList;
-        document.getElementById("version").innerHTML = data.version;
-        document.getElementById("serverOwner").innerHTML = data.owner;
-        document.getElementById("gameMode").innerHTML = data.gameMode;
-        document.getElementById("plugins").innerHTML = data.plugins;
-        document.getElementById("gameID").innerHTML = data.gameID;
-        document.getElementById("ram").innerHTML = data.ram;
+        get("onlinePlayers").innerHTML = data.onlinePlayers;
+        get("slots").innerHTML = data.slots;
+        get("motd").innerHTML = data.motd;
+        get("mapName").innerHTML = data.mapName;
+        get("playerList").innerHTML = data.playerList;
+        get("version").innerHTML = data.version;
+        get("serverOwner").innerHTML = data.owner;
+        get("gameMode").innerHTML = data.gameMode;
+        get("plugins").innerHTML = data.plugins;
+        get("gameID").innerHTML = data.gameID;
+        get("ram").innerHTML = data.ram;
 
-        document.getElementById("diskspace_server").innerHTML = data.diskspace.server;
-        document.getElementById("diskspace_backup").innerHTML = data.diskspace.backups;
-        document.getElementById("diskspace_total").innerHTML = data.diskspace.total;
+        get("diskspace_server").innerHTML = data.diskspace.server;
+        get("diskspace_backup").innerHTML = data.diskspace.backups;
+        get("diskspace_total").innerHTML = data.diskspace.total;
 
-        document.getElementById("serverPortAvailable").innerHTML = data.port_server_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
-        document.getElementById("serverPortAvailable").className = "label label-" + (data.port_server_available ? "success" : (data.online ? "warning" : "danger"));
+        get("serverPortAvailable").innerHTML = data.port_server_available ? "Free" : (data.online ? "In use by us" : "In use by ??");
+        get("serverPortAvailable").className = "label label-" + (data.port_server_available ? "success" : (data.online ? "warning" : "danger"));
 
-        document.getElementById("online").innerHTML = data.online ? "Online" : "Offline";
-        document.getElementById("online").className = "label label-" + (data.online ? "success" : "danger");
+        get("online").innerHTML = data.online ? "Online" : "Offline";
+        get("online").className = "label label-" + (data.online ? "success" : "danger");
 
-        document.getElementById("coOwnersList").innerHTML = "";
+        get("coOwnersList").innerHTML = "";
         var tmp = "";
         data.coOwners.forEach(function (entry)
         {
             tmp += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeCoowner', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
-        document.getElementById("coOwnersList").innerHTML = tmp;
+        get("coOwnersList").innerHTML = tmp;
 
-        document.getElementById("adminsList").innerHTML = "";
+        get("adminsList").innerHTML = "";
         tmp = "";
         data.admins.forEach(function (entry)
         {
             tmp += "<li>" + entry + "<#if isOwner><i style=\"cursor: pointer;\" onclick=\"call('servercmd/${server.ID?js_string}', 'removeAdmin', ['" + entry + "'])\" class=\"fa fa-times\"></i></#if></li>";
         });
-        document.getElementById("adminsList").innerHTML = tmp;
+        get("adminsList").innerHTML = tmp;
     }
     websocketMonitor = new WebSocket(wsurl("servermonitor/${server.ID?js_string}"));
     websocketMonitor.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocketMonitor.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     };
     websocketMonitor.onmessage = function (evt)
     {
@@ -383,7 +388,7 @@
         {
             if (typeof temp.data === "string")
             {
-                document.getElementById("security-log").innerHTML = temp.data + "\n" + document.getElementById("security-log").innerHTML;
+                get("security-log").innerHTML = temp.data + "\n" + get("security-log").innerHTML;
             }
             else
             {
@@ -392,12 +397,12 @@
         }
         else
         {
-            alert(temp.message);
+            addAlert(temp.message);
         }
     };
 
     $(function () {
-        document.getElementById("forgeVersionSelectorMinecraft").innerHTML = "";
+        get("forgeVersionSelectorMinecraft").innerHTML = "";
         var tmpMC = "";
         for (var i in forgeVersions) {
             if (forgeVersions.hasOwnProperty(i)) {
@@ -406,20 +411,20 @@
         }
         if (tmpMC.length === 0) tmpMC = "<option>Forge data not finished downloading.</option>";
         else updateForges(Object.keys(forgeVersions)[0]);
-        document.getElementById("forgeVersionSelectorMinecraft").innerHTML = tmpMC;
+        get("forgeVersionSelectorMinecraft").innerHTML = tmpMC;
     });
 
     function updateForges(val)
     {
         var forges = forgeVersions[val];
-        document.getElementById("forgeVersionSelectorForge").innerHTML = "";
+        get("forgeVersionSelectorForge").innerHTML = "";
         var tmpForge = "";
         for (var i in forges) {
             if (forges.hasOwnProperty(i)) {
                 tmpForge += "<option>" + forges[i] + "</option>";
             }
         }
-        document.getElementById("forgeVersionSelectorForge").innerHTML = tmpForge;
+        get("forgeVersionSelectorForge").innerHTML = tmpForge;
     }
 
     var forgeVersions = ${Helper.getForgeVersionJson()};

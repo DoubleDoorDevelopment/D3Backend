@@ -19,7 +19,7 @@
 package net.doubledoordev.backend.web.http;
 
 import com.google.common.collect.ImmutableList;
-import freemarker.ext.beans.BeansWrapper;
+import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.*;
 import net.doubledoordev.backend.Main;
 import net.doubledoordev.backend.permissions.User;
@@ -56,19 +56,20 @@ public class FreemarkerHandler extends StaticHttpHandlerBase implements ErrorPag
 {
     public static final ImmutableList<String> ADMINPAGES = ImmutableList.of("console", "backendConsoleText");
     public static long lastRequest = 0L;
-    public final Configuration freemarker = new Configuration();
+    public final Configuration freemarker = new Configuration(Configuration.VERSION_2_3_0);
 
     public FreemarkerHandler(Class clazz, String path) throws TemplateModelException
     {
         freemarker.setClassForTemplateLoading(clazz, path);
-        freemarker.setObjectWrapper(new DefaultObjectWrapper());
+        freemarker.setObjectWrapper(new DefaultObjectWrapper(Configuration.VERSION_2_3_0));
         freemarker.setDefaultEncoding("UTF-8");
         freemarker.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
         freemarker.setIncompatibleImprovements(new Version(2, 3, 20));  // FreeMarker 2.3.20
         Map<String, Object> dataObject = new HashMap<>();
         dataObject.put("Settings", Settings.SETTINGS);
-        dataObject.put("Helper", BeansWrapper.getDefaultInstance().getStaticModels().get(Helper.class.getName()));
-        freemarker.setAllSharedVariables(new SimpleHash(dataObject));
+
+        dataObject.put("Helper",  new BeansWrapperBuilder(Configuration.VERSION_2_3_0).build().getStaticModels().get(Helper.class.getName()));
+        freemarker.setAllSharedVariables(new SimpleHash(dataObject, new DefaultObjectWrapperBuilder(Configuration.VERSION_2_3_0).build()));
 
         if (!Main.debug) freemarker.setTemplateUpdateDelay(0);
     }

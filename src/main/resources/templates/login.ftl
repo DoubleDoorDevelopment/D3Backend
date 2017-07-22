@@ -3,7 +3,7 @@
 <#if !Helper.usingHttps()>
 <div id="httpsWarning" class="alert alert-danger" role="alert"><b>This server is not using HTTPS</b>, your password will be send over the network in plaintext!</div>
 <script>
-    var httpsWarning = document.getElementById("httpsWarning");
+    var httpsWarning = get("httpsWarning");
     if (location.protocol == 'https:' && httpsWarning != null)
     {
         httpsWarning.setAttribute("hidden", "hidden")

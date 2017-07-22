@@ -71,16 +71,16 @@
         }
         else
         {
-            alert(temp.message);
+            addAlert(temp.message);
         }
     };
     websocket.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocket.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     }
 </script>
 <#include "footer.ftl">

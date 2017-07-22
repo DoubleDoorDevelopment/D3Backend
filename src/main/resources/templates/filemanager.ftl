@@ -105,11 +105,11 @@
     websocketMonitor = new WebSocket(wsurl("filemonitor/${server.ID?url}/${fm.stripServer(fm.file)?url}"));
     websocketMonitor.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocketMonitor.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     };
     websocketMonitor.onmessage = function (evt)
     {
@@ -120,7 +120,7 @@
         }
         else
         {
-            alert(temp.message);
+            addAlert(temp.message);
         }
     };
 

@@ -26,7 +26,7 @@
     </table>
     <script type="text/javascript">
         var json = ${fm.getFileContents()?js_string};
-        var opList = document.getElementById("opList");
+        var opList = get("opList");
         json.forEach(function (object)
         {
             opList.innerHTML += "<tr id=\"" + object['name'] + "\"><td>" + object['name'] + "</td><td>" + object['uuid'] + "</td><td id=\"" + object['name'] + "lvl\">" + object['level'] + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Remove</button><button type=\"button\" onclick=\"changePermlvl(\'" + object['name'] + "\')\" class=\"btn btn-warning btn-xs\">Change perm lvl</button></div></td></#if></tr>";
@@ -46,7 +46,7 @@
                     var input = prompt("New perm lvl?", json[i]["level"]);
                     if (input != null && isNumber(input))
                     {
-                        document.getElementById(username + "lvl").innerHTML = input;
+                        get(username + "lvl").innerHTML = input;
                         json[i]["level"] = input;
                     }
                 }
@@ -55,7 +55,7 @@
 
         function removeUser(username)
         {
-            var element = document.getElementById(username);
+            var element = get(username);
             if (element != null) opList.removeChild(element);
             for (var i = json.length - 1; i >= 0; i--)
             {
@@ -69,12 +69,12 @@
         function makeNew()
         {
             var xmlhttp = new XMLHttpRequest();
-            var username = document.getElementById("newUsername").value;
-            var permlvl = document.getElementById("newlvl").value;
+            var username = get("newUsername").value;
+            var permlvl = get("newlvl").value;
 
             if (!isNumber(permlvl))
             {
-                alert("Input invalid.");
+                addAlert("Input invalid.", true);
                 return;
             }
 
@@ -96,12 +96,12 @@
                             json.push({"name": username, "uuid": uuid, "level": permlvl});
                             opList.innerHTML += "<tr id=\"" + username + "\"><td>" + username + "</td><td>" + uuid + "</td><td id=\"" + username + "lvl\">" + permlvl + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + username + "\')\" class=\"btn btn-danger btn-xs\">Remove</button><button type=\"button\" onclick=\"changePermlvl(\'" + username + "\')\" class=\"btn btn-warning btn-xs\">Change perm lvl</button></div></td></#if></tr>";
 
-                            document.getElementById("newUsername").value = "";
-                            document.getElementById("newlvl").value = "4";
+                            get("newUsername").value = "";
+                            get("newlvl").value = "4";
                             return;
                         }
                     }
-                    alert("Input invalid.");
+                    addAlert("Input invalid.", true);
                 }
             };
             xmlhttp.open("GET", "https://api.mojang.com/users/profiles/minecraft/" + username, true);
@@ -111,11 +111,11 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
-            alert("The websocket errored. Refresh the page!")
+            addAlert("The websocket errored. Refresh the page!")
         };
         websocket.onclose = function (evt)
         {
-            alert("The websocket closed. Refresh the page!")
+            addAlert("The websocket closed. Refresh the page!")
         };
         websocket.onmessage = function (evt)
         {
@@ -127,7 +127,7 @@
             }
             else
             {
-                alert(temp.message);
+                addAlert(temp.message);
             }
         };
         function send()

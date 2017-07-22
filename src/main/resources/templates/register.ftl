@@ -2,7 +2,7 @@
 <#if !Helper.usingHttps()>
 <div id="httpsWarning" class="alert alert-danger" role="alert"><b>This server is not using HTTPS</b>, your password will be send over the network in plaintext!</div>
 <script>
-    var httpsWarning = document.getElementById("httpsWarning");
+    var httpsWarning = get("httpsWarning");
     if (location.protocol == 'https:' && httpsWarning != null)
     {
         httpsWarning.setAttribute("hidden", "hidden")
@@ -33,17 +33,17 @@
 <script>
     function checkName()
     {
-        var name = document.getElementById("username").value;
+        var name = get("username").value;
 
         if (name == null || !name.match(/^[0-9A-Za-z]+$/) || name.length > 16)
         {
-            document.getElementById("submit").disabled = true;
-            document.getElementById("name-div").className = "form-group has-error";
+            get("submit").disabled = true;
+            get("name-div").className = "form-group has-error";
         }
         else
         {
-            document.getElementById("submit").disabled = false;
-            document.getElementById("name-div").className = "form-group";
+            get("submit").disabled = false;
+            get("name-div").className = "form-group";
         }
     }
 </script>

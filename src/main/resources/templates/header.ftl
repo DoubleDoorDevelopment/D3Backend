@@ -56,6 +56,18 @@
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script>
+        function get(id)
+        {
+            return document.getElementById(id);
+        }
+
+        function addAlert(message, dismissible)
+        {
+            var alert = "<div class=\"alert alert-danger\" role=\"alert\">";
+            if (dismissible) alert += "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">&times;</button>";
+            get("alerts").innerHTML += alert + message + "</div>"
+        }
+
         function wsurl(s)
         {
             var l = window.location;
@@ -79,7 +91,7 @@
                 var temp = JSON.parse(evt.data);
                 if (typeof func === 'undefined')
                 {
-                    if (temp.status !== "ok") alert(temp.message);
+                    if (temp.status !== "ok") addAlert(temp.message, true);
                 }
                 else
                 {
@@ -88,7 +100,7 @@
             };
             cmdwebsocket.onerror = function (evt)
             {
-                alert("The call socket connction errored. Try again.");
+                addAlert("The call socket connection errored. Try again.", true);
             };
         }
 
@@ -96,6 +108,52 @@
         {
             setTimeout(function () { location.reload(true); }, 1);
         }
+
+        function navTab($args)
+        {
+            switch ($args[3])
+            {
+                case "":
+                    get("homeNavTab").className += " active";
+                    break;
+                default:
+                    var element = get($args[3] + "NavTab");
+                    if (element != null) element.className += " active";
+                    break;
+                case "servers":
+                    if ($args.length > 4)
+                    {
+                        get("serversNavTab").className += " active";
+                        get($args[4] + "NavTab").className += " active";
+                    }
+                    else
+                    {
+                        get("serverListNavTab").className += " active";
+                    }
+                    break;
+            }
+        }
+        navTab(document.URL.split("/"));
+        $(function ()
+        {
+            $('.panel-heading span.clickable').on("click", function (e)
+            {
+                if ($(this).hasClass('panel-collapsed'))
+                {
+                    // expand the panel
+                    $(this).parents('.panel').find('.panel-body').slideDown();
+                    $(this).removeClass('panel-collapsed');
+                    $(this).find('i').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+                }
+                else
+                {
+                    // collapse the panel
+                    $(this).parents('.panel').find('.panel-body').slideUp();
+                    $(this).addClass('panel-collapsed');
+                    $(this).find('i').removeClass('fa-chevron-up').addClass('fa-chevron-down');
+                }
+            });
+        });
     </script>
 </head>
 <body>
@@ -142,3 +200,4 @@
     </div>
 </div>
 <div class="container" id="container">
+    <div id="alerts"></div>

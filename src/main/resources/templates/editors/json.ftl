@@ -23,24 +23,25 @@
     <p>File is readonly.</p>
 </#if>
     <script type="text/javascript">
-        var container = document.getElementById('jsoneditor');
+        var container = get('jsoneditor');
 
         var options = {
             mode: 'code',
             modes: ['code', 'tree'], // allowed modes
             error: function (err)
             {
-                alert(err.toString());
+                addAlert(err.toString());
             }
         };
 
         var json = ${fm.getFileContents()!"null"};
 
+        <#--noinspection EqualityComparisonWithCoercionJS-->
         if (json == null)
         {
-            alert("Data file might be currupt. It can't be read by our parser.");
-            document.getElementById("savebtn").disabled = true;
-            document.getElementById("jsoneditor").innerHTML = "Error. File corrupt?";
+            addAlert("Data file might be currupt. It can't be read by our parser.");
+            get("savebtn").disabled = true;
+            get("jsoneditor").innerHTML = "Error. File corrupt?";
         }
         else
         {
@@ -50,11 +51,11 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
-            alert("The websocket errored. Refresh the page!")
+            addAlert("The websocket errored. Refresh the page!")
         };
         websocket.onclose = function (evt)
         {
-            alert("The websocket closed. Refresh the page!")
+            addAlert("The websocket closed. Refresh the page!")
         };
         function send()
         {
@@ -69,7 +70,7 @@
             }
             else
             {
-                alert(temp.message);
+                addAlert(temp.message);
             }
         }
     </script>

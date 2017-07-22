@@ -40,7 +40,7 @@
                     <label for="RestartingInfo_restartScheduleMessage">Reboot schedule time</label>
 
                     <div class="input-group">
-                        <input id="RestartingInfo_restartScheduleMessage" class="form-control" aria-describedby="helpBlock" type="text" placeholder="00:00">
+                        <input id="RestartingInfo_restartScheduleMessage" class="form-control" aria-describedby="helpBlock" placeholder="00:00" maxlength="100">
 
                         <div class="input-group-addon">%time = time left in min</div>
                     </div>
@@ -115,7 +115,7 @@
                     if (typeof allkeys[key1] === "undefined") allkeys[key1] = [];
                     allkeys[key1].push(key2);
                 }
-                var dom = document.getElementById(key1 + "_" + key2);
+                var dom = get(key1 + "_" + key2);
                 if (dom != null)
                 {
                     if (dom.type === "checkbox")
@@ -142,16 +142,16 @@
         }
         else
         {
-            alert(temp.message);
+            addAlert(temp.message, true);
         }
     };
     websocket.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocket.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     };
 
     function send(key1)
@@ -161,7 +161,7 @@
         for (key2 in allkeys[key1])
         {
             var name = key1 + "_" + allkeys[key1][key2];
-            var dom = document.getElementById(name);
+            var dom = get(name);
             if (dom == null) continue;
             if (dom.type === "checkbox")
             {

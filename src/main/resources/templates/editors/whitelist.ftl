@@ -21,7 +21,7 @@
     </table>
     <script type="text/javascript">
         var json = ${fm.getFileContents()?json_string};
-        var opList = document.getElementById("opList");
+        var opList = get("opList");
         json.forEach(function (object)
         {
             opList.innerHTML += "<tr id=\"" + object['name'] + "\"><td>" + object['name'] + "</td><td>" + object['uuid'] + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + object['name'] + "\')\" class=\"btn btn-danger btn-xs\">Remove</button></div></td></#if></tr>";
@@ -29,7 +29,7 @@
 
         function removeUser(username)
         {
-            var element = document.getElementById(username);
+            var element = get(username);
             if (element != null) opList.removeChild(element);
             for (var i = json.length - 1; i >= 0; i--)
             {
@@ -43,7 +43,7 @@
         function makeNew()
         {
             var xmlhttp = new XMLHttpRequest();
-            var username = document.getElementById("newUsername").value;
+            var username = get("newUsername").value;
 
             xmlhttp.onreadystatechange = function ()
             {
@@ -63,11 +63,11 @@
                             json.push({"name": username, "uuid": uuid});
                             opList.innerHTML += "<tr id=\"" + username + "\"><td>" + username + "</td><td>" + uuid + "</td><#if !readonly><td><div class=\"btn-group\"><button type=\"button\" onclick=\"removeUser(\'" + username + "\')\" class=\"btn btn-danger btn-xs\">Remove</button></div></td></#if></tr>";
 
-                            document.getElementById("newUsername").value = "";
+                            get("newUsername").value = "";
                             return;
                         }
                     }
-                    alert("Input invalid.");
+                    addAlert("Input invalid.", true);
                 }
             };
             xmlhttp.open("GET", "https://api.mojang.com/users/profiles/minecraft/" + username, true);
@@ -77,11 +77,11 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
-            alert("The websocket errored. Refresh the page!")
+            addAlert("The websocket errored. Refresh the page!")
         };
         websocket.onclose = function (evt)
         {
-            alert("The websocket closed. Refresh the page!")
+            addAlert("The websocket closed. Refresh the page!")
         };
         websocket.onmessage = function (evt)
         {
@@ -93,7 +93,7 @@
             }
             else
             {
-                alert(temp.message);
+                addAlert(temp.message, true);
             }
         };
         function send()

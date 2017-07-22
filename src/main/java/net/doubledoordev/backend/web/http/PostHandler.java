@@ -29,6 +29,7 @@ import net.doubledoordev.backend.util.PasswordHash;
 import net.doubledoordev.backend.util.Settings;
 import net.doubledoordev.backend.util.exceptions.OutOfPortsException;
 import net.doubledoordev.backend.util.exceptions.PostException;
+import net.doubledoordev.backend.util.methodCaller.IMethodCaller;
 import net.doubledoordev.backend.util.methodCaller.UserMethodCaller;
 import org.glassfish.grizzly.EmptyCompletionHandler;
 import org.glassfish.grizzly.http.multipart.MultipartScanner;
@@ -115,14 +116,14 @@ public class PostHandler
         final Server server = Settings.getServerByName(request.getParameter(SERVER));
         if (server == null || !server.canUserControl(user)) throw new PostException("Server doesn't exist or user doesn't have permission to edit the server.");
         data.put(SERVER, server);
-        upload(server.getFolder(), request, data, uri, response);
+        upload(new UserMethodCaller(user), server, server.getFolder(), request, data, uri, response);
         return null;
     }
 
-    private void upload(File folder, Request request, HashMap<String, Object> data, String uri, Response response)
+    private void upload(IMethodCaller caller, Server server, File folder, Request request, HashMap<String, Object> data, String uri, Response response)
     {
         response.suspend();
-        final UploaderMultipartHandler uploader = new UploaderMultipartHandler(folder);
+        final UploaderMultipartHandler uploader = new UploaderMultipartHandler(caller, server, folder);
         MultipartScanner.scan(request, uploader, new EmptyCompletionHandler<Request>()
         {
             @Override
@@ -154,7 +155,7 @@ public class PostHandler
             @Override
             public void failed(Throwable throwable)
             {
-                Main.LOGGER.warn("Upload failed to {}", folder.getAbsolutePath());
+                Main.LOGGER.warn("Upload failed to {}", server.getFolder());
                 throwable.printStackTrace();
                 response.resume();
             }
@@ -171,7 +172,7 @@ public class PostHandler
         data.put(SERVER, server);
         final FileManager fileManager = new FileManager(server, request.getParameter(FILE));
         data.put("fm", fileManager);
-        upload(fileManager.getFile(), request, data, uri, response);
+        upload(new UserMethodCaller(user), server, fileManager.getFile(), request, data, uri, response);
         return null;
     }
 

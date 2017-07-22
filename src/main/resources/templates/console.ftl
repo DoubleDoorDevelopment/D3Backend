@@ -12,11 +12,11 @@
     var websocket = new WebSocket(wsurl("console"));
     websocket.onerror = function (evt)
     {
-        alert("The websocket errored. Refresh the page!")
+        addAlert("The websocket errored. Refresh the page!")
     };
     websocket.onclose = function (evt)
     {
-        alert("The websocket closed. Refresh the page!")
+        addAlert("The websocket closed. Refresh the page!")
     };
 
     function htmlDecode(input)
@@ -31,7 +31,7 @@
         var temp = JSON.parse(evt.data);
         if (temp.status !== "ok")
         {
-            alert(temp.message);
+            addAlert(temp.message);
         }
         else
         {

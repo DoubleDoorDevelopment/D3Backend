@@ -55,6 +55,7 @@ public class Helper
     private static final Map<String, String> UUID_USERNMAME_MAP = new HashMap<>();
     private static final SimpleDateFormat BAN_SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final SimpleDateFormat HTML_TIME_FORMAT = new SimpleDateFormat("'<b>'HH:mm'</b>':ss");
     public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.##");
     private static final char[] symbols = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
     private static final int MAX_REDIRECTS = 25;
@@ -331,13 +332,17 @@ public class Helper
 
     public static String getVersionString()
     {
-        return String.format("v%s - build #%s", Main.version, Main.build);
+        return Main.version;
     }
 
     public static String formatDate(long time)
     {
-        if (time == -1) time = new Date().getTime();
         return SIMPLE_DATE_FORMAT.format(time);
+    }
+
+    public static String getServerTime()
+    {
+        return HTML_TIME_FORMAT.format(new Date());
     }
 
     public static String stripColor(String txt)
@@ -393,5 +398,11 @@ public class Helper
             WebSocketHelper.sendError(socket, e);
             socket.close();
         }
+    }
+
+    public static String getRelativeString(File root, File target)
+    {
+        if (root.equals(target)) return ".";
+        return target.toString().substring(root.toString().length() + 1).replace('\\', '/');
     }
 }

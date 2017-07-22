@@ -104,15 +104,15 @@
         if (needsShowing)
         {
             modal.modal("show");
-            document.getElementById("modal-log").innerHTML = "";
+            get("modal-log").innerHTML = "";
             needsShowing = false;
         }
         if (data === "done")
         {
             needsShowing = true;
-            document.getElementById("modal-log").innerHTML += "-- ALL DONE --\n";
+            get("modal-log").innerHTML += "-- ALL DONE --\n";
         }
-        document.getElementById("modal-log").innerHTML += data + "\n";
+        get("modal-log").innerHTML += data + "\n";
     }
 </script>
 -->

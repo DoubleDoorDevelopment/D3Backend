@@ -40,7 +40,7 @@
     </table>
     <script type="text/javascript">
         var json = ${fm.getFileContents()};
-        var opList = document.getElementById("opList");
+        var opList = get("opList");
         json.forEach(function (object)
         {
             opList.innerHTML +=
@@ -63,7 +63,7 @@
 
         function removeUser(username)
         {
-            var element = document.getElementById(username);
+            var element = get(username);
             if (element != null) opList.removeChild(element);
             for (var i = json.length - 1; i >= 0; i--)
             {
@@ -77,11 +77,11 @@
         function makeNew()
         {
             var xmlhttp = new XMLHttpRequest();
-            var ip = document.getElementById("newip").value;
-            var source = document.getElementById("newSource").value;
-            var reason = document.getElementById("newReason").value;
-            var created = document.getElementById("newCreated").value;
-            var expires = document.getElementById("newExpires").value;
+            var ip = get("newip").value;
+            var source = get("newSource").value;
+            var reason = get("newReason").value;
+            var created = get("newCreated").value;
+            var expires = get("newExpires").value;
 
             json.push({"ip": ip, "source": source, "reason": reason, "created": created, "expires": expires});
             opList.innerHTML +=
@@ -101,30 +101,30 @@
                     </#if>
                     "</tr>";
 
-            document.getElementById("newip").value = "";
-            document.getElementById("newSource").value = "Server";
-            document.getElementById("newReason").value = "Banned by an operator.";
-            document.getElementById("newCreated").value = "${Helper.getNowInBanFormat()}";
-            document.getElementById("newExpires").value = "forever";
+            get("newip").value = "";
+            get("newSource").value = "Server";
+            get("newReason").value = "Banned by an operator.";
+            get("newCreated").value = "${Helper.getNowInBanFormat()}";
+            get("newExpires").value = "forever";
 
-            document.getElementById("addBtn").innerHTML = "Add";
+            get("addBtn").innerHTML = "Add";
         }
 
         function makeEditable(username)
         {
-            var element = document.getElementById(username);
+            var element = get(username);
             if (element != null) opList.removeChild(element);
             for (var i = json.length - 1; i >= 0; i--)
             {
                 if (json[i]["ip"] === username)
                 {
-                    document.getElementById("newip").value = json[i]["ip"];
-                    document.getElementById("newSource").value = json[i]["source"];
-                    document.getElementById("newReason").value = json[i]["reason"];
-                    document.getElementById("newCreated").value = json[i]["created"];
-                    document.getElementById("newExpires").value = json[i]["expires"];
+                    get("newip").value = json[i]["ip"];
+                    get("newSource").value = json[i]["source"];
+                    get("newReason").value = json[i]["reason"];
+                    get("newCreated").value = json[i]["created"];
+                    get("newExpires").value = json[i]["expires"];
 
-                    document.getElementById("addBtn").innerHTML = "Re-add";
+                    get("addBtn").innerHTML = "Re-add";
 
                     json.splice(i, 1);
                 }
@@ -134,11 +134,11 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())}"));
         websocket.onerror = function (evt)
         {
-            alert("The websocket errored. Refresh the page!")
+            addAlert("The websocket errored. Refresh the page!")
         };
         websocket.onclose = function (evt)
         {
-            alert("The websocket closed. Refresh the page!")
+            addAlert("The websocket closed. Refresh the page!")
         };
         websocket.onmessage = function (evt)
         {
@@ -150,7 +150,7 @@
             }
             else
             {
-                alert(temp.message);
+                addAlert(temp.message);
             }
         };
         function send()

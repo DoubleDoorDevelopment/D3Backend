@@ -59,7 +59,7 @@ public class Cache
      */
     private static final Timer TIMER = new Timer("Cache-Timer", true);
 
-    private static final Table<String, String, ForgeBuild> FORGE_VERSION_TABLE = Tables.newCustomTable(new LinkedHashMap<>(), LinkedHashMap::new);
+    private static final Table<String, String, ForgeBuild> FORGE_VERSION_TABLE = Tables.synchronizedTable(Tables.newCustomTable(new LinkedHashMap<>(), LinkedHashMap::new));
     private static final TimerTask FORGE_VERSIONS_DOWNLOADER = new TimerTask()
     {
         private boolean hasInstaller(JsonObject object)
@@ -78,7 +78,7 @@ public class Cache
                 Main.LOGGER.info("[Cache] Refreshing Forge version cache....");
 
                 Reader reader = new InputStreamReader(new URL(FORGE_VERIONS_URL).openStream());
-                JsonObject root = Constants.JSONPARSER.parse(reader).getAsJsonObject();
+                JsonObject root = JSONPARSER.parse(reader).getAsJsonObject();
                 reader.close();
 
                 // WARNING: Java 8 madness ahead.
@@ -127,7 +127,7 @@ public class Cache
             }
         }
     };
-    private static final Map<String, URL> CASHED_MC_VERSIONS = new LinkedHashMap<>();
+    private static final Map<String, URL> CASHED_MC_VERSIONS = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final TimerTask MC_VERSIONS_DOWNLOADER = new TimerTask()
     {
         @Override
@@ -136,8 +136,8 @@ public class Cache
             JsonObject versionList;
             try
             {
-                Reader sr = new InputStreamReader(new URL(Constants.MC_VERIONS_URL).openStream());
-                versionList = Constants.JSONPARSER.parse(sr).getAsJsonObject();
+                Reader sr = new InputStreamReader(new URL(MC_VERIONS_URL).openStream());
+                versionList = JSONPARSER.parse(sr).getAsJsonObject();
                 sr.close();
             }
             catch (IOException e)
@@ -145,22 +145,19 @@ public class Cache
                 e.printStackTrace();
                 return;
             }
-            synchronized (CASHED_MC_VERSIONS)
+            CASHED_MC_VERSIONS.clear();
+            for (JsonElement element : versionList.getAsJsonArray("versions"))
             {
-                CASHED_MC_VERSIONS.clear();
-                for (JsonElement element : versionList.getAsJsonArray("versions"))
+                JsonObject o = element.getAsJsonObject();
+                if (!o.get("type").getAsString().equals("release") && !o.get("type").getAsString().equals("snapshot"))
+                    continue;
+                try
                 {
-                    JsonObject o = element.getAsJsonObject();
-                    if (!o.get("type").getAsString().equals("release") && !o.get("type").getAsString().equals("snapshot"))
-                        continue;
-                    try
-                    {
-                        CASHED_MC_VERSIONS.put(o.get("id").getAsString(), new URL(o.get("url").getAsString()));
-                    }
-                    catch (MalformedURLException e)
-                    {
-                        e.printStackTrace();
-                    }
+                    CASHED_MC_VERSIONS.put(o.get("id").getAsString(), new URL(o.get("url").getAsString()));
+                }
+                catch (MalformedURLException e)
+                {
+                    e.printStackTrace();
                 }
             }
         }

@@ -21,7 +21,7 @@
 
         var modes = ["abap", "actionscript", "ada", "apache_conf", "applescript", "asciidoc", "assembly_x86", "autohotkey", "batchfile", "c9search", "cirru", "clojure", "cobol", "coffee", "coldfusion", "csharp", "css", "curly", "c_cpp", "d", "dart", "diff", "django", "dockerfile", "dot", "eiffel", "ejs", "erlang", "forth", "ftl", "gcode", "gherkin", "gitignore", "glsl", "golang", "groovy", "haml", "handlebars", "haskell", "haxe", "html", "html_ruby", "ini", "io", "jack", "jade", "java", "javascript", "json", "jsoniq", "jsp", "jsx", "julia", "latex", "less", "liquid", "lisp", "livescript", "logiql", "lsl", "lua", "luapage", "lucene", "makefile", "markdown", "matlab", "mel", "mushcode", "mysql", "nix", "objectivec", "ocaml", "pascal", "perl", "pgsql", "php", "plain_text", "powershell", "praat", "prolog", "properties", "protobuf", "python", "r", "rdoc", "rhtml", "ruby", "rust", "sass", "scad", "scala", "scheme", "scss", "sh", "sjs", "smarty", "snippets", "soy_template", "space", "sql", "stylus", "svg", "tcl", "tex", "text", "textile", "toml", "twig", "typescript", "vala", "vbscript", "velocity", "verilog", "vhdl", "xml", "xquery", "yaml"];
 
-        var modeSelector = document.getElementById("modeSelector");
+        var modeSelector = get("modeSelector");
         modes.forEach(function (mode)
         {
             modeSelector.innerHTML += "<option value=\"" + mode + "\">" + mode + "</option>";
@@ -52,11 +52,11 @@
         var websocket = new WebSocket(wsurl("filemanager/${server.ID?js_string}/${fm.stripServer(fm.getFile())?js_string}"));
         websocket.onerror = function (evt)
         {
-            alert("The websocket errored. Refresh the page!")
+            addAlert("The websocket errored. Refresh the page!")
         };
         websocket.onclose = function (evt)
         {
-            alert("The websocket closed. Refresh the page!")
+            addAlert("The websocket closed. Refresh the page!")
         };
         websocket.onmessage = function (evt)
         {
@@ -68,7 +68,7 @@
             }
             else
             {
-                alert(temp.message);
+                addAlert(temp.message);
             }
         };
         function send(data)

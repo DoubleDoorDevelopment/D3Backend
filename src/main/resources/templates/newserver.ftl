@@ -119,7 +119,7 @@
 <script>
     function checkName()
     {
-        var name = document.getElementById("name").value;
+        var name = get("name").value;
         while (!name.match(/^\w+$/) || name.length > 16)
         {
             if (name.length > 16)
@@ -135,15 +135,15 @@
 
         if (name == null || !name.match(/^\w+$/) || name.length > 16)
         {
-            document.getElementById("submit").disabled = true;
-            document.getElementById("name-div").className = "form-group has-error";
+            get("submit").disabled = true;
+            get("name-div").className = "form-group has-error";
 
         }
         else
         {
-            document.getElementById("name").value = name;
-            document.getElementById("submit").disabled = false;
-            document.getElementById("name-div").className = "form-group";
+            get("name").value = name;
+            get("submit").disabled = false;
+            get("name-div").className = "form-group";
         }
     }
 </script>

@@ -112,8 +112,7 @@ public class FileManager
 
     public String stripServer(File file)
     {
-        if (file.equals(serverFolder)) return serverFolder.getName();
-        return file.toString().substring(serverFolder.toString().length() + 1).replace('\\', '/');
+        return Helper.getRelativeString(serverFolder, file);
     }
 
     public static boolean canEdit(File file)
@@ -252,7 +251,7 @@ public class FileManager
 
     public void newFile(IMethodCaller caller, String name) throws IOException
     {
-        server.logAction(caller, "New File " + stripServer(file));
+        server.logAction(caller, "New File " + name + " in " + stripServer(file));
         FileUtils.touch(new File(file, name));
         FileMonitorSocketApplication.update(getJson(file), file);
     }

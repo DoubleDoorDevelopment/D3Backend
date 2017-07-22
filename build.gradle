@@ -16,7 +16,7 @@ apply plugin: "idea-utils"
 archivesBaseName = "D3Backend"
 group = "net.doubledoordev.backend"
 
-version = "0.11.1"
+version = "0.11.2"
 if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD_NUMBER
 
 def vendor = "DoubleDoorDevelopment"
@@ -66,7 +66,7 @@ dependencies {
     compile group: "org.apache.commons", name: "commons-io", version: "1.3.2"
     compile group: "org.apache.commons", name: "commons-lang3", version: "3.3.2"
     compile group: "commons-codec", name: "commons-codec", version: "1.9"
-    compile group: "org.freemarker", name: "freemarker", version: "2.3.20"
+    compile group: "org.freemarker", name: "freemarker", version: "2.3.23"
     compile group: "org.apache.logging.log4j", name: "log4j-core", version: "2.0.2"
     compile group: "net.lingala.zip4j", name: "zip4j", version: "1.3.2"
     compile group: "org.glassfish.grizzly", name: "grizzly-http-all", version: "2.3.17"
