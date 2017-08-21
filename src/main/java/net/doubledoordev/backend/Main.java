@@ -142,7 +142,6 @@ public class Main
         config.addHttpHandler(freemarkerHandler);
         config.setDefaultErrorPageGenerator(freemarkerHandler);
         config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), STATIC_PATH), STATIC_PATH);
-        config.addHttpHandler(new ServerFileHandler(P2S_PATH), P2S_PATH);
         config.addHttpHandler(new ServerFileHandler(), RAW_PATH);
 
         // Socket stuff

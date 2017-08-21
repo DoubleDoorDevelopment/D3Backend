@@ -28,6 +28,7 @@ import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.server.StaticHttpHandlerBase;
 import org.glassfish.grizzly.http.util.Header;
 import org.glassfish.grizzly.http.util.HttpStatus;
+import org.glassfish.grizzly.http.util.URLDecoder;
 
 import java.io.File;
 
@@ -54,8 +55,16 @@ public class ServerFileHandler extends StaticHttpHandlerBase
     @Override
     protected boolean handle(String uri, Request request, Response response) throws Exception
     {
+        if (!Method.GET.equals(request.getMethod()))
+        {
+            response.setHeader(Header.Allow, Method.GET.getMethodString());
+            response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
+            return true;
+        }
+
         if (request.getSession(false) != null) request.getSession();
         if (uri.startsWith(SLASH_STR)) uri = uri.substring(1);
+        uri = URLDecoder.decode(uri);
 
         String[] uris = uri.split("/", 2); // 0 = server, 1 = file
         if (uris.length != 2) return false;
@@ -72,16 +81,14 @@ public class ServerFileHandler extends StaticHttpHandlerBase
         }
 
         File baseFolder = Strings.isNullOrEmpty(path) ? server.getFolder() : new File(server.getFolder(), path);
-
         File file = new File(baseFolder, uris[1]);
-        if (!file.exists() || file.isDirectory()) return false;
-
-        if (!Method.GET.equals(request.getMethod()))
+        if (!file.toPath().startsWith(baseFolder.toPath()))
         {
-            response.setHeader(Header.Allow, Method.GET.getMethodString());
-            response.sendError(HttpStatus.METHOD_NOT_ALLOWED_405.getStatusCode());
+            response.sendError(HttpStatus.FORBIDDEN_403.getStatusCode());
             return true;
         }
+
+        if (!file.exists() || file.isDirectory()) return false;
 
         pickupContentType(response, file.getPath());
 

@@ -67,7 +67,6 @@ public class Constants
     public static final String SLASH_STR = "/";
     public static final String STATIC_PATH = "/static/";
     public static final String TEMPLATES_PATH = "/templates/";
-    public static final String P2S_PATH = "/pay2spawn/";
     public static final String RAW_PATH = "/raw/";
     public static final String SOCKET_CONTEXT = "/socket";
     public static final String LOGIN_URL = "/login";
@@ -87,7 +86,7 @@ public class Constants
 
     public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = (dir, name) -> FilenameUtils.getExtension(name).equals("jar");
     public final static FilenameFilter ACCEPT_ALL_FILTER = (dir, name) -> !name.equalsIgnoreCase("eula.txt");
-    public final static FilenameFilter ACCEPT_NONE_FILTER = (dir, name) -> false;
+    public final static FilenameFilter ACCEPT_NONE_EXCEPT_BACKUP_FILTER = (dir, name) -> !name.toLowerCase().contains("backup");
     public final static FilenameFilter ACCEPT_FORGE_FILTER = (dir, name) -> (name.startsWith("forge") || name.startsWith("FTBserver")) && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
     public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = (dir, name) -> name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
 

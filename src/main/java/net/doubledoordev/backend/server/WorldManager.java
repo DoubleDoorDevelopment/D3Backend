@@ -72,7 +72,7 @@ public class WorldManager
 
     public void doMakeWorldBackup(IMethodCaller methodCaller)
     {
-        doBackup(methodCaller, new File(new File(server.getBackupFolder(), WORLD), BACKUP_SDF.format(new Date()) + ".zip"), new File(server.getFolder(), getWorldName()), ACCEPT_NONE_FILTER);
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), WORLD), BACKUP_SDF.format(new Date()) + ".zip"), new File(server.getFolder(), getWorldName()), ACCEPT_NONE_EXCEPT_BACKUP_FILTER);
     }
 
     public void makeAllOfTheBackup(IMethodCaller methodCaller) throws BackupException
@@ -84,7 +84,7 @@ public class WorldManager
 
     public void doMakeAllOfTheBackup(IMethodCaller methodCaller)
     {
-        doBackup(methodCaller, new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_FILTER);
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), SERVER), BACKUP_SDF.format(new Date()) + ".zip"), server.getFolder(), ACCEPT_NONE_EXCEPT_BACKUP_FILTER);
     }
 
     public void makeBackup(IMethodCaller methodCaller, String dimid) throws BackupException
@@ -96,7 +96,7 @@ public class WorldManager
 
     public void doMakeBackup(IMethodCaller methodCaller, String dimid)
     {
-        doBackup(methodCaller, new File(new File(server.getBackupFolder(), dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid.equals(OVERWORLD) ? DIM_ONLY_FILTER : ACCEPT_NONE_FILTER);
+        doBackup(methodCaller, new File(new File(server.getBackupFolder(), dimid), BACKUP_SDF.format(new Date()) + ".zip"), getFolder(dimid), dimid.equals(OVERWORLD) ? DIM_ONLY_FILTER : ACCEPT_NONE_EXCEPT_BACKUP_FILTER);
     }
 
     public File getFolder(String dimid)

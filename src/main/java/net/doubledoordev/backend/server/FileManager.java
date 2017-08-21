@@ -58,14 +58,10 @@ public class FileManager
 
         if (fileString != null && !fileString.trim().isEmpty() && !serverFolder.getName().equals(fileString))
         {
-            fileString = fileString.replace("/../", "").replace("\\..\\", "");
-            try
+            file = new File(this.serverFolder, fileString);
+            if (!file.toPath().startsWith(this.serverFolder.toPath()))
             {
-                file = new File(this.serverFolder, fileString).getCanonicalFile();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
+                throw new IllegalArgumentException("File outside of server folder. Server:" + server + " FileString: " + fileString);
             }
         }
         this.file = file;
