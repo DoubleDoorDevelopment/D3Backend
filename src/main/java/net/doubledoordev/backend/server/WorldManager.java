@@ -131,7 +131,11 @@ public class WorldManager
             FileUtils.copyDirectory(folder, tmp);
             zip.getParentFile().mkdirs();
 
-            for (File delfolder : tmp.listFiles(filter)) FileUtils.deleteDirectory(delfolder);
+            for (File file : tmp.listFiles(filter))
+            {
+                if (file.isFile()) file.delete();
+                else if (file.isDirectory()) FileUtils.deleteDirectory(file);
+            }
 
             server.printLine("Making backup zip...");
             methodCaller.sendMessage("Making backup zip...");
