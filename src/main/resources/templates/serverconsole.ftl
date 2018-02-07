@@ -44,7 +44,12 @@
             }, {
                 clear: false,
                 exit: false,
-                history: false,
+                history: true,
+                convertLinks: true,
+                echoCommand: false,
+                outputLimit: 10000,
+                scrollOnEcho: true,
+                wrap: false,
                 name: 'console_${server.ID?js_string}',
                 greetings: 'Server console for ${server.ID?js_string}.'
             });
@@ -68,7 +73,7 @@
                 }
                 else
                 {
-                    term.echo(temp.data);
+                    term.echo(temp.data).resume();
                 }
             };
         });
