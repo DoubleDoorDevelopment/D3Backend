@@ -4,14 +4,14 @@
 </h1>
 <#if !fm.file.exists()>
 <div class="panel panel-danger">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
+    <div class="panel-heading"><a href="?server=${server.ID?url}&file=${server.ID?url}">${server.ID?url}</a><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
     <div class="panel-body">
         <h4>File not found.</h4>
     </div>
 </div>
 <#elseif fm.file.isDirectory() >
 <div class="panel panel-info">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
+    <div class="panel-heading"><a href="?server=${server.ID?url}&file=${server.ID?url}">${server.ID?url}</a><#list fm.makeBreadcrumbs() as file> / <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}">${file.getName()?url}</a></#list></div>
     <div class="panel-body">
         <form class="form-inline" enctype="multipart/form-data" method="post" id="uploadform">
             <div class="form-group">
@@ -149,7 +149,7 @@
 <#else >
     <#assign readonly = !fm.file.canWrite()>
 <div class="panel panel-<#if readonly>warning<#elseif fm.getEditor()??>success<#else>danger</#if>">
-    <div class="panel-heading"><#list fm.makeBreadcrumbs() as file> /
+    <div class="panel-heading"><a href="?server=${server.ID?url}&file=${server.ID?url}">${server.ID?url}</a> <#list fm.makeBreadcrumbs() as file> /
         <a href="?server=${server.ID?url}&file=${fm.stripServer(file)?url}" <#if file.getName()?ends_with(".dat") && Helper.getUsernameFromUUID(file.getName())??>rel="tooltip" data-toggle="tooltip" data-placement="top" title="${Helper.getUsernameFromUUID(file.getName())}"</#if>>${file.getName()}</a></#list>
     </div>
     <#if fm.getEditor()??>

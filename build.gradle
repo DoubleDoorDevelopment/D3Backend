@@ -16,7 +16,7 @@ apply plugin: "idea-utils"
 archivesBaseName = "D3Backend"
 group = "net.doubledoordev.backend"
 
-version = "0.11.3"
+version = "0.12.0"
 if (System.getenv().BUILD_NUMBER != null) version += "." + System.getenv().BUILD_NUMBER
 
 def vendor = "DoubleDoorDevelopment"
@@ -73,6 +73,8 @@ dependencies {
     compile group: "com.flowpowered", name: "flow-nbt", version: "1.0.0"
     compile group: "com.google.guava", name: "guava", version: "22.0"
     compile group: "net.dries007.cmd", name: "CurseModpackDownloader", classifier: "all", version: "1.+"
+    compile group: "com.cronutils", name: "cron-utils", version: "7.0.1"
+    compile group: "it.sauronsoftware.cron4j", name: "cron4j", version: "2.2.5"
 }
 
 processResources {

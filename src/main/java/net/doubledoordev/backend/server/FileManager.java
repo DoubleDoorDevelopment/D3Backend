@@ -94,13 +94,13 @@ public class FileManager
         LinkedList<File> list = new LinkedList<>();
 
         File crumb = file;
-        while (!crumb.equals(serverFolder))
+        while (!crumb.getAbsoluteFile().equals(serverFolder.getAbsoluteFile()))
         {
             list.add(crumb);
             crumb = crumb.getParentFile();
         }
 
-        list.add(serverFolder);
+//        list.add(serverFolder);
 
         Collections.reverse(list);
         return list;

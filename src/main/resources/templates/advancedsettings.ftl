@@ -11,7 +11,7 @@
             </div>
             <div class="panel-body" style="text-align: center;">
                 <p>Last Auto Restart: ${restartInfo.getLastRestart("YYYY-MM-dd hh:mm:ss")}</p>
-                <p>Next Auto Restart: ${restartInfo.getNextRestart("YYYY-MM-dd hh:mm:ss")}</p>
+                <p>Auto Restart schedule: ${restartInfo.getHumanCronString()}</p>
 
                 <div class="form-group">
                     <label>
@@ -23,28 +23,23 @@
                     <label>
                         <input id="RestartingInfo_enableRestartSchedule" type="checkbox"> Use a reboot schedule
                     </label>
-                    <span for="RestartingInfo_enableRestartSchedule" class="help-block">Enable daily restarts.</span>
                 </div>
                 <div class="form-group">
-                    <label for="RestartingInfo_restartScheduleHours">Reboot schedule time</label>
+                    <label for="RestartingInfo_cronString">Reboot schedule time</label>
 
-                    <div class="input-group col-sm-6 col-sm-offset-3">
-                        <input id="RestartingInfo_restartScheduleHours" class="form-control" aria-describedby="helpBlock" type="number" min="0" max="23" placeholder="00">
+                    <input id="RestartingInfo_cronString" class="form-control" placeholder="Cron4j formatted string">
 
-                        <div class="input-group-addon">h</div>
-                        <input id="RestartingInfo_restartScheduleMinutes" class="form-control" aria-describedby="helpBlock" type="number" min="0" max="59" placeholder="00">
-                    </div>
-                    <span for="RestartingInfo_restartScheduleHours" class="help-block">This is server time!</span>
+                    <span for="RestartingInfo_cronString" class="help-block">This is server time!<br/>Format like a cron string, more info <a href="http://www.sauronsoftware.it/projects/cron4j/manual.php#p02">here</a>.</span>
                 </div>
                 <div class="form-group">
                     <label for="RestartingInfo_restartScheduleMessage">Reboot schedule time</label>
 
                     <div class="input-group">
-                        <input id="RestartingInfo_restartScheduleMessage" class="form-control" aria-describedby="helpBlock" placeholder="00:00" maxlength="100">
+                        <input id="RestartingInfo_restartScheduleMessage" class="form-control" placeholder="Server restart in %time seconds!" maxlength="100">
 
-                        <div class="input-group-addon">%time = time left in min</div>
+                        <div class="input-group-addon">%time = time left in seconds.</div>
                     </div>
-                    <span for="RestartingInfo_restartScheduleMessage" class="help-block">This message gets send at: T- 15, 10, 5, 4, 3, 2, 1, 0 min.</span>
+                    <span for="RestartingInfo_restartScheduleMessage" class="help-block">This message gets send 1 minute before the server restarts.</span>
                 </div>
             </div>
             <div class="panel-footer">
@@ -60,7 +55,7 @@
             <div class="panel-body" style="text-align: center;">
                 <div class="form-group">
                     <label for="JvmData_jarName">Server jar name</label>
-                    <select id="JvmData_jarName" class="form-control" aria-describedby="helpBlock">
+                    <select id="JvmData_jarName" class="form-control" >
                     <#list server.getPossibleJarnames() as jarName>
                         <option value="${jarName?json_string}">${jarName?html}</option>
                     </#list>
@@ -71,7 +66,7 @@
 
                     <div class="input-group">
                         <div class="input-group-addon">Min:</div>
-                        <input id="JvmData_ramMin" class="form-control" aria-describedby="helpBlock" type="number" min="512" step="512">
+                        <input id="JvmData_ramMin" class="form-control"  type="number" min="512" step="512">
 
                         <div class="input-group-addon">MB</div>
                     </div>
@@ -79,18 +74,18 @@
                 <div class="form-group">
                     <div class="input-group">
                         <div class="input-group-addon">Max:</div>
-                        <input id="JvmData_ramMax" class="form-control" aria-describedby="helpBlock" type="number" min="512" step="512">
+                        <input id="JvmData_ramMax" class="form-control"  type="number" min="512" step="512">
 
                         <div class="input-group-addon">MB</div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="JvmData_extraJavaParameters">Java Parameters</label>
-                    <input id="JvmData_extraJavaParameters" class="form-control" aria-describedby="helpBlock" type="text">
+                    <input id="JvmData_extraJavaParameters" class="form-control"  type="text">
                 </div>
                 <div class="form-group">
                     <label for="JvmData_extraMCParameters">MC Parameters</label>
-                    <input id="JvmData_extraMCParameters" class="form-control" aria-describedby="helpBlock" type="text">
+                    <input id="JvmData_extraMCParameters" class="form-control"  type="text">
                 </div>
             </div>
             <div class="panel-footer">
