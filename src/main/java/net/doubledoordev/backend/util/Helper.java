@@ -144,54 +144,23 @@ public class Helper
 
     public static Tag<?> readRawNBT(File file, boolean compressed)
     {
-        Tag<?> tag = null;
-        try
+        try (NBTInputStream ns = new NBTInputStream(new FileInputStream(file), compressed))
         {
-            InputStream is = new FileInputStream(file);
-            NBTInputStream ns = new NBTInputStream(is, compressed);
-            try
-            {
-                tag = ns.readTag();
-            }
-            finally
-            {
-                try
-                {
-                    ns.close();
-                }
-                catch (IOException ignored)
-                {
-
-                }
-            }
+            return ns.readTag();
         }
         catch (Exception ignored)
         {
-
+            return null;
         }
-        return tag;
     }
 
     public static void writeRawNBT(File file, boolean compressed, Tag<?> tag)
     {
         try
         {
-            OutputStream is = new FileOutputStream(file);
-            NBTOutputStream ns = new NBTOutputStream(is, compressed);
-            try
+            try (NBTOutputStream ns = new NBTOutputStream(new FileOutputStream(file), compressed))
             {
                 ns.writeTag(tag);
-            }
-            finally
-            {
-                try
-                {
-                    ns.close();
-                }
-                catch (IOException ignored)
-                {
-
-                }
             }
         }
         catch (Exception ignored)

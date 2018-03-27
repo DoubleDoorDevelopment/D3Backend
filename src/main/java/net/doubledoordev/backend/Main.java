@@ -190,6 +190,9 @@ public class Main
         LOGGER.info("Use the help command for help.");
 
         CommandHandler.init();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown(true), "shutdown-hook"));
+
         for (Server server : SETTINGS.servers.values())
         {
             try
@@ -205,39 +208,52 @@ public class Main
         }
     }
 
-    public static synchronized void shutdown()
+    public static synchronized void shutdown(boolean isShutdownHook)
     {
         running = false;
+
         Cache.stop();
         Settings.save();
+
         LOGGER.info("Attempting graceful shutdown of all servers...");
         for (final Server server : SETTINGS.servers.values())
         {
             if (server.getOnline())
             {
                 LOGGER.info("Server " + server.getID() + " is still online.");
-                try
-                {
-                    try
-                    {
-                        server.stopServer(CommandHandler.CMDCALLER, NAME + " shutdown!");
-                    }
-                    catch (Exception e)
-                    {
-                        server.getProcess().destroy();
-                    }
-
-                    LOGGER.info("Waiting for server " + server.getID() + " to shutdown...");
-                    server.getProcess().waitFor();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                    LOGGER.info("Something went wrong while waiting for server " + server.getID(), e);
-                }
+                server.stopServer(CommandHandler.CMDCALLER, NAME + " shutdown!");
             }
         }
-        LOGGER.info("Bye!");
-        Runtime.getRuntime().exit(0);
+
+        for (final Server server : SETTINGS.servers.values())
+        {
+            if (!server.getOnline()) continue;
+
+            try
+            {
+                LOGGER.info("Waiting for server " + server.getID() + " to shutdown...");
+                server.getProcess().waitFor();
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        for (final Server server : SETTINGS.servers.values())
+        {
+            if (server.getProcess() != null) server.getProcess().destroy();
+        }
+
+        for (final Server server : SETTINGS.servers.values())
+        {
+            if (server.getProcess() != null) server.getProcess().destroyForcibly();
+        }
+
+        if (!isShutdownHook)
+        {
+            LOGGER.info("Bye!");
+            Runtime.getRuntime().exit(0);
+        }
     }
 }

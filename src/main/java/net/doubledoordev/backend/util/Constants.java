@@ -86,7 +86,7 @@ public class Constants
 
     public final static FilenameFilter ACCEPT_ALL_JAR_FILTER = (dir, name) -> FilenameUtils.getExtension(name).equals("jar");
     public final static FilenameFilter ACCEPT_ALL_FILTER = (dir, name) -> !name.equalsIgnoreCase("eula.txt");
-    public final static FilenameFilter ACCEPT_NONE_EXCEPT_BACKUP_FILTER = (dir, name) -> !name.toLowerCase().contains("backup");
+    public final static FilenameFilter ACCEPT_BACKUP_FILTER = (dir, name) -> name.toLowerCase().contains("backup");
     public final static FilenameFilter ACCEPT_FORGE_FILTER = (dir, name) -> (name.startsWith("forge") || name.startsWith("FTBserver")) && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
     public final static FilenameFilter ACCEPT_MINECRAFT_SERVER_FILTER = (dir, name) -> name.startsWith("minecraft_server") && ACCEPT_ALL_JAR_FILTER.accept(dir, name);
 

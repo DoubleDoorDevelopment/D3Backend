@@ -256,7 +256,7 @@ public class CommandHandler implements Runnable
     public void cmdShutdown(@Switch('f') boolean force) throws CommandException
     {
         if (force) System.exit(0);
-        Main.shutdown();
+        Main.shutdown(false);
     }
 
     @Command(aliases = {"command", "cmd"}, desc = "Send a command to one or more servers", usage = "<server ID (regex)> <message ...>", min = 2)

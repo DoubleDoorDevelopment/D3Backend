@@ -456,11 +456,12 @@ public class Server
     {
         if (!propertiesFile.exists()) propertiesFile.createNewFile();
 
-        FileOutputStream outputStream = new FileOutputStream(propertiesFile);
-        Properties properties = getProperties();
-        properties.store(outputStream, "Modified by the backend");
-        propertiesFileLastModified = propertiesFile.lastModified();
-        outputStream.close();
+        try (FileOutputStream outputStream = new FileOutputStream(propertiesFile))
+        {
+            Properties properties = getProperties();
+            properties.store(outputStream, "Modified by the backend");
+            propertiesFileLastModified = propertiesFile.lastModified();
+        }
 
         ServerPropertiesSocketApplication.sendUpdateToAll(this);
     }
@@ -861,7 +862,17 @@ public class Server
             BufferedReader inReader = new BufferedReader(new InputStreamReader(new PipedInputStream(out)));
             worker.setLogger(new PrintStream(out));
 
-            new Thread(worker, ID.concat("-curseDownloader")).start();
+            new Thread(() -> {
+                worker.run();
+                try
+                {
+                    out.close();
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+            }, ID.concat("-curseDownloader")).start();
 
             while (!worker.isDone())
             {
@@ -1054,6 +1065,7 @@ public class Server
                             printLine(line);
                         }
                         printLine("----=====##### SERVER PROCESS HAS ENDED #####=====-----");
+                        reader.close();
                         instance.update();
                     }
                     catch (IOException e)
