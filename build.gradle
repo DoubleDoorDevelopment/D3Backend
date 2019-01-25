@@ -113,7 +113,3 @@ artifacts {
     archives sourcesJar
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
-}
-
